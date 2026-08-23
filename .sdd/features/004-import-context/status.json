@@ -2,8 +2,8 @@
   "id": "004",
   "slug": "import-context",
   "title": "Importar contexto de otra sesión",
-  "phase": "planned",
-  "progress_pct": 40,
+  "phase": "tasked",
+  "progress_pct": 60,
   "depends_on": [
     "001"
   ],

@@ -1,7 +1,7 @@
 # Tasks: Importar contexto de otra sesión
 
 Feature ID: 004
-Status: tasked (borrador — pendiente de aprobación)
+Status: tasked (aprobado 2026-08-23)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo task que el código (unit primero en `shared`/`main`). Ningún task se marca `[x]` con tests rojos. Los AC de 001 y 002 (unit + E2E existentes) deben seguir verdes en cada task. Base: `docs/spike-004-context.md`.
