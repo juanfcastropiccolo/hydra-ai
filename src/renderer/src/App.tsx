@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
+import { AnalyticsView } from './components/analytics/AnalyticsView'
 import { ImportContextDialog } from './components/ImportContextDialog'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -19,6 +20,7 @@ function App(): React.JSX.Element {
   const lastError = useAppStore((s) => s.lastError)
   const setError = useAppStore((s) => s.setError)
   const escape = useAppStore((s) => s.escape)
+  const centerView = useAppStore((s) => s.centerView)
   const openDialog = useAppStore((s) => s.openNewSessionDialog)
   const sidebarCollapsed = useFileTree((s) => s.collapsed)
 
@@ -87,7 +89,9 @@ function App(): React.JSX.Element {
       <Sidebar />
       <section className={styles.main}>
         <header className={styles.topbar}>
-          <span className={styles.topbarTitle}>Sesiones</span>
+          <span className={styles.topbarTitle} data-testid="topbar-title">
+            {centerView === 'analytics' ? 'Analytics' : 'Sesiones'}
+          </span>
           <span className={styles.topbarSpacer} />
           <span className={styles.topbarTitle} data-testid="claude-status">
             {availability === null
@@ -104,7 +108,12 @@ function App(): React.JSX.Element {
           </div>
         )}
         <div className={styles.contentRow}>
-          <div className={styles.content}>
+          {/* Feature 005: the grid stays mounted (terminals keep their size) but hidden behind Analytics. */}
+          <div
+            className={`${styles.content} ${centerView !== 'sessions' ? styles.contentHidden : ''}`}
+            aria-hidden={centerView !== 'sessions'}
+            data-testid="sessions-view"
+          >
             {availability && !availability.ok ? (
               <ClaudeUnavailable availability={availability} />
             ) : projects.length === 0 ? (
@@ -120,6 +129,16 @@ function App(): React.JSX.Element {
               </ErrorBoundary>
             )}
           </div>
+          {centerView === 'analytics' && (
+            <div
+              className={`${styles.content} ${styles.contentAnalytics}`}
+              data-testid="analytics-view"
+            >
+              <ErrorBoundary label="analytics">
+                <AnalyticsView />
+              </ErrorBoundary>
+            </div>
+          )}
         </div>
       </section>
       <NewSessionDialog />

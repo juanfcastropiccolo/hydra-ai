@@ -27,8 +27,10 @@ export interface AnalyticsState {
   sort: { key: SortKey; dir: 'asc' | 'desc' }
   pricing: Record<string, ModelPricing>
   error: string | null
+  /** Wall clock from main (kept here so render stays pure); 0 until loaded. */
+  now: number
 
-  setSessions(sessions: SessionSummary[], fromCache?: boolean): void
+  setSessions(sessions: SessionSummary[], now: number, fromCache?: boolean): void
   setProgress(p: AnalyticsProgress | null): void
   setPrefs(p: AnalyticsPrefs): void
   setRange(r: AnalyticsRange): void
@@ -57,9 +59,10 @@ export function createAnalyticsStore(): StoreApi<AnalyticsState> {
     sort: { key: 'firstTs', dir: 'desc' },
     pricing: {},
     error: null,
+    now: 0,
 
-    setSessions: (sessions, fromCache) =>
-      set((s) => ({ sessions, loaded: true, fromCache: fromCache ?? s.fromCache })),
+    setSessions: (sessions, now, fromCache) =>
+      set((s) => ({ sessions, now, loaded: true, fromCache: fromCache ?? s.fromCache })),
     setProgress: (progress) => set({ progress }),
     setPrefs: (p) => set({ range: p.range, pricing: p.pricing }),
     setRange: (range) => set({ range }),
@@ -73,7 +76,8 @@ export function createAnalyticsStore(): StoreApi<AnalyticsState> {
       else set({ sort: { key, dir: TEXT_KEYS.includes(key) ? 'asc' : 'desc' } })
     },
     setError: (error) => set({ error }),
-    reset: () => set({ sessions: [], loaded: false, fromCache: false, progress: null, error: null })
+    reset: () =>
+      set({ sessions: [], loaded: false, fromCache: false, progress: null, error: null, now: 0 })
   }))
 }
 

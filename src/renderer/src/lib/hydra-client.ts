@@ -16,6 +16,7 @@ export function initHydraClient(): () => void {
   void window.hydra.invoke('projects.list').then(st.setProjects)
   void window.hydra.invoke('sessions.list').then(st.setSessions)
   void window.hydra.invoke('ui.getHidden').then(st.setHidden)
+  void window.hydra.invoke('ui.getCenterView').then((v) => appStore.getState().setCenterView(v))
   return () => {
     offs.forEach((off) => off())
     started = false
@@ -61,6 +62,20 @@ export const hydra = {
   setFileTree: (patch: { open?: boolean; width?: number; collapsed?: boolean }) =>
     window.hydra.invoke('ui.setFileTree', patch),
   onToggleSidebar: (cb: () => void) => window.hydra.on('ui.toggleSidebar', cb),
+  // feature 005
+  analyticsOpen: () => window.hydra.invoke('analytics.open'),
+  analyticsClose: () => window.hydra.invoke('analytics.close'),
+  analyticsReindex: () => window.hydra.invoke('analytics.reindex'),
+  getAnalytics: () => window.hydra.invoke('ui.getAnalytics'),
+  setAnalytics: (patch: Partial<import('@shared/analytics/types').AnalyticsPrefs>) =>
+    window.hydra.invoke('ui.setAnalytics', patch),
+  setCenterView: (view: import('@shared/analytics/types').CenterView) =>
+    window.hydra.invoke('ui.setCenterView', view),
+  onAnalyticsProgress: (cb: (p: import('@shared/analytics/types').AnalyticsProgress) => void) =>
+    window.hydra.on('analytics.progress', cb),
+  onAnalyticsSessions: (
+    cb: (e: { sessions: import('@shared/analytics/types').SessionSummary[]; now: number }) => void
+  ) => window.hydra.on('analytics.sessions', cb),
   // feature 004
   summarizeContext: (importId: string, sourceSessionId: string) =>
     window.hydra.invoke('context.summarize', { importId, sourceSessionId }),

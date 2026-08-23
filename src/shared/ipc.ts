@@ -84,7 +84,11 @@ export interface IpcInvoke {
    * `analytics.progress` / `analytics.sessions` events follow while the scan runs, and the
    * directory is watched until `analytics.close`.
    */
-  'analytics.open': { args: []; result: { sessions: SessionSummary[]; fromCache: boolean } }
+  'analytics.open': {
+    args: []
+    /** `now` = main's clock (E2E can pin it via HYDRA_E2E_NOW) so the renderer stays pure. */
+    result: { sessions: SessionSummary[]; fromCache: boolean; now: number }
+  }
   'analytics.close': { args: []; result: void }
   /** Drop the cache and rebuild (progress/sessions events as in open). */
   'analytics.reindex': { args: []; result: void }
@@ -131,7 +135,7 @@ export interface IpcEvents {
   // ---- feature 005 ----
   'analytics.progress': AnalyticsProgress
   /** Full current list (temp-dir sessions already excluded). */
-  'analytics.sessions': { sessions: SessionSummary[] }
+  'analytics.sessions': { sessions: SessionSummary[]; now: number }
 }
 
 export type InvokeChannel = keyof IpcInvoke

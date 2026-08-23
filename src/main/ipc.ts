@@ -119,7 +119,10 @@ export function registerIpc(
   handle('ui.setImportContext', (patch) => ctx.store.setImportContext(patch))
 
   // ---- feature 005: analytics ----
-  handle('analytics.open', () => ctx.analyticsIndexer().open())
+  handle('analytics.open', async () => ({
+    ...(await ctx.analyticsIndexer().open()),
+    now: ctx.analyticsNow()
+  }))
   handle('analytics.close', () => ctx.analyticsIndexer().close())
   handle('analytics.reindex', () => ctx.analyticsIndexer().reindex())
   handle('ui.getAnalytics', () => ctx.store.analytics())

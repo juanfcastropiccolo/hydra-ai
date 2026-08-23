@@ -6,8 +6,8 @@ describe('analytics store', () => {
   it('loads sessions/prefs and keeps filters', () => {
     const st = createAnalyticsStore()
     expect(st.getState().loaded).toBe(false)
-    st.getState().setSessions([], true)
-    expect(st.getState()).toMatchObject({ loaded: true, fromCache: true })
+    st.getState().setSessions([], 1_700_000_000_000, true)
+    expect(st.getState()).toMatchObject({ loaded: true, fromCache: true, now: 1_700_000_000_000 })
     st.getState().setPrefs({
       range: '30d',
       pricing: { x: { input: 1, output: 1, cacheWrite: 1, cacheRead: 1 } }

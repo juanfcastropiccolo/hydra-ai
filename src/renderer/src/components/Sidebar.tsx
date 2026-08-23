@@ -4,6 +4,7 @@ import wordmark from '../assets/brand/hydra-wordmark-dark.png'
 import { useState } from 'react'
 import { FILE_TREE_MIN_WIDTH } from '@shared/types'
 import { hydra } from '../lib/hydra-client'
+import { useAppStore } from '../store/app-store'
 import { fileTreeStore, useFileTree } from '../store/file-tree-slice'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FileTreePanel } from './file-tree/FileTreePanel'
@@ -11,7 +12,7 @@ import { ProjectList } from './ProjectList'
 
 const NAV = [
   { key: 'sessions', label: 'Sessions', enabled: true },
-  { key: 'analytics', label: 'Analytics', enabled: false },
+  { key: 'analytics', label: 'Analytics', enabled: true },
   { key: 'graph', label: 'Graph Know', enabled: false },
   { key: 'config', label: 'Config', enabled: false }
 ] as const
@@ -22,6 +23,13 @@ export function Sidebar(): React.JSX.Element {
   const treeWidth = useFileTree((s) => s.width)
   const collapsed = useFileTree((s) => s.collapsed)
   const [resizing, setResizing] = useState(false)
+  // Feature 005: which view fills the central area
+  const centerView = useAppStore((s) => s.centerView)
+  const setCenterView = useAppStore((s) => s.setCenterView)
+  const goTo = (view: 'sessions' | 'analytics'): void => {
+    setCenterView(view)
+    void hydra.setCenterView(view)
+  }
   const setView = (files: boolean): void => {
     fileTreeStore.getState().setPrefs({ open: files, collapsed: false })
     void hydra.setFileTree({ open: files, collapsed: false })
@@ -186,9 +194,12 @@ export function Sidebar(): React.JSX.Element {
             {NAV.map((n) => (
               <button
                 key={n.key}
-                className={`${styles.navBtn} ${n.key === 'sessions' ? styles.navBtnActive : ''}`}
+                className={`${styles.navBtn} ${n.key === centerView ? styles.navBtnActive : ''}`}
                 disabled={!n.enabled}
                 title={n.enabled ? n.label : `${n.label} — próximamente`}
+                onClick={() => n.enabled && goTo(n.key as 'sessions' | 'analytics')}
+                data-testid={`nav-${n.key}`}
+                aria-current={n.key === centerView ? 'page' : undefined}
               >
                 {n.label}
               </button>

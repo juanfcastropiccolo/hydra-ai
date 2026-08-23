@@ -30,6 +30,17 @@
   min-height: 0;
   display: flex;
   min-width: 0;
+  position: relative;
+}
+/* Feature 005: keep the grid laid out (xterm keeps its dimensions) but invisible and inert. */
+.contentHidden {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.contentAnalytics {
+  overflow: auto;
 }
 .content {
   flex: 1;

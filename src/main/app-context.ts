@@ -259,11 +259,23 @@ export class AppContext {
         tmpdir: tmpdir()
       })
       ix.on('progress', (p) => this.broadcast('analytics.progress', p))
-      ix.on('sessions', (sessions) => this.broadcast('analytics.sessions', { sessions }))
+      ix.on('sessions', (sessions) =>
+        this.broadcast('analytics.sessions', { sessions, now: this.analyticsNow() })
+      )
       ix.on('error', (msg) => console.error('[analytics]', msg))
       this.analytics = ix
     }
     return this.analytics
+  }
+
+  /** Wall clock for the dashboard; E2E pins it with HYDRA_E2E_NOW (ISO or ms). */
+  analyticsNow(): number {
+    const pinned = process.env['HYDRA_E2E_NOW']
+    if (pinned) {
+      const n = /^\d+$/.test(pinned) ? Number(pinned) : Date.parse(pinned)
+      if (Number.isFinite(n)) return n
+    }
+    return Date.now()
   }
 
   async dispose(): Promise<void> {
