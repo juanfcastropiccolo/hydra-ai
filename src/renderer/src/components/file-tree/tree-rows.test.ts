@@ -21,15 +21,25 @@ describe('flattenTree', () => {
       isExpanded: (d) => d === '/r/src',
       filterMatches: null
     })
-    expect(rows.map((r) => `${r.depth}:${r.rel}`)).toEqual(['0:src', '1:deep', '1:b.ts', '0:a.ts'])
+    expect(rows.map((r) => `${r.depth}:${r.rel}`)).toEqual([
+      '0:src',
+      '1:src/deep',
+      '1:src/b.ts',
+      '0:a.ts'
+    ])
+    expect(rows.map((r) => r.name)).toEqual(['src', 'deep', 'b.ts', 'a.ts'])
   })
-  it('filter mode shows matches with ancestors, everything expanded', () => {
+  it('filter mode lists the matches flat, labelled by relative path (dirs end with /)', () => {
     const rows = flattenTree({
       root: '/r',
       nodes,
       isExpanded: () => false,
-      filterMatches: new Set(['src/deep/c.ts'])
+      filterMatches: new Set(['src/deep/c.ts', 'src/deep/'])
     })
-    expect(rows.map((r) => r.rel)).toEqual(['src', 'src/deep', 'src/deep/c.ts'])
+    expect(rows.map((r) => [r.rel, r.name, r.depth, r.isDir])).toEqual([
+      ['src/deep/c.ts', 'src/deep/c.ts', 0, false],
+      ['src/deep', 'src/deep', 0, true]
+    ])
+    expect(rows[0]?.path).toBe('/r/src/deep/c.ts')
   })
 })
