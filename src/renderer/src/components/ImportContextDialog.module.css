@@ -1,0 +1,118 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-content: center;
+  z-index: 50;
+}
+.dialog {
+  width: 520px;
+  max-height: 80vh;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: grid;
+  grid-template-rows: auto auto auto 1fr auto;
+  gap: 10px;
+}
+.dialog h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.dialog h2 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.hint {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.filter {
+  width: 100%;
+}
+.list {
+  overflow: auto;
+  min-height: 120px;
+  max-height: 44vh;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-pane);
+  padding: 4px;
+}
+.group + .group {
+  margin-top: 6px;
+}
+.groupTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--fg-muted);
+  padding: 6px 8px 2px;
+}
+.item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: default;
+  user-select: none;
+}
+.item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.selected,
+.selected:hover {
+  background: var(--accent-dim);
+  color: #fff;
+}
+.name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.external {
+  font-size: 10px;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.selected .external {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.5);
+}
+.empty {
+  padding: 24px 8px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.model {
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.model code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #fff;
+  font-weight: 600;
+}

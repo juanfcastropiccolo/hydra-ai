@@ -61,6 +61,13 @@ export const hydra = {
   setFileTree: (patch: { open?: boolean; width?: number; collapsed?: boolean }) =>
     window.hydra.invoke('ui.setFileTree', patch),
   onToggleSidebar: (cb: () => void) => window.hydra.on('ui.toggleSidebar', cb),
+  // feature 004
+  summarizeContext: (importId: string, sourceSessionId: string) =>
+    window.hydra.invoke('context.summarize', { importId, sourceSessionId }),
+  cancelImport: (importId: string) => window.hydra.invoke('context.cancel', { importId }),
+  getImportContext: () => window.hydra.invoke('ui.getImportContext'),
+  setImportContext: (patch: { model?: string }) =>
+    window.hydra.invoke('ui.setImportContext', patch),
   onFsChanged: (cb: (e: { root: string; dirs: string[]; all: boolean }) => void) =>
     window.hydra.on('fs.changed', cb),
   onGitChanged: (
