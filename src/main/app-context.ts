@@ -5,6 +5,9 @@ import type { BrowserWindow } from 'electron'
 import type { ClaudeAvailability, Session } from '@shared/types'
 import type { IpcEvents } from '@shared/ipc'
 import { ClaudeCli, type ClaudeCliLike } from './claude/claude-cli'
+import { FsActions } from './fs/fs-actions'
+import { FsService } from './fs/fs-service'
+import { GitService } from './git/git-service'
 import { resolveEnv, type ResolvedEnv } from './env/env-resolver'
 import { buildHookSettingsJson } from './hooks/hook-events'
 import { HooksServer } from './hooks/hooks-server'
@@ -27,6 +30,9 @@ export class AppContext {
   readonly store: ProjectStore
   readonly hooks = new HooksServer()
   readonly pty: PtyManager
+  readonly fs = new FsService()
+  git!: GitService
+  fsActions!: FsActions
   cli: ClaudeCliLike | null = null
   watcher: SessionWatcher | null = null
   availability: ClaudeAvailability = {
@@ -49,6 +55,15 @@ export class AppContext {
     this.store.load()
     await this.hooks.start()
     this.resolved = await resolveEnv()
+    this.git = new GitService({ env: this.resolved.env })
+    this.fsActions = new FsActions(this.resolved.env)
+    // Feature 002: forward fs changes + refreshed git status to the renderer.
+    this.fs.on('changed', (ev) => {
+      this.broadcast('fs.changed', ev)
+      void this.git
+        .status(ev.root)
+        .then((result) => this.broadcast('git.changed', { root: ev.root, result }))
+    })
     this.availability = this.opts.fakeNoClaude
       ? {
           ok: false,
@@ -89,7 +104,14 @@ export class AppContext {
   }
 
   broadcast<C extends keyof IpcEvents>(channel: C, payload: IpcEvents[C]): void {
-    for (const w of this.windows) if (!w.isDestroyed()) w.webContents.send(channel, payload)
+    for (const w of this.windows) {
+      if (w.isDestroyed() || w.webContents.isDestroyed()) continue
+      try {
+        w.webContents.send(channel, payload)
+      } catch {
+        /* window is going away */
+      }
+    }
   }
 
   get env(): NodeJS.ProcessEnv {
@@ -136,15 +158,23 @@ export class AppContext {
     return `${base}-${n}`
   }
 
-  async createSession(projectId: string, name: string): Promise<Session> {
+  async createSession(projectId: string, name: string, cwd?: string): Promise<Session> {
     const cli = this.requireCli()
     const project = this.store.getProject(projectId)
     if (!project) throw new Error('Proyecto no encontrado')
     if (project.missing) throw new Error(`La carpeta del proyecto no existe: ${project.path}`)
+    const sessionCwd = cwd ?? project.path
+    if (cwd) {
+      const inside = this.store.listProjects().some((p) => {
+        const root = p.path.replace(/\/+$/, '')
+        return cwd === root || cwd.startsWith(root + '/')
+      })
+      if (!inside) throw new Error('La carpeta elegida no pertenece a ningún proyecto registrado')
+    }
     const trimmed = name.trim()
     if (!trimmed) throw new Error('El nombre de la sesión no puede estar vacío')
     const { bgId } = await cli.spawnBackground({
-      cwd: project.path,
+      cwd: sessionCwd,
       name: trimmed,
       settingsJson: buildHookSettingsJson(this.hooks.port)
     })
@@ -158,7 +188,7 @@ export class AppContext {
       bgId,
       kind: 'background',
       name: trimmed,
-      cwd: project.path,
+      cwd: sessionCwd,
       projectId,
       startedAt: Date.now(),
       state: 'idle',
@@ -202,6 +232,7 @@ export class AppContext {
   }
 
   async dispose(): Promise<void> {
+    this.fs.dispose()
     this.watcher?.stop()
     this.pty.disposeAll() // clients only; sessions keep running (FR-10)
     await this.hooks.stop()

@@ -2,6 +2,7 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { AppContext } from './app-context'
+import { installAppMenu } from './app-menu'
 import { registerIpc, type E2EHooks } from './ipc'
 import { createFakePtySpawn, FakeClaudeCli } from './testing/fakes'
 
@@ -65,6 +66,7 @@ app.whenReady().then(async () => {
     })
   }
   registerIpc(ctx, () => mainWindow, e2eHooks)
+  installAppMenu({ toggleFileTree: () => ctx?.broadcast('ui.toggleFileTree', {}) })
   await ctx.init()
 
   mainWindow = createWindow()

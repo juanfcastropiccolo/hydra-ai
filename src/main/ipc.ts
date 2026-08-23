@@ -71,7 +71,7 @@ export function registerIpc(
 
   handle('sessions.list', () => ctx.sessions())
   handle('sessions.suggestName', ({ projectId }) => ctx.suggestSessionName(projectId))
-  handle('sessions.create', ({ projectId, name }) => ctx.createSession(projectId, name))
+  handle('sessions.create', ({ projectId, name, cwd }) => ctx.createSession(projectId, name, cwd))
   handle('sessions.stop', ({ sessionId }) => ctx.stopSession(sessionId))
   handle('sessions.rename', ({ sessionId, name }) => ctx.renameSession(sessionId, name))
 
@@ -80,6 +80,32 @@ export function registerIpc(
   handle('pty.scrollback', ({ ptyId }) => ctx.pty.scrollback(ptyId))
   on('pty.write', ({ ptyId, data }) => ctx.pty.write(ptyId, data))
   on('pty.resize', ({ ptyId, cols, rows }) => ctx.pty.resize(ptyId, cols, rows))
+
+  // ---- feature 002: file tree ----
+  handle('fs.list', ({ dir }) => ctx.fs.list(dir))
+  handle('fs.listRecursive', async ({ root, limit }) => {
+    const git = await ctx.git.status(root)
+    const ignored = new Set(
+      Object.entries(git.statuses)
+        .filter(([, s]) => s === 'ignored')
+        .map(([p]) => p)
+    )
+    return ctx.fs.listRecursive(root, { limit, skipDirs: ignored })
+  })
+  handle('fs.watch', ({ root }) => ctx.fs.watch(root))
+  handle('fs.unwatch', ({ root }) => ctx.fs.unwatch(root))
+  handle('fs.open', ({ path }) => ctx.fsActions.openPath(path))
+  handle('fs.reveal', ({ path }) => ctx.fsActions.reveal(path))
+  handle('fs.copyPath', ({ path }) => ctx.fsActions.copy(path))
+  handle('fs.openInEditor', ({ path }) => ctx.fsActions.openInEditor(path))
+  handle('fs.contextMenu', (req) =>
+    ctx.fsActions.showContextMenu(getWindow(), req, (projectId, cwd) =>
+      ctx.broadcast('ui.openNewSession', { projectId, cwd })
+    )
+  )
+  handle('git.status', ({ dir }) => ctx.git.status(dir))
+  handle('ui.getFileTree', () => ctx.store.fileTree())
+  handle('ui.setFileTree', (patch) => ctx.store.setFileTree(patch))
 
   handle('ui.getHidden', () => ctx.store.hiddenSessionIds())
   handle('ui.setHidden', ({ sessionId, hidden }) => ctx.store.setHidden(sessionId, hidden))
