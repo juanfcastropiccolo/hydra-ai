@@ -94,7 +94,7 @@ export class ClaudeCli implements ClaudeCliLike {
 
   private defaultRunner: Runner = (args, { cwd, timeoutMs, signal }) =>
     new Promise((resolve, reject) => {
-      execFile(
+      const child = execFile(
         this.opts.binaryPath,
         args,
         {
@@ -119,6 +119,8 @@ export class ClaudeCli implements ClaudeCliLike {
           resolve({ stdout: String(stdout ?? ''), stderr: String(stderr ?? ''), code })
         }
       )
+      // `claude -p` waits up to 3 s for piped stdin before proceeding; we never feed it.
+      child.stdin?.end()
     })
 
   /** `claude --version` → e.g. "2.1.241 (Claude Code)". */
