@@ -61,6 +61,14 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
     hide(session.sessionId)
     void hydra.setHidden(session.sessionId, true)
   }
+  // A finished session is removed from the daemon (stop+rm are tolerant) so it stops showing up.
+  const onCloseEnded = async (): Promise<void> => {
+    try {
+      await hydra.stopSession(session.sessionId)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
   const onStop = async (): Promise<void> => {
     const msg =
       session.state === 'working'
@@ -95,7 +103,6 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
         <span className={styles.title} title={session.cwd}>
           {session.name}
         </span>
-        {session.origin === 'external' && <span className={styles.meta}>externa</span>}
         <button
           className={styles.iconBtn}
           onClick={(e) => {
@@ -142,7 +149,7 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
               nueva en el mismo proyecto.
             </p>
             <div className={styles.overlayActions}>
-              <button onClick={onHide} data-testid="pane-close-ended">
+              <button onClick={() => void onCloseEnded()} data-testid="pane-close-ended">
                 Cerrar
               </button>
               <button
