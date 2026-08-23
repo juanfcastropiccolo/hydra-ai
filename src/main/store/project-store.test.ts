@@ -29,7 +29,13 @@ describe('ProjectStore', () => {
     expect(s.load()).toEqual({
       version: 1,
       projects: [],
-      ui: { hiddenSessionIds: [], paneOrder: [] }
+      ui: {
+        hiddenSessionIds: [],
+        paneOrder: [],
+        sessionNames: {},
+        fileTree: { open: false, width: 300, collapsed: false },
+        importContext: { model: 'haiku' }
+      }
     })
     s.addProject({ path: '/Users/u/foo/' })
     expect(existsSync(file)).toBe(true)
@@ -67,6 +73,12 @@ describe('ProjectStore', () => {
     expect(b.setFileTree({ width: 10 })).toEqual({ open: true, width: 420, collapsed: false }) // below min → keep
     expect(b.setFileTree({ collapsed: true })).toEqual({ open: true, width: 420, collapsed: true })
     expect(mk().load().ui.fileTree).toEqual({ open: true, width: 420, collapsed: true })
+    // feature 004: import-context prefs
+    expect(b.importContext()).toEqual({ model: 'haiku' })
+    expect(b.setImportContext({ model: ' sonnet ' })).toEqual({ model: 'sonnet' })
+    expect(b.setImportContext({ model: '' })).toEqual({ model: 'sonnet' }) // empty → keep
+    expect(b.setImportContext({})).toEqual({ model: 'sonnet' })
+    expect(mk().load().ui.importContext).toEqual({ model: 'sonnet' })
     b.setSessionName('S1', '')
     expect(b.sessionNames()).toEqual({})
     b.setHidden('S1', false)
@@ -135,12 +147,29 @@ describe('validateHydraFile', () => {
     ).toEqual({
       version: 1,
       projects: [{ id: 'a', name: 'A', path: '/a', addedAt: '' }],
-      ui: { hiddenSessionIds: ['s'], paneOrder: [] }
+      ui: {
+        hiddenSessionIds: ['s'],
+        paneOrder: [],
+        sessionNames: {},
+        fileTree: { open: false, width: 300, collapsed: false },
+        importContext: { model: 'haiku' }
+      }
     })
     expect(
       validateHydraFile({ version: 1, projects: [], ui: { fileTree: { open: 'yes', width: -5 } } })
         ?.ui.fileTree
-    ).toEqual({ open: false, width: 300 })
+    ).toEqual({ open: false, width: 300, collapsed: false })
+    expect(validateHydraFile({ version: 1, projects: [], ui: {} })?.ui.importContext).toEqual({
+      model: 'haiku'
+    })
+    expect(
+      validateHydraFile({ version: 1, projects: [], ui: { importContext: { model: 42 } } })?.ui
+        .importContext
+    ).toEqual({ model: 'haiku' })
+    expect(
+      validateHydraFile({ version: 1, projects: [], ui: { importContext: { model: ' opus ' } } })
+        ?.ui.importContext
+    ).toEqual({ model: 'opus' })
     expect(validateHydraFile({ version: 1 })).toBeNull()
     expect(validateHydraFile([])).toBeNull()
   })

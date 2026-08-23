@@ -62,8 +62,17 @@ export interface HydraFile {
     sessionNames: Record<string, string>
     /** Feature 002: file tree panel preferences. */
     fileTree: FileTreePrefs
+    /** Feature 004: import-context preferences. */
+    importContext: ImportContextPrefs
   }
 }
+
+/** Feature 004: how the handoff summary of another session is generated. */
+export interface ImportContextPrefs {
+  /** Model alias or full name passed verbatim to `claude -p --model`. */
+  model: string
+}
+export const DEFAULT_IMPORT_CONTEXT_PREFS: ImportContextPrefs = { model: 'haiku' }
 
 export interface FileTreePrefs {
   /** true = sidebar shows the Files view, false = Sessions view. */
@@ -102,7 +111,8 @@ export const EMPTY_HYDRA_FILE: HydraFile = {
     hiddenSessionIds: [],
     paneOrder: [],
     sessionNames: {},
-    fileTree: { open: false, width: 300, collapsed: false }
+    fileTree: { open: false, width: 300, collapsed: false },
+    importContext: { model: 'haiku' }
   }
 }
 

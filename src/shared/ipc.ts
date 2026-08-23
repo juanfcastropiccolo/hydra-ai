@@ -5,6 +5,7 @@ import type {
   FileTreePrefs,
   FsEntry,
   GitStatusResult,
+  ImportContextPrefs,
   Project,
   Session
 } from './types'
@@ -56,6 +57,20 @@ export interface IpcInvoke {
   'git.status': { args: [{ dir: string }]; result: GitStatusResult }
   'ui.getFileTree': { args: []; result: FileTreePrefs }
   'ui.setFileTree': { args: [Partial<FileTreePrefs>]; result: FileTreePrefs }
+
+  // ---- feature 004: import context ----
+  /**
+   * Summarise another session's conversation for pasting into a target pane. Resolves with the
+   * full block to paste (intro + summary). Rejects with message 'cancelled' when cancelled via
+   * `context.cancel`. Never writes to any PTY — the renderer does the paste.
+   */
+  'context.summarize': {
+    args: [{ importId: string; sourceSessionId: string }]
+    result: { text: string; truncated: boolean; model: string; durationMs: number }
+  }
+  'context.cancel': { args: [{ importId: string }]; result: void }
+  'ui.getImportContext': { args: []; result: ImportContextPrefs }
+  'ui.setImportContext': { args: [Partial<ImportContextPrefs>]; result: ImportContextPrefs }
 
   /** E2E only (HYDRA_E2E=1): what each fake PTY received. Rejects otherwise. */
   'e2e.ptyRecords': {

@@ -12,10 +12,12 @@ import {
 import { basename, dirname } from 'node:path'
 import {
   DEFAULT_FILE_TREE_PREFS,
+  DEFAULT_IMPORT_CONTEXT_PREFS,
   EMPTY_HYDRA_FILE,
   FILE_TREE_MIN_WIDTH,
   type FileTreePrefs,
   type HydraFile,
+  type ImportContextPrefs,
   type Project
 } from '@shared/types'
 
@@ -63,6 +65,13 @@ export function validateHydraFile(v: unknown): HydraFile | null {
         : DEFAULT_FILE_TREE_PREFS.width,
     collapsed: typeof ft.collapsed === 'boolean' ? ft.collapsed : DEFAULT_FILE_TREE_PREFS.collapsed
   }
+  const ic = isRecord(ui.importContext) ? ui.importContext : {}
+  const importContext: ImportContextPrefs = {
+    model:
+      typeof ic.model === 'string' && ic.model.trim()
+        ? ic.model.trim()
+        : DEFAULT_IMPORT_CONTEXT_PREFS.model
+  }
   return {
     version: 1,
     projects,
@@ -70,7 +79,8 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       hiddenSessionIds: strs(ui.hiddenSessionIds),
       paneOrder: strs(ui.paneOrder),
       sessionNames: names,
-      fileTree
+      fileTree,
+      importContext
     }
   }
 }
@@ -209,6 +219,21 @@ export class ProjectStore {
     }
     this.save()
     return this.fileTree()
+  }
+
+  importContext(): ImportContextPrefs {
+    return { ...this.data.ui.importContext }
+  }
+
+  /** Feature 004: `model` is trimmed; empty/non-string values keep the current one. */
+  setImportContext(patch: Partial<ImportContextPrefs>): ImportContextPrefs {
+    const model =
+      typeof patch.model === 'string' && patch.model.trim()
+        ? patch.model.trim()
+        : this.data.ui.importContext.model
+    this.data.ui.importContext = { model }
+    this.save()
+    return this.importContext()
   }
 
   paneOrder(): string[] {
