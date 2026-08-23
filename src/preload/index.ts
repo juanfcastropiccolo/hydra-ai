@@ -1,22 +1,16 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
+import type { HydraApi } from '@shared/ipc'
 
-// Custom APIs for renderer
-const api = {}
-
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
+const hydra: HydraApi = {
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  send: (channel, payload) => ipcRenderer.send(channel, payload),
+  on: (channel, listener) => {
+    const wrapped = (_e: Electron.IpcRendererEvent, payload: unknown): void => {
+      listener(payload as Parameters<typeof listener>[0])
+    }
+    ipcRenderer.on(channel, wrapped)
+    return () => ipcRenderer.removeListener(channel, wrapped)
   }
-} else {
-  // @ts-ignore (define in dts)
-  window.electron = electronAPI
-  // @ts-ignore (define in dts)
-  window.api = api
 }
+
+contextBridge.exposeInMainWorld('hydra', hydra)

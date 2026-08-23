@@ -28,7 +28,6 @@
     "test:electron": "electron test/electron/pty-smoke.cjs"
   },
   "dependencies": {
-    "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@lydell/node-pty": "^1.1.0"
   },

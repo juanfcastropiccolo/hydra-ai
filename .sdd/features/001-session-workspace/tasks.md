@@ -19,7 +19,7 @@ Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verif
 
 ## Fase 2 — Capa main: contrato con Claude Code (TDD)
 
-- [ ] **5.** `src/shared/types.ts` + `src/shared/ipc.ts`: tipos `Project`, `Session`, `SessionState`, `Pane`, `HydraFile` y el contrato IPC tipado (canales + payloads) — done when: compila y es importado por main y renderer sin `any`.
+- [x] **5.** `src/shared/types.ts` + `src/shared/ipc.ts`: tipos `Project`, `Session`, `SessionState`, `Pane`, `HydraFile` y el contrato IPC tipado (canales + payloads) — done when: compila y es importado por main y renderer sin `any`.
 - [ ] **6.** `EnvResolver`: resolver PATH del login shell (**`-lc`, no `-ilc`**: el interactivo hizo timeout en el spike; timeout 3 s) + localizar `claude` — done when: unit tests del parseo de PATH y de la búsqueda (`~/.local/bin/claude`, `which`, PATH resuelto); test de integración devuelve la ruta real de `claude` en esta máquina; si no se encuentra, devuelve un error tipado con mensaje accionable (base de AC-16).
 - [ ] **7.** `ClaudeCli.listSessions()`: ejecutar `claude agents --json` y parsear/validar — done when: fixtures reales capturadas en `test/fixtures/agents-*.json` (bg working, bg waiting+waitingFor, bg idle/blocked sin prompt, interactive idle/busy, done, sin pid, salida vacía, JSON inválido) y unit tests de `parseAgentsJson()` para todas; un error de parseo nunca lanza: devuelve `{ sessions: [], error }`.
 - [ ] **8.** `mapSessionState()`: tabla `status/state/pid/kind` → `working | waiting | idle | ended` — done when: unit tests cubren toda la tabla de casos del plan (incl. `state: blocked` + `status: idle` → `idle`, `waiting` → `waiting`, `busy` → `working`, sin pid → `ended`) y un caso desconocido → `idle` con warning.
