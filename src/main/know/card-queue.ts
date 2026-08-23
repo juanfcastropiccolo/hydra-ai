@@ -1,0 +1,169 @@
+// Feature 006 FR-3/FR-16/FR-17: serial generation of session cards. One in flight, retries with
+// backoff, quiet-session gating, cost accounting, autoCards toggle, backfill needs confirmation.
+import { EventEmitter } from 'node:events'
+import type { ClaudeCliLike } from '../claude/claude-cli'
+import type { KnowIndexer, PendingSession } from './know-indexer'
+import { buildCardPrompt } from './card-prompt'
+import { parseCard, toSessionCard } from './parse-card'
+
+export interface CardQueueOptions {
+  know: KnowIndexer
+  cli: () => ClaudeCliLike | null
+  model: () => string
+  autoCards: () => boolean
+  /** A session is "quiet" when it is not working right now (idle, or gone from the daemon). */
+  isSessionBusy: (sessionId: string) => boolean
+  now?: () => number
+  quietMs?: number
+  maxAttempts?: number
+  backoffMs?: number
+  /** Test seam. */
+  setTimeoutFn?: typeof setTimeout
+}
+
+export interface CardQueueEvents {
+  changed: []
+}
+
+interface Attempt {
+  count: number
+  nextAt: number
+}
+
+export class CardQueue extends EventEmitter<CardQueueEvents> {
+  private running = false
+  private inFlight: string | null = null
+  private attempts = new Map<string, Attempt>()
+  /** Backfill guard: sessions that existed before the first explicit approval are not auto-generated. */
+  private backfillApproved = false
+  private readonly initialBacklog = new Set<string>()
+  lastError: string | null = null
+  totalCostUsd = 0
+
+  constructor(private readonly opts: CardQueueOptions) {
+    super()
+    for (const p of safePending(opts.know)) this.initialBacklog.add(p.sessionId)
+    opts.know.on('changed', () => this.kick())
+  }
+
+  generating(): string | null {
+    return this.inFlight
+  }
+
+  /** Pending sessions the queue may process automatically right now. */
+  private autoEligible(): PendingSession[] {
+    if (!this.opts.autoCards()) return []
+    return safePending(this.opts.know).filter(
+      (p) => (this.backfillApproved || !this.initialBacklog.has(p.sessionId)) && this.readyNow(p)
+    )
+  }
+
+  private readyNow(p: PendingSession): boolean {
+    const now = this.opts.now?.() ?? Date.now()
+    if (this.opts.isSessionBusy(p.sessionId)) return false
+    if (now - p.lastTs < (this.opts.quietMs ?? 120_000)) return false
+    const a = this.attempts.get(p.sessionId)
+    if (a && now < a.nextAt) return false
+    return true
+  }
+
+  /** Estimate for the UI confirmation (count + rough cost of the initial backlog). */
+  backlogEstimate(): { count: number; estUsd: number } {
+    const pend = safePending(this.opts.know).filter((p) => this.initialBacklog.has(p.sessionId))
+    return { count: pend.length, estUsd: pend.length * 0.03 }
+  }
+
+  /** User confirmed the backfill (or asked to generate everything now). */
+  approveBackfill(): void {
+    this.backfillApproved = true
+    this.kick()
+  }
+
+  kick(): void {
+    if (this.running) return
+    this.running = true
+    void this.loop().finally(() => {
+      this.running = false
+    })
+  }
+
+  private async loop(): Promise<void> {
+    for (;;) {
+      const next = this.autoEligible()[0]
+      if (!next) return
+      await this.generateOne(next.sessionId)
+      await new Promise((r) => (this.opts.setTimeoutFn ?? setTimeout)(r, 10))
+    }
+  }
+
+  /** Generate (or refresh) one card now; used by the loop and by "generate this one" UI actions. */
+  async generateOne(sessionId: string): Promise<boolean> {
+    const cli = this.opts.cli()
+    const meta = this.opts.know.meta(sessionId)
+    if (!cli || !meta) return false
+    this.inFlight = sessionId
+    this.emit('changed')
+    try {
+      const model = this.opts.model()
+      const existing = this.opts.know
+        .vigenteFacts(meta.projectKey)
+        .filter((f) => !f.id.startsWith(`${sessionId}#`))
+      const r = await cli.runPrompt({
+        resumeSessionId: sessionId,
+        cwd: meta.cwd,
+        model,
+        prompt: buildCardPrompt(existing),
+        timeoutMs: 120_000
+      })
+      let parsed = parseCard(r.text)
+      if (!parsed) {
+        const retry = await cli.runPrompt({
+          resumeSessionId: sessionId,
+          cwd: meta.cwd,
+          model,
+          prompt:
+            buildCardPrompt(existing) +
+            '\n\nIMPORTANTE: respondé únicamente el objeto JSON, nada más.',
+          timeoutMs: 120_000
+        })
+        parsed = parseCard(retry.text)
+      }
+      if (!parsed) throw new Error('La ficha no devolvió JSON válido')
+      const costUsd = typeof r.raw.costUsd === 'number' ? r.raw.costUsd : undefined
+      const card = toSessionCard(parsed, {
+        sessionId,
+        sourceLastTs: meta.lastTs,
+        model,
+        generatedAt: this.opts.now?.() ?? Date.now(),
+        ...(costUsd !== undefined ? { costUsd } : {})
+      })
+      this.opts.know.setCard(sessionId, card)
+      if (parsed.supersededIds.length)
+        this.opts.know.applySuperseded(parsed.supersededIds, card.facts[0]?.id ?? `${sessionId}#1`)
+      if (costUsd) this.totalCostUsd += costUsd
+      this.attempts.delete(sessionId)
+      this.lastError = null
+      return true
+    } catch (e) {
+      const a = this.attempts.get(sessionId) ?? { count: 0, nextAt: 0 }
+      a.count += 1
+      const backoff = (this.opts.backoffMs ?? 60_000) * Math.pow(2, Math.min(a.count - 1, 4))
+      a.nextAt = (this.opts.now?.() ?? Date.now()) + backoff
+      if (a.count >= (this.opts.maxAttempts ?? 5)) a.nextAt = Number.MAX_SAFE_INTEGER
+      this.attempts.set(sessionId, a)
+      this.lastError = (e as Error).message
+      return false
+    } finally {
+      this.inFlight = null
+      this.emit('changed')
+    }
+  }
+}
+
+function safePending(know: KnowIndexer): PendingSession[] {
+  try {
+    return know.pending()
+  } catch {
+    return []
+  }
+}
