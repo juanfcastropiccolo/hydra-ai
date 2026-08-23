@@ -13,7 +13,7 @@ Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verif
 ## Fase 1 — Setup
 
 - [x] **1.** Inicializar proyecto electron-vite + React + TS strict — done when: `npm run dev` abre una ventana vacía "Hydra"; `npm run build` genera `out/`; `tsc --noEmit` pasa; estructura `src/main`, `src/preload`, `src/renderer`, `src/shared` creada.
-- [ ] **2.** Configurar ESLint + Prettier + Vitest + scripts — done when: `npm run lint`, `npm run format:check`, `npm test` pasan en el esqueleto (0 tests), con `vitest` configurado para `src/main` y `src/shared` (entorno node) y cobertura habilitada.
+- [x] **2.** Configurar ESLint + Prettier + Vitest + scripts — done when: `npm run lint`, `npm run format:check`, `npm test` pasan en el esqueleto (0 tests), con `vitest` configurado para `src/main` y `src/shared` (entorno node) y cobertura habilitada.
 - [ ] **3.** Integrar `@lydell/node-pty` y verificar carga en Electron — done when: un test de integración abre una PTY con `/bin/zsh -c 'echo hi'` **dentro del proceso main de Electron** (no solo Node) y recibe `hi`; documentado en README cómo se resuelve el binario prebuilt x64.
 - [ ] **4.** Configurar electron-builder (mac x64, ad-hoc) + script `npm run package` — done when: genera `release/Hydra.app` que abre desde Finder y muestra la ventana vacía; `.dmg` opcional en este task.
 
