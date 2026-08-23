@@ -11,6 +11,9 @@ import styles from './Pane.module.css'
 import { StatusLight } from './StatusLight'
 import { XTermView, type XTermController } from './XTermView'
 
+/** Gap between the two identical pastes that make Claude Code show the full text (see below). */
+export const PASTE_EXPAND_DELAY_MS = 350
+
 export function Pane({ session }: { session: Session }): React.JSX.Element {
   const focused = useAppStore((s) => s.focusedSessionId === session.sessionId)
   const expanded = useAppStore((s) => s.expandedSessionId === session.sessionId)
@@ -57,7 +60,14 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
       importContextStore.getState().markBlocked(session.sessionId)
       return
     }
-    hydra.write(ptyId, bracketedPaste(importState.text))
+    // Claude Code collapses a long paste into "[Pasted text #N +M lines]" and expands it when the
+    // same text is pasted again ("paste again to expand"). Pasting twice shows the full block so
+    // the user can review it; the CLI still submits a single copy (verified in paste.integration).
+    // Fire-and-forget on purpose: markDone re-runs this effect at once, so an effect cleanup would
+    // cancel the second paste. Writing to a PTY that closed meanwhile is a harmless no-op in main.
+    const paste = bracketedPaste(importState.text)
+    hydra.write(ptyId, paste)
+    setTimeout(() => hydra.write(ptyId, paste), PASTE_EXPAND_DELAY_MS)
     controller.current?.focus()
     importContextStore.getState().markDone(session.sessionId) // 'done' renders the green toast
     // eslint-disable-next-line react-hooks/exhaustive-deps

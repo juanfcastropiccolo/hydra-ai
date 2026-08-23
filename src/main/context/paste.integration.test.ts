@@ -106,6 +106,9 @@ describe('bracketed paste into a live session (integration)', () => {
       '</imported-context>',
       'Respondé solo "ok".'
     ].join('\n')
+    // Pasted twice, like Pane does ("paste again to expand" shows the full text in the TUI).
+    m.write('p1', bracketedPaste(block))
+    await sleep(350)
     m.write('p1', bracketedPaste(block))
     await sleep(2500)
     expect(userMessages(cwd, sessionId)).toEqual([]) // nothing submitted
@@ -118,7 +121,7 @@ describe('bracketed paste into a live session (integration)', () => {
       msgs = userMessages(cwd, sessionId)
     }
     expect(msgs).toHaveLength(1)
-    expect(msgs[0]).toBe(block)
+    expect(msgs[0]).toBe(block) // one copy, not two
 
     m.disposeAll()
     expect(readdirSync(projectDir(cwd)).filter((f) => f.endsWith('.jsonl'))).toEqual([

@@ -61,9 +61,11 @@ test('E2E-6 (AC-1/3/4/9): button state, dialog, summary pasted as one bracketed 
   await dialog.getByTestId('import-confirm').click()
   await expect(dialog).toHaveCount(0)
 
-  // FR-10/11/13: exactly one bracketed write, no \r, toast, focus on B
-  await expect.poll(async () => (await writesOf(page, 'fake0002')).length).toBe(1)
-  const [w] = await writesOf(page, 'fake0002')
+  // FR-10/11/13: the bracketed block is written twice (the second paste makes Claude Code expand
+  // the "[Pasted text]" placeholder; the CLI submits one copy), no \r, toast, focus on B
+  await expect.poll(async () => (await writesOf(page, 'fake0002')).length).toBe(2)
+  const [w, w2] = await writesOf(page, 'fake0002')
+  expect(w2).toBe(w)
   expect(w?.startsWith(BP_START)).toBe(true)
   expect(w?.endsWith(BP_END)).toBe(true)
   expect(w).toContain('Te comparto, como contexto de referencia')
@@ -99,7 +101,7 @@ test.describe('slow summary', () => {
     await setStatus(page, 'fake0002', 'idle')
     await expect(b.getByTestId('status-light')).toHaveAttribute('data-state', 'idle')
     await b.getByTestId('import-retry-paste').click()
-    await expect.poll(async () => (await writesOf(page, 'fake0002')).length).toBe(1)
+    await expect.poll(async () => (await writesOf(page, 'fake0002')).length).toBe(2)
     expect((await writesOf(page, 'fake0002'))[0]).toContain(BP_START)
     await expect(b.getByTestId('pane-toast')).toContainText('listo para enviar')
 
@@ -112,7 +114,7 @@ test.describe('slow summary', () => {
     await expect(b.getByTestId('import-progress')).toHaveCount(0)
     await expect(b.getByTestId('pane-import')).toBeEnabled()
     await page.waitForTimeout(3500)
-    expect((await writesOf(page, 'fake0002')).length).toBe(1)
+    expect((await writesOf(page, 'fake0002')).length).toBe(2)
   })
 
   test('E2E-8b: importing into a hidden pane pastes when it is shown again', async ({ page }) => {
@@ -132,7 +134,7 @@ test.describe('slow summary', () => {
         const recs = await page.evaluate(() => window.hydra.invoke('e2e.ptyRecords'))
         return recs.filter((r) => r.args.includes('fake0002')).flatMap((r) => r.writes).length
       })
-      .toBe(1)
+      .toBe(2)
     await expect(b2.getByTestId('pane-toast')).toContainText('listo para enviar')
   })
 })
