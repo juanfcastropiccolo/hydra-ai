@@ -1,0 +1,146 @@
+.chart {
+  position: relative;
+  width: 100%;
+}
+.grid {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 1;
+}
+.axis {
+  stroke: rgba(255, 255, 255, 0.14);
+  stroke-width: 1;
+}
+.tick {
+  fill: var(--fg-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+.mark {
+  transition: opacity 120ms ease;
+}
+.chart:hover .mark {
+  opacity: 0.92;
+}
+.cell {
+  transition: fill 200ms ease;
+}
+.cell:hover {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1;
+}
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  background: #0f0f11;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  min-width: 140px;
+  max-width: 280px;
+}
+.tipTitle {
+  color: var(--fg-muted);
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.tipTitle b {
+  color: var(--fg);
+  font-weight: 600;
+}
+.tipRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.5;
+}
+.tipLabel {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tipValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* horizontal bars */
+.hbars {
+  display: grid;
+  gap: 6px;
+}
+.hrow {
+  display: grid;
+  grid-template-columns: minmax(120px, 34%) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 4px 6px;
+  text-align: left;
+  color: var(--fg);
+  font: inherit;
+  cursor: default;
+}
+.hrowClickable {
+  cursor: pointer;
+}
+.hrowClickable:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.hrowActive {
+  border-color: var(--accent-dim);
+  background: rgba(74, 222, 128, 0.06);
+}
+.hlabel {
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fg-muted);
+}
+.hlabelStrong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.hmeta {
+  color: var(--fg-muted);
+  font-weight: 400;
+}
+.htrack {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hfill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width 300ms ease;
+}
+.hvalue {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.hshare {
+  color: var(--fg-muted);
+  font-size: 11px;
+}
+.emptyInline {
+  color: var(--fg-muted);
+  font-size: 12px;
+  padding: 8px 0;
+}
