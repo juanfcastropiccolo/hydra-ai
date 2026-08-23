@@ -1,7 +1,7 @@
 # Tasks: Importar contexto de otra sesión
 
 Feature ID: 004
-Status: in_progress (tasks 1–10 hechos 2026-08-23)
+Status: in_progress (tasks 1–13 hechos 2026-08-23; falta QA manual y cierre)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo task que el código (unit primero en `shared`/`main`). Ningún task se marca `[x]` con tests rojos. Los AC de 001 y 002 (unit + E2E existentes) deben seguir verdes en cada task. Base: `docs/spike-004-context.md`.
@@ -24,9 +24,9 @@ Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo ta
 
 ## Fase 3 — Tests y cierre
 
-- [ ] **11.** Integración PTY (marcada `integration`, `src/main/context/paste.integration.test.ts`): sesión `--bg` + `attach` en PTY real; escribir bloque bracketed-paste multilínea sin `\r` → el transcript **no** gana mensaje de usuario; luego `\r` → aparece un único mensaje íntegro; limpia con `stop`/`rm` (réplica del spike; ≈ US$0.01) — done when: verde con `claude` real.
-- [ ] **12.** E2E-6 (`e2e/06-import-context.spec.ts`): dos sesiones A y B; botón habilitado en B (idle) y deshabilitado con tooltip en una sesión `working` (`e2e.setStatus`); diálogo desde B lista A (no B), agrupada, filtro, "haiku"; confirmar → overlay con Cancelar; al resolver, `e2e.ptyRecords` de B tiene **una** escritura que empieza con `ESC[200~`, contiene intro + resumen falso, termina con `ESC[201~` y **no** contiene `\r`; toast verde; B con foco — done when: verde.
-- [ ] **13.** E2E-7/8 (mismo spec): con `HYDRA_E2E_SUMMARY_DELAY_MS` alto, B pasa a `working` durante la espera → sin escritura, aviso con Copiar/Reintentar; B vuelve a idle + Reintentar → escritura; cancelar durante la espera → sin escritura y botón habilitado; importar con B oculta y mostrarla → se pega — done when: verde; los E2E 01–05 siguen verdes.
+- [x] **11.** Integración PTY (marcada `integration`, `src/main/context/paste.integration.test.ts`): sesión `--bg` + `attach` en PTY real; escribir bloque bracketed-paste multilínea sin `\r` → el transcript **no** gana mensaje de usuario; luego `\r` → aparece un único mensaje íntegro; limpia con `stop`/`rm` (réplica del spike; ≈ US$0.01) — done when: verde con `claude` real.
+- [x] **12.** E2E-6 (`e2e/06-import-context.spec.ts`): dos sesiones A y B; botón habilitado en B (idle) y deshabilitado con tooltip en una sesión `working` (`e2e.setStatus`); diálogo desde B lista A (no B), agrupada, filtro, "haiku"; confirmar → overlay con Cancelar; al resolver, `e2e.ptyRecords` de B tiene **una** escritura que empieza con `ESC[200~`, contiene intro + resumen falso, termina con `ESC[201~` y **no** contiene `\r`; toast verde; B con foco — done when: verde.
+- [x] **13.** E2E-7/8 (mismo spec): con `HYDRA_E2E_SUMMARY_DELAY_MS` alto, B pasa a `working` durante la espera → sin escritura, aviso con Copiar/Reintentar; B vuelve a idle + Reintentar → escritura; cancelar durante la espera → sin escritura y botón habilitado; importar con B oculta y mostrarla → se pega — done when: verde; los E2E 01–05 siguen verdes.
 - [ ] **14.** QA manual `docs/qa-004.md` (AC-1/2/5/6/8 con sesiones reales de este repo, origen larga: tiempo/costo observados, `.app` empaquetada con OAuth, modelo inválido en `hydra.json`) + empaquetar `Hydra.app` 0.3.0 — done when: checklist completo por Juan; fallos → tasks de fix.
 - [ ] **15.** Cierre: README (sección "Importar contexto"), CLAUDE.md (módulo `context/`, regla: nunca escribir `\r` al pegar; bracketed paste; `-p` solo vía `ClaudeCli`), `.sdd/README.md` (004 complete; 007 hereda `ui.importContext.model` y `--max-budget-usd`), `status.json` → `complete`, tag `v0.3.0` — done when: hecho y pusheado.
 
