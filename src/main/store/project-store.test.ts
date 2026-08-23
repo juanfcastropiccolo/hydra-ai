@@ -34,7 +34,9 @@ describe('ProjectStore', () => {
         paneOrder: [],
         sessionNames: {},
         fileTree: { open: false, width: 300, collapsed: false },
-        importContext: { model: 'haiku' }
+        importContext: { model: 'haiku' },
+        centerView: 'sessions',
+        analytics: { range: '7d', pricing: {} }
       }
     })
     s.addProject({ path: '/Users/u/foo/' })
@@ -79,6 +81,30 @@ describe('ProjectStore', () => {
     expect(b.setImportContext({ model: '' })).toEqual({ model: 'sonnet' }) // empty → keep
     expect(b.setImportContext({})).toEqual({ model: 'sonnet' })
     expect(mk().load().ui.importContext).toEqual({ model: 'sonnet' })
+    // feature 005: center view + analytics prefs
+    expect(b.centerView()).toBe('sessions')
+    expect(b.setCenterView('analytics')).toBe('analytics')
+    expect(b.analytics()).toEqual({ range: '7d', pricing: {} })
+    expect(b.setAnalytics({ range: '30d' })).toEqual({ range: '30d', pricing: {} })
+    expect(b.setAnalytics({ range: { from: '2026-08-01', to: '2026-08-23' } }).range).toEqual({
+      from: '2026-08-01',
+      to: '2026-08-23'
+    })
+    expect(b.setAnalytics({ range: { from: '2026-09-01', to: '2026-08-01' } }).range).toEqual({
+      from: '2026-08-01',
+      to: '2026-08-23'
+    }) // inverted → ignored
+    expect(
+      b.setAnalytics({
+        pricing: {
+          'claude-x': { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 },
+          bad: { input: -1, output: 5, cacheWrite: 1, cacheRead: 1 }
+        }
+      }).pricing
+    ).toEqual({ 'claude-x': { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 } })
+    const reloaded = mk().load().ui
+    expect(reloaded.centerView).toBe('analytics')
+    expect(reloaded.analytics.pricing['claude-x']?.output).toBe(5)
     b.setSessionName('S1', '')
     expect(b.sessionNames()).toEqual({})
     b.setHidden('S1', false)
@@ -152,9 +178,18 @@ describe('validateHydraFile', () => {
         paneOrder: [],
         sessionNames: {},
         fileTree: { open: false, width: 300, collapsed: false },
-        importContext: { model: 'haiku' }
+        importContext: { model: 'haiku' },
+        centerView: 'sessions',
+        analytics: { range: '7d', pricing: {} }
       }
     })
+    expect(
+      validateHydraFile({
+        version: 1,
+        projects: [],
+        ui: { centerView: 'nope', analytics: { range: 'weird', pricing: 3 } }
+      })?.ui
+    ).toMatchObject({ centerView: 'sessions', analytics: { range: '7d', pricing: {} } })
     expect(
       validateHydraFile({ version: 1, projects: [], ui: { fileTree: { open: 'yes', width: -5 } } })
         ?.ui.fileTree

@@ -1,6 +1,12 @@
 // Typed IPC contract between main and renderer. Both sides import from here;
 // nothing crosses the bridge that is not described in these two maps.
 import type {
+  AnalyticsPrefs,
+  AnalyticsProgress,
+  CenterView,
+  SessionSummary
+} from './analytics/types'
+import type {
   ClaudeAvailability,
   FileTreePrefs,
   FsEntry,
@@ -72,6 +78,21 @@ export interface IpcInvoke {
   'ui.getImportContext': { args: []; result: ImportContextPrefs }
   'ui.setImportContext': { args: [Partial<ImportContextPrefs>]; result: ImportContextPrefs }
 
+  // ---- feature 005: analytics ----
+  /**
+   * Start (or refresh) the transcript index. Resolves at once with whatever the cache holds;
+   * `analytics.progress` / `analytics.sessions` events follow while the scan runs, and the
+   * directory is watched until `analytics.close`.
+   */
+  'analytics.open': { args: []; result: { sessions: SessionSummary[]; fromCache: boolean } }
+  'analytics.close': { args: []; result: void }
+  /** Drop the cache and rebuild (progress/sessions events as in open). */
+  'analytics.reindex': { args: []; result: void }
+  'ui.getAnalytics': { args: []; result: AnalyticsPrefs }
+  'ui.setAnalytics': { args: [Partial<AnalyticsPrefs>]; result: AnalyticsPrefs }
+  'ui.getCenterView': { args: []; result: CenterView }
+  'ui.setCenterView': { args: [CenterView]; result: CenterView }
+
   /** E2E only (HYDRA_E2E=1): what each fake PTY received. Rejects otherwise. */
   'e2e.ptyRecords': {
     args: []
@@ -107,6 +128,10 @@ export interface IpcEvents {
   'ui.toggleFileTree': Record<string, never>
   'ui.toggleSidebar': Record<string, never>
   'ui.openNewSession': { projectId: string; cwd: string }
+  // ---- feature 005 ----
+  'analytics.progress': AnalyticsProgress
+  /** Full current list (temp-dir sessions already excluded). */
+  'analytics.sessions': { sessions: SessionSummary[] }
 }
 
 export type InvokeChannel = keyof IpcInvoke

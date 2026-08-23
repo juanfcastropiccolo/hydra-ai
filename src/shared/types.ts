@@ -1,4 +1,5 @@
 // Domain types shared by main and renderer. Keep this file free of Node/DOM imports.
+import type { AnalyticsPrefs, CenterView } from './analytics/types'
 
 /** A folder the user registered in the sidebar. Persisted in hydra.json. */
 export interface Project {
@@ -64,6 +65,10 @@ export interface HydraFile {
     fileTree: FileTreePrefs
     /** Feature 004: import-context preferences. */
     importContext: ImportContextPrefs
+    /** Feature 005: which view fills the central area. */
+    centerView: CenterView
+    /** Feature 005: analytics dashboard preferences. */
+    analytics: AnalyticsPrefs
   }
 }
 
@@ -112,7 +117,9 @@ export const EMPTY_HYDRA_FILE: HydraFile = {
     paneOrder: [],
     sessionNames: {},
     fileTree: { open: false, width: 300, collapsed: false },
-    importContext: { model: 'haiku' }
+    importContext: { model: 'haiku' },
+    centerView: 'sessions',
+    analytics: { range: '7d', pricing: {} }
   }
 }
 

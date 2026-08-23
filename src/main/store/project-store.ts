@@ -20,6 +20,13 @@ import {
   type ImportContextPrefs,
   type Project
 } from '@shared/types'
+import {
+  DEFAULT_ANALYTICS_PREFS,
+  type AnalyticsPrefs,
+  type AnalyticsRange,
+  type CenterView,
+  type ModelPricing
+} from '@shared/analytics/types'
 
 export interface ProjectStoreDeps {
   filePath: string
@@ -72,6 +79,12 @@ export function validateHydraFile(v: unknown): HydraFile | null {
         ? ic.model.trim()
         : DEFAULT_IMPORT_CONTEXT_PREFS.model
   }
+  const centerView: CenterView = ui.centerView === 'analytics' ? 'analytics' : 'sessions'
+  const an = isRecord(ui.analytics) ? ui.analytics : {}
+  const analytics: AnalyticsPrefs = {
+    range: validRange(an.range) ?? DEFAULT_ANALYTICS_PREFS.range,
+    pricing: validPricing(an.pricing)
+  }
   return {
     version: 1,
     projects,
@@ -80,9 +93,37 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       paneOrder: strs(ui.paneOrder),
       sessionNames: names,
       fileTree,
-      importContext
+      importContext,
+      centerView,
+      analytics
     }
   }
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
+export function validRange(v: unknown): AnalyticsRange | null {
+  if (v === 'today' || v === '7d' || v === '30d' || v === 'all') return v
+  if (isRecord(v) && typeof v.from === 'string' && typeof v.to === 'string') {
+    if (DATE_RE.test(v.from) && DATE_RE.test(v.to) && v.from <= v.to)
+      return { from: v.from, to: v.to }
+  }
+  return null
+}
+const nonNeg = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x) && x >= 0
+export function validPricing(v: unknown): Record<string, ModelPricing> {
+  const out: Record<string, ModelPricing> = {}
+  if (!isRecord(v)) return out
+  for (const [model, p] of Object.entries(v)) {
+    if (!model.trim() || !isRecord(p)) continue
+    if (nonNeg(p.input) && nonNeg(p.output) && nonNeg(p.cacheWrite) && nonNeg(p.cacheRead))
+      out[model] = {
+        input: p.input,
+        output: p.output,
+        cacheWrite: p.cacheWrite,
+        cacheRead: p.cacheRead
+      }
+  }
+  return out
 }
 
 export class ProjectStore {
@@ -234,6 +275,28 @@ export class ProjectStore {
     this.data.ui.importContext = { model }
     this.save()
     return this.importContext()
+  }
+
+  // ---- feature 005 ----
+  centerView(): CenterView {
+    return this.data.ui.centerView
+  }
+  setCenterView(view: CenterView): CenterView {
+    this.data.ui.centerView = view === 'analytics' ? 'analytics' : 'sessions'
+    this.save()
+    return this.centerView()
+  }
+  analytics(): AnalyticsPrefs {
+    return { range: this.data.ui.analytics.range, pricing: { ...this.data.ui.analytics.pricing } }
+  }
+  /** Invalid range/pricing entries are ignored; `pricing` replaces the whole override map. */
+  setAnalytics(patch: Partial<AnalyticsPrefs>): AnalyticsPrefs {
+    const next = this.analytics()
+    if (patch.range !== undefined) next.range = validRange(patch.range) ?? next.range
+    if (patch.pricing !== undefined) next.pricing = validPricing(patch.pricing)
+    this.data.ui.analytics = next
+    this.save()
+    return this.analytics()
   }
 
   paneOrder(): string[] {
