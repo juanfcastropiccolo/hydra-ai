@@ -15,7 +15,7 @@ export function snippetFromTranscript(path: string, terms: string[]): string | n
   }
   let best: { score: number; text: string } | null = null
   for (const line of raw.split('\n')) {
-    if (!line.includes('"type":"user"') && !line.includes('"type":"assistant"')) continue
+    if (!/"type":\s*"(?:user|assistant)"/.test(line)) continue
     let rec: unknown
     try {
       rec = JSON.parse(line)

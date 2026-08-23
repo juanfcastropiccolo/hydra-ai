@@ -19,6 +19,7 @@ import {
 import {
   emptyState,
   finalizeSession,
+  knowledgeOf,
   reduceTranscriptLine,
   type TranscriptState
 } from './transcript-reducer'
@@ -78,6 +79,30 @@ export class AnalyticsIndexer extends EventEmitter<AnalyticsIndexerEvents> {
   sessions(): SessionSummary[] {
     const targets = this.discoverFromCache()
     return this.summaries(targets)
+  }
+
+  /** Feature 006: knowledge view per session (same cache, no extra reads). Temp sessions excluded. */
+  knowledge(): Array<{
+    summary: SessionSummary
+    transcriptPath: string
+    knowledge: ReturnType<typeof knowledgeOf>
+  }> {
+    const out: Array<{
+      summary: SessionSummary
+      transcriptPath: string
+      knowledge: ReturnType<typeof knowledgeOf>
+    }> = []
+    for (const t of this.discoverFromCache()) {
+      const main = this.cache.files[t.file]
+      if (!main) continue
+      const subs = t.subagentFiles
+        .map((f) => this.cache.files[f]?.state)
+        .filter((s): s is TranscriptState => Boolean(s))
+      const summary = finalizeSession(main.state, { sessionId: t.sessionId, subagents: subs })
+      if (isTempCwd(summary.cwd, this.opts.tmpdir)) continue
+      out.push({ summary, transcriptPath: t.file, knowledge: knowledgeOf(main.state, subs) })
+    }
+    return out
   }
 
   /** Start: emit cached sessions immediately, scan in the background, then watch. */
