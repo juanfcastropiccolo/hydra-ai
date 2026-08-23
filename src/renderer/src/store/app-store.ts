@@ -9,6 +9,8 @@ import type { ClaudeAvailability, Project, Session } from '@shared/types'
 export interface NewSessionDialogState {
   projectId: string
   suggestedName: string
+  /** Feature 002 'Abrir terminal acá': subfolder to run the session in. */
+  cwd?: string
 }
 
 export interface AppState {
@@ -19,6 +21,8 @@ export interface AppState {
   /** sessionId → ptyId for panes that currently have an attached terminal */
   ptyIds: Record<string, string>
   focusedSessionId: string | null
+  /** Last pane that had focus (survives blur) — used by the file tree to hand focus back (Esc) and to follow projects. */
+  lastFocusedSessionId: string | null
   expandedSessionId: string | null
   newSessionDialog: NewSessionDialogState | null
   lastError: string | null
@@ -51,6 +55,7 @@ export function createAppStore(): AppStore {
     hiddenSessionIds: [],
     ptyIds: {},
     focusedSessionId: null,
+    lastFocusedSessionId: null,
     expandedSessionId: null,
     newSessionDialog: null,
     lastError: null,
@@ -76,7 +81,7 @@ export function createAppStore(): AppStore {
         else delete ptyIds[sessionId]
         return { ptyIds }
       }),
-    focus: (sessionId) => set({ focusedSessionId: sessionId }),
+    focus: (sessionId) => set({ focusedSessionId: sessionId, lastFocusedSessionId: sessionId }),
     blur: (sessionId) =>
       set((s) => (s.focusedSessionId === sessionId ? { focusedSessionId: null } : {})),
     toggleExpand: (sessionId) =>

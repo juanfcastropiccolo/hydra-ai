@@ -20,10 +20,10 @@ Tengo un pane con foco. Aprieto el botón "Archivos" de la barra superior (o su 
 
 ### Panel
 
-1. **FR-1:** Existe un botón **"Archivos"** en la barra superior del área central y un atajo de teclado (⌘⇧E, como en editores) que **abre/cierra** un panel lateral a la derecha de la grilla. El estado abierto/cerrado persiste entre aperturas de la app.
+1. **FR-1:** La barra izquierda tiene una **solapa saliente** en su borde con dos vistas: **Sesiones** (la barra actual) y **Archivos** (el árbol). Elegir Archivos reemplaza el contenido de la barra por el árbol (la marca y el bloque de usuario se mantienen); ⌘⇧E alterna entre vistas. La vista activa persiste entre aperturas de la app. *(Ajuste 2026-08-23 pedido por Juan: originalmente era un panel a la derecha de la grilla.)*
 2. **FR-2:** El panel muestra el árbol del **proyecto del pane con foco**. Si ningún pane tiene foco, muestra el del **último pane que lo tuvo**; si nunca hubo foco, el del primer proyecto del sidebar. El encabezado del panel muestra el nombre y la ruta del proyecto que está mostrando.
 3. **FR-3:** Al cambiar el foco a un pane de **otro proyecto**, el panel cambia de árbol en menos de 1 segundo, conservando el estado de carpetas expandidas de cada proyecto por separado durante la sesión de la app.
-4. **FR-4:** El panel es **redimensionable** arrastrando su borde (ancho mínimo 200 px; el ancho persiste). Con el panel abierto y un pane expandido, el pane expandido ocupa el área central restante (el panel sigue visible).
+4. **FR-4:** En vista Archivos la barra es **redimensionable** arrastrando su borde (ancho mínimo 200 px; el ancho persiste; en vista Sesiones vuelve a su ancho fijo). Con un pane expandido, este ocupa toda el área central; la barra sigue visible.
 5. **FR-5:** Si el proyecto está marcado como carpeta inexistente, el panel lo indica y no intenta listar.
 
 ### Árbol
@@ -72,7 +72,7 @@ Tengo un pane con foco. Aprieto el botón "Archivos" de la barra superior (o su 
 
 ## Acceptance criteria
 
-- **AC-1 (abrir/cerrar):** Given un pane con foco del proyecto "foo", when pulso "Archivos" (o ⌘⇧E), then aparece a la derecha un panel con encabezado "foo" y su ruta y el árbol del primer nivel en < 500 ms; when lo vuelvo a pulsar, then se cierra y las terminales recuperan el ancho sin artefactos; when reinicio Hydra, then el panel conserva su estado abierto/cerrado y ancho.
+- **AC-1 (cambiar de vista):** Given un pane con foco del proyecto "foo", when pulso la solapa "Archivos" (o ⌘⇧E), then la barra izquierda muestra el encabezado "foo" con su ruta y el árbol del primer nivel en < 500 ms; when pulso "Sesiones" (o ⌘⇧E), then vuelve la barra de sesiones y las terminales se reajustan sin artefactos; when reinicio Hydra, then se conserva la vista activa y el ancho.
 - **AC-2 (sigue al foco):** Given panel abierto mostrando "foo", when hago clic en un pane del proyecto "bar", then el árbol cambia a "bar" en < 1 s; when vuelvo a "foo", then las carpetas que había expandido en "foo" siguen expandidas.
 - **AC-3 (contenido completo e iconos):** Given un proyecto con `.gitignore`, `node_modules/`, `src/index.ts`, `README.md`, `.sdd/`, when abro el panel, then veo todas esas entradas (no veo `.git`), carpetas antes que archivos, `node_modules` plegado, y cada entrada con un icono acorde (TS, Markdown, carpeta `src`, etc.).
 - **AC-4 (estado git):** Given un repo con `a.ts` modificado, `nuevo.ts` sin seguimiento y `viejo.ts` borrado, when abro el panel, then `a.ts` aparece con color/marca de modificado, `nuevo.ts` de nuevo, `viejo.ts` de borrado (tachado), y la carpeta que los contiene tiene un punto de color; when hago commit desde fuera, then en < 2 s las marcas desaparecen.

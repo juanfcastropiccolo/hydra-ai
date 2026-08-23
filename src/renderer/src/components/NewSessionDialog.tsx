@@ -38,7 +38,7 @@ function DialogForm({
     setBusy(true)
     setError(null)
     try {
-      const s = await hydra.createSession(project.id, name.trim())
+      const s = await hydra.createSession(project.id, name.trim(), dialog.cwd)
       close()
       focus(s.sessionId)
     } catch (e) {
@@ -77,7 +77,7 @@ function DialogForm({
         <div className={styles.field}>
           <span className={styles.label}>Carpeta</span>
           <div className={styles.path} data-testid="session-cwd">
-            {project.path}
+            {dialog.cwd ?? project.path}
           </div>
         </div>
         {error && <div className={styles.error}>{error}</div>}

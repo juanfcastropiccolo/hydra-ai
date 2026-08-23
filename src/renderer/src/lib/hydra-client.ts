@@ -30,8 +30,8 @@ export const hydra = {
   renameProject: (id: string, name: string) => window.hydra.invoke('projects.rename', { id, name }),
   suggestSessionName: (projectId: string) =>
     window.hydra.invoke('sessions.suggestName', { projectId }),
-  createSession: (projectId: string, name: string) =>
-    window.hydra.invoke('sessions.create', { projectId, name }),
+  createSession: (projectId: string, name: string, cwd?: string) =>
+    window.hydra.invoke('sessions.create', { projectId, name, cwd }),
   stopSession: (sessionId: string) => window.hydra.invoke('sessions.stop', { sessionId }),
   renameSession: (sessionId: string, name: string) =>
     window.hydra.invoke('sessions.rename', { sessionId, name }),
@@ -44,6 +44,30 @@ export const hydra = {
   write: (ptyId: string, data: string) => window.hydra.send('pty.write', { ptyId, data }),
   resize: (ptyId: string, cols: number, rows: number) =>
     window.hydra.send('pty.resize', { ptyId, cols, rows }),
+  // feature 002
+  fsList: (dir: string) => window.hydra.invoke('fs.list', { dir }),
+  fsListRecursive: (root: string, limit?: number) =>
+    window.hydra.invoke('fs.listRecursive', { root, limit }),
+  fsWatch: (root: string) => window.hydra.invoke('fs.watch', { root }),
+  fsUnwatch: (root: string) => window.hydra.invoke('fs.unwatch', { root }),
+  fsOpen: (path: string) => window.hydra.invoke('fs.open', { path }),
+  fsReveal: (path: string) => window.hydra.invoke('fs.reveal', { path }),
+  fsCopyPath: (path: string) => window.hydra.invoke('fs.copyPath', { path }),
+  fsOpenInEditor: (path: string) => window.hydra.invoke('fs.openInEditor', { path }),
+  fsContextMenu: (req: { path: string; root: string; projectId: string; isDir: boolean }) =>
+    window.hydra.invoke('fs.contextMenu', req),
+  gitStatus: (dir: string) => window.hydra.invoke('git.status', { dir }),
+  getFileTree: () => window.hydra.invoke('ui.getFileTree'),
+  setFileTree: (patch: { open?: boolean; width?: number }) =>
+    window.hydra.invoke('ui.setFileTree', patch),
+  onFsChanged: (cb: (e: { root: string; dirs: string[]; all: boolean }) => void) =>
+    window.hydra.on('fs.changed', cb),
+  onGitChanged: (
+    cb: (e: { root: string; result: import('@shared/types').GitStatusResult }) => void
+  ) => window.hydra.on('git.changed', cb),
+  onToggleFileTree: (cb: () => void) => window.hydra.on('ui.toggleFileTree', cb),
+  onOpenNewSession: (cb: (e: { projectId: string; cwd: string }) => void) =>
+    window.hydra.on('ui.openNewSession', cb),
   onPtyData: (cb: (e: { ptyId: string; data: string }) => void) => window.hydra.on('pty.data', cb),
   onPtyExit: (cb: (e: { ptyId: string; exitCode: number }) => void) =>
     window.hydra.on('pty.exit', cb)

@@ -10,7 +10,7 @@ export default defineConfig({
     include: [
       'src/{main,preload,shared}/**/*.test.ts',
       'src/renderer/src/store/**/*.test.ts',
-      'src/renderer/src/components/file-tree/icon-map.test.ts',
+      'src/renderer/src/components/file-tree/*.test.ts',
       'test/**/*.test.ts'
     ],
     exclude: [

@@ -1,9 +1,56 @@
 .sidebar {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: var(--bg-elev);
   border-right: 1px solid var(--border);
   min-height: 0;
+  min-width: 0;
+}
+/* Protruding tab on the right edge: switches the sidebar content (sessions / files). */
+.tabs {
+  position: absolute;
+  top: 96px;
+  right: -22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 5;
+}
+.tab {
+  width: 22px;
+  height: 30px;
+  padding: 0;
+  border-radius: 0 8px 8px 0;
+  border: 1px solid var(--border);
+  border-left: none;
+  background: var(--bg-panel);
+  color: var(--fg-muted);
+  font-size: 12px;
+  line-height: 1;
+  display: grid;
+  place-content: center;
+}
+.tab:hover {
+  color: var(--fg);
+}
+.tabActive {
+  background: var(--bg-elev);
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+.resizer {
+  position: absolute;
+  right: -3px;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 4;
+}
+.resizer:hover,
+.resizerActive {
+  background: var(--accent-dim);
 }
 .brand {
   margin: 14px 14px 10px;

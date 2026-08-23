@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@shared/types'
+import { droppedPathText } from '@shared/paths'
 import { hydra } from '../lib/hydra-client'
 import { useAppStore } from '../store/app-store'
 import styles from './Pane.module.css'
@@ -18,6 +19,7 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   const controller = useRef<XTermController | null>(null)
   const [exitCode, setExitCode] = useState<number | null>(null)
   const [editing, setEditing] = useState(false)
+  const [dropping, setDropping] = useState(false)
   const [draft, setDraft] = useState(session.name)
   const ended = session.state === 'ended' || exitCode !== null
   const attachable = Boolean(session.bgId)
@@ -53,6 +55,25 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
     if (host && active && host.contains(active)) return
     controller.current?.focus()
   }, [focused, ptyId, session.sessionId])
+
+  // Feature 002: drop a file from the tree → type its path into this session (FR-15).
+  const HYDRA_PATH_MIME = 'application/x-hydra-path'
+  const onDragOver = (e: React.DragEvent): void => {
+    if (!e.dataTransfer.types.includes(HYDRA_PATH_MIME) || !ptyId || ended) return
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'copy'
+    if (!dropping) setDropping(true)
+  }
+  const onDragLeave = (): void => setDropping(false)
+  const onDrop = (e: React.DragEvent): void => {
+    setDropping(false)
+    const abs = e.dataTransfer.getData(HYDRA_PATH_MIME)
+    if (!abs || !ptyId || ended) return
+    e.preventDefault()
+    e.stopPropagation()
+    hydra.write(ptyId, droppedPathText(abs, session.cwd))
+    controller.current?.focus()
+  }
 
   const onDoubleClick = (): void => {
     toggleExpand(session.sessionId)
@@ -114,6 +135,10 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
       data-expanded={expanded}
       onMouseDown={() => controller.current?.focus()}
       onDoubleClick={onDoubleClick}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      data-dropping={dropping}
     >
       <header className={styles.header} data-testid="pane-header">
         <StatusLight state={ended ? 'ended' : session.state} waitingFor={session.waitingFor} />

@@ -22,6 +22,10 @@ Sin dependencias nuevas de runtime. Todo se resuelve con lo que ya usa 001 más 
 | Estado del árbol | slice nuevo en el store zustand: `fileTree: { open, width, projectId, expandedByProject, selectedPath, filter, highlights }` + caché de nodos por ruta | Mismo patrón que 001; selectores de primitivas/estables |
 | Tests | Vitest (unit + integración con fs/git reales en temp), Playwright (E2E con un proyecto de fixture en disco + `git init`) | Constitution |
 
+## Ajuste 2026-08-23 (en implementación)
+
+Por pedido de Juan el árbol **vive en la barra izquierda** como segunda vista (solapa saliente Sesiones/Archivos) en lugar de un panel derecho. Cambian: `Sidebar` (tabs + ancho variable + resizer), `FileTreePanel` (embebido, sin resizer/cierre propios), `App` (sin botón en la barra superior ni columna derecha). El resto del plan (servicios, IPC, store, DnD, menú) no cambia.
+
 ## Architecture overview
 
 ```

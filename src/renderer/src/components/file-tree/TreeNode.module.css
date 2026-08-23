@@ -1,0 +1,85 @@
+.row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding-right: 8px;
+  white-space: nowrap;
+  cursor: default;
+  font-size: 12.5px;
+  border-left: 2px solid transparent;
+}
+.row:hover {
+  background: var(--bg-panel);
+}
+.selected {
+  background: #2a3a4a !important;
+  border-left-color: var(--accent);
+}
+.caret {
+  width: 12px;
+  text-align: center;
+  color: var(--fg-muted);
+  font-size: 10px;
+  flex: none;
+}
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ignored {
+  opacity: 0.5;
+}
+.untracked {
+  color: #73c991;
+}
+.added {
+  color: #73c991;
+}
+.modified {
+  color: #e2c08d;
+}
+.renamed {
+  color: #73c991;
+}
+.deleted {
+  color: #f14c4c;
+  text-decoration: line-through;
+}
+.conflict {
+  color: #c74e39;
+}
+.badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.9;
+  flex: none;
+}
+.dot {
+  margin-left: auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+.symlink {
+  font-size: 9px;
+  color: var(--fg-muted);
+}
+.highlight {
+  animation: flash 2s ease-out;
+}
+@keyframes flash {
+  0% {
+    background: rgba(74, 222, 128, 0.45);
+  }
+  100% {
+    background: transparent;
+  }
+}
+.loading {
+  color: var(--fg-muted);
+  font-size: 11px;
+  padding-left: 8px;
+}
