@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
+import { ImportContextDialog } from './components/ImportContextDialog'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PaneGrid } from './components/PaneGrid'
 import { hydra } from './lib/hydra-client'
+import { runImport } from './lib/import-flow'
 import { fileTreeStore, useFileTree } from './store/file-tree-slice'
+import { importContextStore } from './store/import-context-slice'
 import { Sidebar } from './components/Sidebar'
 import { initHydraClient } from './lib/hydra-client'
 import { useAppStore } from './store/app-store'
@@ -44,7 +47,14 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape' && escape()) e.preventDefault()
+      if (e.key !== 'Escape') return
+      // Feature 004: the import dialog owns Esc while open (it closes itself).
+      if (importContextStore.getState().dialogTargetId) {
+        importContextStore.getState().closeDialog()
+        e.preventDefault()
+        return
+      }
+      if (escape()) e.preventDefault()
     }
     // App-level shortcuts in CAPTURE phase so they run before xterm.js (which would forward them to Claude).
     const onShortcut = (e: KeyboardEvent): void => {
@@ -113,6 +123,7 @@ function App(): React.JSX.Element {
         </div>
       </section>
       <NewSessionDialog />
+      <ImportContextDialog onPick={(target, source) => void runImport(target, source)} />
     </div>
   )
 }
