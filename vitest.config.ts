@@ -7,12 +7,16 @@ export default defineConfig({
   resolve: { alias: { '@shared': resolve('src/shared') } },
   test: {
     environment: 'node',
-    include: ['src/{main,preload,shared}/**/*.test.ts', 'test/**/*.test.ts'],
+    include: [
+      'src/{main,preload,shared}/**/*.test.ts',
+      'src/renderer/src/store/**/*.test.ts',
+      'test/**/*.test.ts'
+    ],
     exclude: ['**/node_modules/**', 'out/**', 'release/**', 'spikes/**', 'e2e/**'],
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
-      include: ['src/main/**', 'src/shared/**'],
+      include: ['src/main/**', 'src/shared/**', 'src/renderer/src/store/**'],
       exclude: ['src/main/index.ts', '**/*.test.ts', '**/*.d.ts'],
       reporter: ['text', 'html']
     }
