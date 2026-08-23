@@ -1,7 +1,7 @@
 # Tasks: Graph Know — conocimiento y recuperación de contexto
 
 Feature ID: 006
-Status: tasked (borrador — pendiente de aprobación)
+Status: tasked (aprobado 2026-08-23)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo task que el código. Ningún task se marca `[x]` con tests rojos. Los AC de 001/002/004/005 (unit + E2E) siguen verdes en cada task.

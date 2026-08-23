@@ -2,8 +2,8 @@
   "id": "006",
   "slug": "graph-know",
   "title": "Graph Know — conocimiento y recuperación de contexto",
-  "phase": "planned",
-  "progress_pct": 40,
+  "phase": "tasked",
+  "progress_pct": 60,
   "depends_on": [
     "004",
     "005"
