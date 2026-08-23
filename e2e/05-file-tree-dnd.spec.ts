@@ -56,6 +56,7 @@ test('AC-2/9/12: tree follows focus between projects; drop types the path into t
       })
       .toBe('src/index.ts ')
     await expect(a).toHaveAttribute('data-focused', 'true')
+    await expect(a.getByTestId('pane-toast')).toContainText('Adjuntado: index.ts')
     await row.dragTo(b)
     await expect
       .poll(async () => {

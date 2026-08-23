@@ -64,7 +64,10 @@ export function buildContextMenuTemplate(opts: {
   hasEditor: boolean
 }): Array<{ label?: string; action?: ContextMenuAction; type?: 'separator' }> {
   const items: Array<{ label?: string; action?: ContextMenuAction; type?: 'separator' }> = [
-    { label: opts.isDir ? 'Abrir carpeta' : 'Abrir', action: 'open' },
+    {
+      label: opts.isDir ? 'Abrir carpeta (Finder)' : 'Abrir con la app por defecto',
+      action: 'open'
+    },
     { label: 'Revelar en Finder', action: 'reveal' },
     { type: 'separator' },
     { label: 'Copiar ruta absoluta', action: 'copyAbs' },

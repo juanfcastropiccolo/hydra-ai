@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type { HydraApi } from '@shared/ipc'
 
 const hydra: HydraApi = {
@@ -14,3 +14,7 @@ const hydra: HydraApi = {
 }
 
 contextBridge.exposeInMainWorld('hydra', hydra)
+// Feature 002: absolute path of a File dropped from Finder (File.path is gone in modern Electron).
+contextBridge.exposeInMainWorld('hydraFiles', {
+  pathFor: (file: File): string => webUtils.getPathForFile(file)
+})

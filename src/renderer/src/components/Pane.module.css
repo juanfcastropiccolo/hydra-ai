@@ -76,3 +76,47 @@
   border-color: var(--info);
   box-shadow: 0 0 0 1px var(--info) inset;
 }
+
+/* Hydra toast, centred on the pane's top edge (over the terminal) */
+.toast {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #14532d;
+  color: #bbf7d0;
+  border: 1px solid #22c55e;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: toastIn 160ms ease-out;
+  pointer-events: none;
+}
+.toastCheck {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #22c55e;
+  color: #052e16;
+  display: grid;
+  place-content: center;
+  font-size: 11px;
+  font-weight: 800;
+}
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

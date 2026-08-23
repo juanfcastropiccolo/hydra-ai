@@ -181,10 +181,13 @@
   background: var(--bg-panel);
 }
 .collapseBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 6;
+  margin-left: auto;
+}
+.userName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .railLogo {
   width: 30px;

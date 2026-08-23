@@ -1,4 +1,5 @@
-// Minimal native application menu. Accelerators work even while xterm has keyboard focus.
+// Minimal native application menu. NOTE: ⌘⇧E / ⌘B are handled in the renderer (capture phase,
+// before xterm.js swallows them) — menu items here are plain entries so they never double-fire.
 import { app, Menu, type MenuItemConstructorOptions } from 'electron'
 
 export function installAppMenu(handlers: {
@@ -34,8 +35,7 @@ export function installAppMenu(handlers: {
       label: 'Ver',
       submenu: [
         {
-          label: 'Archivos',
-          accelerator: 'CmdOrCtrl+Shift+E',
+          label: 'Archivos (⌘⇧E)',
           click: () => handlers.toggleFileTree()
         },
         { type: 'separator' },

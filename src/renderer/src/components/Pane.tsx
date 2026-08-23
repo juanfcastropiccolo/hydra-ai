@@ -20,6 +20,13 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   const [exitCode, setExitCode] = useState<number | null>(null)
   const [editing, setEditing] = useState(false)
   const [dropping, setDropping] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showToast = (msg: string): void => {
+    setToast(msg)
+    if (toastTimer.current) clearTimeout(toastTimer.current)
+    toastTimer.current = setTimeout(() => setToast(null), 2500)
+  }
   const [draft, setDraft] = useState(session.name)
   const ended = session.state === 'ended' || exitCode !== null
   const attachable = Boolean(session.bgId)
@@ -58,8 +65,12 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
 
   // Feature 002: drop a file from the tree → type its path into this session (FR-15).
   const HYDRA_PATH_MIME = 'application/x-hydra-path'
+  const acceptsDrag = (e: React.DragEvent): boolean =>
+    Boolean(ptyId) &&
+    !ended &&
+    (e.dataTransfer.types.includes(HYDRA_PATH_MIME) || e.dataTransfer.types.includes('Files'))
   const onDragOver = (e: React.DragEvent): void => {
-    if (!e.dataTransfer.types.includes(HYDRA_PATH_MIME) || !ptyId || ended) return
+    if (!acceptsDrag(e)) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
     if (!dropping) setDropping(true)
@@ -67,12 +78,28 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   const onDragLeave = (): void => setDropping(false)
   const onDrop = (e: React.DragEvent): void => {
     setDropping(false)
-    const abs = e.dataTransfer.getData(HYDRA_PATH_MIME)
-    if (!abs || !ptyId || ended) return
+    if (!ptyId || ended) return
+    // Paths: from Hydra's own tree, or from Finder (one or many files)
+    const paths: string[] = []
+    const own = e.dataTransfer.getData(HYDRA_PATH_MIME)
+    if (own) paths.push(own)
+    else if (e.dataTransfer.files?.length) {
+      for (const f of Array.from(e.dataTransfer.files)) {
+        try {
+          const p = window.hydraFiles.pathFor(f)
+          if (p) paths.push(p)
+        } catch {
+          /* not a file */
+        }
+      }
+    }
+    if (paths.length === 0) return
     e.preventDefault()
     e.stopPropagation()
-    hydra.write(ptyId, droppedPathText(abs, session.cwd))
+    hydra.write(ptyId, paths.map((p) => droppedPathText(p, session.cwd)).join(''))
     controller.current?.focus()
+    const names = paths.map((p) => p.split('/').pop() ?? p)
+    showToast(names.length === 1 ? `Adjuntado: ${names[0]}` : `Adjuntados ${names.length} archivos`)
   }
 
   const onDoubleClick = (): void => {
@@ -203,6 +230,11 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
         </button>
       </header>
       <div className={styles.body}>
+        {toast && (
+          <div className={styles.toast} role="status" data-testid="pane-toast">
+            <span className={styles.toastCheck}>✓</span> {toast}
+          </div>
+        )}
         {ptyId && (
           <XTermView
             sessionId={session.sessionId}

@@ -77,7 +77,8 @@ export function FileTreePanel(): React.JSX.Element {
     },
     [reveal]
   )
-  const open = useCallback((row: TreeRow) => void hydra.fsOpen(row.path), [])
+  // Double-click / Enter opens in the editor (VS Code when available); the context menu offers the default app.
+  const open = useCallback((row: TreeRow) => void hydra.fsOpenInEditor(row.path), [])
   const contextMenu = useCallback(
     (row: TreeRow, e: React.MouseEvent) => {
       e.preventDefault()

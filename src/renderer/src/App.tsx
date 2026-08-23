@@ -46,8 +46,30 @@ function App(): React.JSX.Element {
     const onKey = (e: KeyboardEvent): void => {
       if (e.key === 'Escape' && escape()) e.preventDefault()
     }
+    // App-level shortcuts in CAPTURE phase so they run before xterm.js (which would forward them to Claude).
+    const onShortcut = (e: KeyboardEvent): void => {
+      if (!e.metaKey || e.ctrlKey || e.altKey) return
+      const k = e.key.toLowerCase()
+      if (e.shiftKey && k === 'e') {
+        e.preventDefault()
+        e.stopPropagation()
+        fileTreeStore
+          .getState()
+          .setPrefs({ open: !fileTreeStore.getState().open, collapsed: false })
+        void hydra.setFileTree({ open: fileTreeStore.getState().open, collapsed: false })
+      } else if (!e.shiftKey && k === 'b') {
+        e.preventDefault()
+        e.stopPropagation()
+        fileTreeStore.getState().toggleCollapsed()
+        void hydra.setFileTree({ collapsed: fileTreeStore.getState().collapsed })
+      }
+    }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    window.addEventListener('keydown', onShortcut, true)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('keydown', onShortcut, true)
+    }
   }, [escape])
 
   return (

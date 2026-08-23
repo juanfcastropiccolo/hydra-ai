@@ -47,9 +47,21 @@ test('AC-1/3/4: files tab shows the focused project tree with icons, git badges,
     'modified'
   )
 
-  // back to sessions view and again (⌘⇧E via app menu) — prefs persist in-store
+  // back to sessions view; ⌘⇧E toggles even while a terminal has focus; ⌘B collapses/expands
   await page.getByTestId('tab-sessions').click()
   await expect(page.getByTestId('sidebar')).toHaveAttribute('data-view', 'sessions')
+  await page.getByTestId('pane').locator('.xterm').click()
+  await page.keyboard.press('Meta+Shift+E')
+  await expect(page.getByTestId('sidebar')).toHaveAttribute('data-view', 'files')
+  await page.keyboard.press('Meta+Shift+E')
+  await expect(page.getByTestId('sidebar')).toHaveAttribute('data-view', 'sessions')
+  await page.keyboard.press('Meta+B')
+  await expect(page.getByTestId('sidebar')).toHaveAttribute('data-collapsed', 'true')
+  await page.keyboard.press('Meta+B')
+  await expect(page.getByTestId('sidebar')).toHaveAttribute('data-collapsed', 'false')
+  // none of those keys reached the PTY
+  const recs = await page.evaluate(() => window.hydra.invoke('e2e.ptyRecords'))
+  expect(recs.map((r) => r.writes.join(''))).toEqual([''])
 })
 
 test('AC-5/10: live updates highlight new files; filter is a flat match list', async ({

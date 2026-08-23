@@ -39,9 +39,9 @@ Tengo un pane con foco. Aprieto el botón "Archivos" de la barra superior (o su 
 
 ### Acciones sobre archivos
 
-13. **FR-13:** **Doble clic** (o `Enter` con la entrada seleccionada) en un archivo lo abre con la **aplicación por defecto** de macOS. En una carpeta, expande/colapsa.
+13. **FR-13:** **Doble clic** (o `Enter` con la entrada seleccionada) en un archivo lo abre en el **editor** (VS Code si está instalado; si no `$VISUAL`/`$EDITOR` gráfico; si no la app por defecto). En una carpeta, expande/colapsa. *(Ajuste 2026-08-23 en QA: antes abría con la app por defecto; esa opción queda en el menú contextual.)*
 14. **FR-14 — Menú contextual** (clic derecho) sobre archivo o carpeta: **Revelar en Finder**, **Copiar ruta absoluta**, **Copiar ruta relativa al proyecto**, **Abrir en editor** (VS Code si está instalado, si no `$EDITOR`/`$VISUAL`, si no la app por defecto), **Abrir terminal acá** (solo carpetas: nueva sesión de Claude Code en esa carpeta, pasando por el diálogo de nueva sesión con la carpeta pre-cargada — reutiliza 001 FR-5).
-15. **FR-15 — Arrastrar a una terminal:** arrastrar un archivo o carpeta del árbol y soltarlo sobre un pane **escribe en esa sesión la ruta relativa al proyecto de la sesión** (entre comillas si contiene espacios), seguida de un espacio, sin enviar Enter. Si el archivo está fuera del proyecto de la sesión destino, escribe la ruta absoluta. El pane destino recibe el foco. Arrastrar sobre cualquier otra zona no hace nada.
+15. **FR-15 — Arrastrar a una terminal:** arrastrar un archivo o carpeta del árbol **o desde Finder** (uno o varios) y soltarlo sobre un pane **escribe en esa sesión la ruta relativa al proyecto de la sesión** (entre comillas si contiene espacios), seguida de un espacio, sin enviar Enter. Si el archivo está fuera del proyecto de la sesión destino, escribe la ruta absoluta. El pane destino recibe el foco y muestra un aviso breve verde con check ("Adjuntado: nombre") centrado en su borde superior. Arrastrar sobre cualquier otra zona no hace nada. *(Finder + aviso añadidos en QA 2026-08-23.)*
 16. **FR-16:** Navegación por teclado dentro del árbol: ↑/↓ mueven la selección, →/← expanden/colapsan, `Enter` abre, `Esc` devuelve el foco al pane que lo tenía.
 
 ### Robustez y rendimiento

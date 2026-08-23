@@ -127,23 +127,6 @@ export function Sidebar(): React.JSX.Element {
       data-view={filesView ? 'files' : 'sessions'}
       data-collapsed="false"
     >
-      <button
-        className={styles.collapseBtn}
-        onClick={() => setCollapsed(true)}
-        title="Colapsar barra (⌘B)"
-        data-testid="sidebar-collapse"
-      >
-        <svg
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M10 3L5 8l5 5" />
-        </svg>
-      </button>
       <div className={styles.tabs} data-testid="sidebar-tabs">
         <button
           className={`${styles.tab} ${!filesView ? styles.tabActive : ''}`}
@@ -217,7 +200,24 @@ export function Sidebar(): React.JSX.Element {
       )}
       <div className={styles.user} data-testid="user-block">
         <span className={styles.avatar}>{user.initials}</span>
-        <span>{user.name}</span>
+        <span className={styles.userName}>{user.name}</span>
+        <button
+          className={styles.collapseBtn}
+          onClick={() => setCollapsed(true)}
+          title="Colapsar barra (⌘B)"
+          data-testid="sidebar-collapse"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M10 3L5 8l5 5" />
+          </svg>
+        </button>
       </div>
     </aside>
   )
