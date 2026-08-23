@@ -10,7 +10,14 @@ import {
   copyFileSync
 } from 'node:fs'
 import { basename, dirname } from 'node:path'
-import { EMPTY_HYDRA_FILE, type HydraFile, type Project } from '@shared/types'
+import {
+  DEFAULT_FILE_TREE_PREFS,
+  EMPTY_HYDRA_FILE,
+  FILE_TREE_MIN_WIDTH,
+  type FileTreePrefs,
+  type HydraFile,
+  type Project
+} from '@shared/types'
 
 export interface ProjectStoreDeps {
   filePath: string
@@ -47,13 +54,22 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       if (typeof val === 'string' && val.trim()) names[k] = val
     }
   }
+  const ft = isRecord(ui.fileTree) ? ui.fileTree : {}
+  const fileTree: FileTreePrefs = {
+    open: typeof ft.open === 'boolean' ? ft.open : DEFAULT_FILE_TREE_PREFS.open,
+    width:
+      typeof ft.width === 'number' && Number.isFinite(ft.width) && ft.width >= FILE_TREE_MIN_WIDTH
+        ? Math.round(ft.width)
+        : DEFAULT_FILE_TREE_PREFS.width
+  }
   return {
     version: 1,
     projects,
     ui: {
       hiddenSessionIds: strs(ui.hiddenSessionIds),
       paneOrder: strs(ui.paneOrder),
-      sessionNames: names
+      sessionNames: names,
+      fileTree
     }
   }
 }
@@ -175,6 +191,19 @@ export class ProjectStore {
     if (trimmed) this.data.ui.sessionNames[sessionId] = trimmed
     else delete this.data.ui.sessionNames[sessionId]
     this.save()
+  }
+
+  fileTree(): FileTreePrefs {
+    return { ...this.data.ui.fileTree }
+  }
+
+  setFileTree(patch: Partial<FileTreePrefs>): FileTreePrefs {
+    const next = { ...this.data.ui.fileTree, ...patch }
+    if (!Number.isFinite(next.width) || next.width < FILE_TREE_MIN_WIDTH)
+      next.width = this.data.ui.fileTree.width
+    this.data.ui.fileTree = { open: Boolean(next.open), width: Math.round(next.width) }
+    this.save()
+    return this.fileTree()
   }
 
   paneOrder(): string[] {

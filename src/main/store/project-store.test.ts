@@ -58,6 +58,10 @@ describe('ProjectStore', () => {
     expect(b.hiddenSessionIds()).toEqual(['S1'])
     expect(b.paneOrder()).toEqual(['S2', 'S1'])
     expect(b.sessionNames()).toEqual({ S1: 'Mi sesión' })
+    expect(b.fileTree()).toEqual({ open: false, width: 300 })
+    expect(b.setFileTree({ open: true, width: 420.4 })).toEqual({ open: true, width: 420 })
+    expect(b.setFileTree({ width: 10 })).toEqual({ open: true, width: 420 }) // below min → keep
+    expect(mk().load().ui.fileTree).toEqual({ open: true, width: 420 })
     b.setSessionName('S1', '')
     expect(b.sessionNames()).toEqual({})
     b.setHidden('S1', false)
@@ -128,6 +132,10 @@ describe('validateHydraFile', () => {
       projects: [{ id: 'a', name: 'A', path: '/a', addedAt: '' }],
       ui: { hiddenSessionIds: ['s'], paneOrder: [] }
     })
+    expect(
+      validateHydraFile({ version: 1, projects: [], ui: { fileTree: { open: 'yes', width: -5 } } })
+        ?.ui.fileTree
+    ).toEqual({ open: false, width: 300 })
     expect(validateHydraFile({ version: 1 })).toBeNull()
     expect(validateHydraFile([])).toBeNull()
   })

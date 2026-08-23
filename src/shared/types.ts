@@ -60,13 +60,46 @@ export interface HydraFile {
     paneOrder: string[]
     /** Display-name overrides chosen by the user (the CLI has no rename for bg sessions). */
     sessionNames: Record<string, string>
+    /** Feature 002: file tree panel preferences. */
+    fileTree: FileTreePrefs
   }
+}
+
+export interface FileTreePrefs {
+  open: boolean
+  width: number
+}
+export const DEFAULT_FILE_TREE_PREFS: FileTreePrefs = { open: false, width: 300 }
+export const FILE_TREE_MIN_WIDTH = 200
+
+/** One directory entry as listed by the main process (feature 002). */
+export interface FsEntry {
+  name: string
+  kind: 'dir' | 'file' | 'symlink' | 'other'
+  /** For symlinks: resolved target kind (dir/file) if readable. */
+  symlinkKind?: 'dir' | 'file'
+  unreadable?: boolean
+}
+
+export type GitStatus =
+  'untracked' | 'modified' | 'added' | 'deleted' | 'renamed' | 'ignored' | 'conflict'
+
+export interface GitStatusResult {
+  /** Repo toplevel, or null if the folder is not inside a git repository. */
+  root: string | null
+  /** Keyed by path relative to `root`, '/'-separated. Directories end with '/'. */
+  statuses: Record<string, GitStatus>
 }
 
 export const EMPTY_HYDRA_FILE: HydraFile = {
   version: 1,
   projects: [],
-  ui: { hiddenSessionIds: [], paneOrder: [], sessionNames: {} }
+  ui: {
+    hiddenSessionIds: [],
+    paneOrder: [],
+    sessionNames: {},
+    fileTree: { open: false, width: 300 }
+  }
 }
 
 /** Result of locating the Claude Code CLI at startup. */
