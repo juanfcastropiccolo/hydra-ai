@@ -1,0 +1,12 @@
+.host {
+  position: absolute;
+  inset: 0;
+  padding: 4px 0 4px 6px;
+  background: var(--bg-pane);
+}
+.host :global(.xterm) {
+  height: 100%;
+}
+.host :global(.xterm-viewport) {
+  overflow-y: auto !important;
+}
