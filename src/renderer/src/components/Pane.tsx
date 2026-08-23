@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@shared/types'
 import { droppedPathText } from '@shared/paths'
+import { bracketedPaste } from '@shared/paste'
+import { canImportInto } from '../lib/can-import'
 import { hydra } from '../lib/hydra-client'
+import { cancelImport, runImport } from '../lib/import-flow'
 import { useAppStore } from '../store/app-store'
+import { importContextStore, useImportContext } from '../store/import-context-slice'
 import styles from './Pane.module.css'
 import { StatusLight } from './StatusLight'
 import { XTermView, type XTermController } from './XTermView'
@@ -30,6 +34,48 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   const [draft, setDraft] = useState(session.name)
   const ended = session.state === 'ended' || exitCode !== null
   const attachable = Boolean(session.bgId)
+
+  // Feature 004: import another session's context into this pane (FR-1, FR-10..14).
+  const importState = useImportContext((s) => s.byTarget[session.sessionId])
+  const importRunning = importState?.phase === 'running'
+  const canImport = canImportInto({ session, ptyId, ended, importRunning })
+  const sourceForRetry = useAppStore((s) =>
+    importState ? s.sessions.find((x) => x.sessionId === importState.sourceSessionId) : undefined
+  )
+  const onImportClick = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+    if (canImport.ok) importContextStore.getState().openDialog(session.sessionId)
+  }
+  // The paste: only when the text is ready AND the session is still idle (Constitution 3 / FR-12).
+  // Re-evaluated on every state change, so a 'ready' import pastes as soon as the pane is idle again
+  // after a 'Reintentar pegado', or when a hidden pane is shown again.
+  useEffect(() => {
+    if (importState?.phase !== 'ready' || !importState.text) return
+    const ok = canImportInto({ session, ptyId, ended, importRunning: false })
+    if (!ok.ok || !ptyId) {
+      importContextStore.getState().markBlocked(session.sessionId)
+      return
+    }
+    hydra.write(ptyId, bracketedPaste(importState.text))
+    controller.current?.focus()
+    importContextStore.getState().markDone(session.sessionId) // 'done' renders the green toast
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [importState?.phase, importState?.text, session.state, ptyId, ended])
+  // 'done' is transient (it is the green toast): forget it after a moment.
+  useEffect(() => {
+    if (importState?.phase !== 'done') return
+    const t = setTimeout(() => importContextStore.getState().clear(session.sessionId), 2500)
+    return () => clearTimeout(t)
+  }, [importState?.phase, session.sessionId])
+  const copyImport = async (): Promise<void> => {
+    if (!importState?.text) return
+    try {
+      await navigator.clipboard.writeText(importState.text)
+      showToast('Contexto copiado al portapapeles')
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
 
   // PTY lifecycle: open on mount (attachable only), close on unmount/hide.
   useEffect(() => {
@@ -202,6 +248,19 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
         )}
         <button
           className={styles.iconBtn}
+          onClick={onImportClick}
+          disabled={!canImport.ok}
+          title={
+            canImport.ok
+              ? 'Importar contexto de otra sesión'
+              : `Importar contexto: ${canImport.reason}`
+          }
+          data-testid="pane-import"
+        >
+          ⇩
+        </button>
+        <button
+          className={styles.iconBtn}
           onClick={(e) => {
             e.stopPropagation()
             toggleExpand(session.sessionId)
@@ -233,6 +292,96 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
         {toast && (
           <div className={styles.toast} role="status" data-testid="pane-toast">
             <span className={styles.toastCheck}>✓</span> {toast}
+          </div>
+        )}
+        {importState?.phase === 'done' && (
+          <div className={styles.toast} role="status" data-testid="pane-toast">
+            <span className={styles.toastCheck}>✓</span> Contexto de {importState.sourceName} listo
+            para enviar — revisalo y pulsá Enter
+          </div>
+        )}
+        {importState?.phase === 'running' && (
+          <div
+            className={`${styles.banner} ${styles.bannerInfo}`}
+            role="status"
+            data-testid="import-progress"
+            onMouseDown={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
+          >
+            <span className={styles.spinner} aria-hidden="true" />
+            <span className={styles.bannerText}>
+              Resumiendo el contexto de <b>{importState.sourceName}</b>…
+            </span>
+            <button
+              onClick={() => void cancelImport(session.sessionId)}
+              data-testid="import-cancel-progress"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+        {importState?.phase === 'blocked' && (
+          <div
+            className={`${styles.banner} ${styles.bannerWarn}`}
+            role="status"
+            data-testid="import-blocked"
+            onMouseDown={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
+          >
+            <span className={styles.bannerText}>
+              El contexto de <b>{importState.sourceName}</b> está listo, pero la sesión ya no está
+              en reposo ({canImport.ok ? 'ahora sí' : canImport.reason.toLowerCase()}). No se pegó
+              para no interrumpirla.
+            </span>
+            <button onClick={() => void copyImport()} data-testid="import-copy">
+              Copiar
+            </button>
+            <button
+              onClick={() => importContextStore.getState().retryPaste(session.sessionId)}
+              data-testid="import-retry-paste"
+            >
+              Reintentar pegado
+            </button>
+            <button
+              className={styles.iconBtn}
+              onClick={() => importContextStore.getState().clear(session.sessionId)}
+              title="Descartar"
+              data-testid="import-dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+        {importState?.phase === 'error' && (
+          <div
+            className={`${styles.banner} ${styles.bannerError}`}
+            role="alert"
+            data-testid="import-error"
+            onMouseDown={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
+          >
+            <span className={styles.bannerText}>
+              No se pudo importar el contexto de <b>{importState.sourceName}</b>:{' '}
+              {importState.error}
+            </span>
+            <button
+              onClick={() => sourceForRetry && void runImport(session.sessionId, sourceForRetry)}
+              disabled={!sourceForRetry}
+              title={
+                sourceForRetry ? 'Volver a generar el resumen' : 'La sesión origen ya no existe'
+              }
+              data-testid="import-retry"
+            >
+              Reintentar
+            </button>
+            <button
+              className={styles.iconBtn}
+              onClick={() => importContextStore.getState().clear(session.sessionId)}
+              title="Cerrar"
+              data-testid="import-dismiss"
+            >
+              ✕
+            </button>
           </div>
         )}
         {ptyId && (

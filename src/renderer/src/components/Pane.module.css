@@ -120,3 +120,57 @@
     transform: translate(-50%, 0);
   }
 }
+
+/* Feature 004: import-context banners (progress / blocked / error). Below the toast, above xterm. */
+.banner {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+.bannerText {
+  flex: 1;
+  min-width: 0;
+}
+.bannerInfo {
+  background: #1e293b;
+  color: #e2e8f0;
+  border: 1px solid #475569;
+}
+.bannerWarn {
+  background: #422006;
+  color: #fde68a;
+  border: 1px solid #d97706;
+}
+.bannerError {
+  background: #450a0a;
+  color: #fecaca;
+  border: 1px solid #dc2626;
+}
+.banner button {
+  font-size: 12px;
+  padding: 2px 8px;
+}
+.spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(226, 232, 240, 0.25);
+  border-top-color: #e2e8f0;
+  animation: spin 0.9s linear infinite;
+  flex: none;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
