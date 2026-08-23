@@ -1,6 +1,7 @@
 // Thin, typed wrapper over the public `claude` CLI. Every subprocess Hydra runs against
 // Claude Code goes through here, so the contract (flags, output formats) lives in one place.
 import { execFile } from 'node:child_process'
+import { parsePrintJson, type PrintJsonOk } from '../context/print-json'
 import { parseAgentsJson, type AgentEntry, type ParseAgentsResult } from './agents-json'
 
 export interface ExecResult {
@@ -9,10 +10,10 @@ export interface ExecResult {
   code: number
 }
 
-/** Injectable runner so unit tests never spawn processes. */
+/** Injectable runner so unit tests never spawn processes. Aborting `signal` kills the child. */
 export type Runner = (
   args: string[],
-  opts: { cwd?: string; timeoutMs: number }
+  opts: { cwd?: string; timeoutMs: number; signal?: AbortSignal }
 ) => Promise<ExecResult>
 
 export interface ClaudeCliOptions {
@@ -54,6 +55,24 @@ export interface ClaudeCliLike {
   stop(bgId: string): Promise<void>
   remove(bgId: string): Promise<void>
   findByBgId(bgId: string): Promise<AgentEntry | undefined>
+  /** Feature 004: handoff summary of a session via `claude -p --resume --fork-session`. */
+  summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult>
+}
+
+export interface SummarizeOptions {
+  /** Full session UUID (from `agents --json`). */
+  sessionId: string
+  /** Must be the session's own cwd: `--resume` looks the transcript up by project dir. */
+  cwd: string
+  model: string
+  prompt: string
+  signal?: AbortSignal
+  /** Default 90 s (spec FR-8). */
+  timeoutMs?: number
+}
+export interface SummarizeResult {
+  text: string
+  raw: PrintJsonOk
 }
 
 export class ClaudeCli implements ClaudeCliLike {
@@ -73,8 +92,8 @@ export class ClaudeCli implements ClaudeCliLike {
     return this.opts.env
   }
 
-  private defaultRunner: Runner = (args, { cwd, timeoutMs }) =>
-    new Promise((resolve) => {
+  private defaultRunner: Runner = (args, { cwd, timeoutMs, signal }) =>
+    new Promise((resolve, reject) => {
       execFile(
         this.opts.binaryPath,
         args,
@@ -82,10 +101,15 @@ export class ClaudeCli implements ClaudeCliLike {
           cwd,
           env: this.opts.env,
           timeout: timeoutMs,
+          signal,
           encoding: 'utf8',
           maxBuffer: 8 * 1024 * 1024
         },
         (err, stdout, stderr) => {
+          if (err && (err as NodeJS.ErrnoException).name === 'AbortError') {
+            reject(err)
+            return
+          }
           const code =
             err && typeof (err as NodeJS.ErrnoException & { code?: unknown }).code === 'number'
               ? (err as { code: number }).code
@@ -149,6 +173,44 @@ export class ClaudeCli implements ClaudeCliLike {
   /** `claude rm <id>`; tolerant if already removed. */
   async remove(bgId: string): Promise<void> {
     await this.runner(['rm', bgId], { timeoutMs: this.timeoutMs })
+  }
+
+  /**
+   * `claude -p --resume <id> --fork-session --no-session-persistence --model <m> --output-format json <prompt>`
+   * run in the session's cwd. Reads the whole conversation, returns the model's answer, and leaves
+   * no transcript behind (verified in docs/spike-004-context.md). Rejects with an AbortError when
+   * `signal` fires; with ClaudeCliError (readable message) on any CLI failure.
+   */
+  async summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult> {
+    const args = [
+      '-p',
+      '--resume',
+      opts.sessionId,
+      '--fork-session',
+      '--no-session-persistence',
+      '--model',
+      opts.model,
+      '--output-format',
+      'json',
+      opts.prompt
+    ]
+    const r = await this.runner(args, {
+      cwd: opts.cwd,
+      timeoutMs: opts.timeoutMs ?? 90_000,
+      signal: opts.signal
+    })
+    const parsed = parsePrintJson(r.stdout, r.stderr)
+    if (!parsed.ok) {
+      const hint =
+        /model/i.test(parsed.message) || /unrecognized_model/.test(r.stderr)
+          ? ` Revisá la preferencia de modelo (ui.importContext.model = "${opts.model}").`
+          : ''
+      throw new ClaudeCliError(
+        `No se pudo resumir la sesión (claude -p exit ${r.code}): ${parsed.message}.${hint}`,
+        r
+      )
+    }
+    return { text: parsed.text, raw: parsed }
   }
 
   /** Convenience: find the entry for a bg id in a fresh listing. */

@@ -78,3 +78,71 @@ describe('ClaudeCli (unit, fake runner)', () => {
     ])
   })
 })
+
+describe('ClaudeCli.summarizeSession (unit, fake runner)', () => {
+  const OK = JSON.stringify({ type: 'result', is_error: false, result: '## Objetivo\nX' })
+
+  it('runs claude -p --resume --fork-session --no-session-persistence in the session cwd and returns the text', async () => {
+    const runner = vi.fn<Runner>(async () => ({ stdout: OK, stderr: '', code: 0 }))
+    const ctrl = new AbortController()
+    const r = await cli(runner).summarizeSession({
+      sessionId: 'sid-1',
+      cwd: '/src/cwd',
+      model: 'haiku',
+      prompt: 'resumí',
+      signal: ctrl.signal
+    })
+    expect(r.text).toBe('## Objetivo\nX')
+    expect(runner).toHaveBeenCalledWith(
+      [
+        '-p',
+        '--resume',
+        'sid-1',
+        '--fork-session',
+        '--no-session-persistence',
+        '--model',
+        'haiku',
+        '--output-format',
+        'json',
+        'resumí'
+      ],
+      { cwd: '/src/cwd', timeoutMs: 90_000, signal: ctrl.signal }
+    )
+  })
+
+  it('throws a readable ClaudeCliError on non-zero exit / is_error, hinting at the model pref when relevant', async () => {
+    const bad = JSON.stringify({
+      is_error: true,
+      result: "There's an issue with the selected model (nope). It may not exist"
+    })
+    const runner = vi.fn<Runner>(async () => ({
+      stdout: bad,
+      stderr: '[claude-code:unrecognized_model] {}',
+      code: 1
+    }))
+    await expect(
+      cli(runner).summarizeSession({ sessionId: 's', cwd: '/c', model: 'nope', prompt: 'p' })
+    ).rejects.toThrow(/selected model \(nope\).*ui\.importContext\.model = "nope"/s)
+    const runner2 = vi.fn<Runner>(async () => ({
+      stdout: '',
+      stderr: 'No conversation found with session ID: s',
+      code: 1
+    }))
+    const err = await cli(runner2)
+      .summarizeSession({ sessionId: 's', cwd: '/c', model: 'haiku', prompt: 'p' })
+      .catch((e: unknown) => e)
+    expect(err).toBeInstanceOf(ClaudeCliError)
+    expect((err as Error).message).toMatch(/exit 1\): No conversation found with session ID: s\.$/)
+  })
+
+  it('propagates the runner abort rejection untouched', async () => {
+    const abort = new Error('aborted')
+    abort.name = 'AbortError'
+    const runner = vi.fn<Runner>(async () => {
+      throw abort
+    })
+    await expect(
+      cli(runner).summarizeSession({ sessionId: 's', cwd: '/c', model: 'haiku', prompt: 'p' })
+    ).rejects.toBe(abort)
+  })
+})

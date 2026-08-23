@@ -1,6 +1,6 @@
 // Deterministic fakes for E2E (HYDRA_E2E=1). No real Claude, no real PTY.
 import type { AgentEntry, ParseAgentsResult } from '../claude/agents-json'
-import type { ClaudeCliLike } from '../claude/claude-cli'
+import type { ClaudeCliLike, SummarizeOptions, SummarizeResult } from '../claude/claude-cli'
 import type { PtyProcess, PtySpawn, PtySpawnOptions } from '../pty/pty-manager'
 
 export class FakeClaudeCli implements ClaudeCliLike {
@@ -43,6 +43,40 @@ export class FakeClaudeCli implements ClaudeCliLike {
   async findByBgId(bgId: string): Promise<AgentEntry | undefined> {
     return this.entries.find((x) => x.id === bgId)
   }
+  /**
+   * Feature 004: canned handoff summary after `HYDRA_E2E_SUMMARY_DELAY_MS` (default 300 ms).
+   * Honours `signal` (rejects with AbortError) and fails for unknown session ids.
+   */
+  async summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult> {
+    const e = this.entries.find((x) => x.sessionId === opts.sessionId)
+    if (!e) throw new Error(`No conversation found with session ID: ${opts.sessionId}`)
+    const delay = Number(process.env['HYDRA_E2E_SUMMARY_DELAY_MS'] ?? 300)
+    await new Promise<void>((resolve, reject) => {
+      if (opts.signal?.aborted) return reject(abortError())
+      const t = setTimeout(() => {
+        opts.signal?.removeEventListener('abort', onAbort)
+        resolve()
+      }, delay)
+      const onAbort = (): void => {
+        clearTimeout(t)
+        reject(abortError())
+      }
+      opts.signal?.addEventListener('abort', onAbort, { once: true })
+    })
+    const text = [
+      '## Objetivo',
+      `Resumen falso de la sesión "${e.name ?? opts.sessionId}" (modelo ${opts.model}).`,
+      '## Decisiones tomadas',
+      '- Usar bracketed paste.',
+      '## Datos y nombres clave',
+      '- Palabra clave: PELICANO-42',
+      '## Estado actual',
+      'En progreso.',
+      '## Pendientes',
+      '- Medir latencia.'
+    ].join('\n')
+    return { text, raw: { ok: true, text } }
+  }
   /** Test hook: flip a session's reported status (e.g. to 'waiting'). */
   setStatus(bgId: string, status: string, waitingFor?: string): void {
     const e = this.entries.find((x) => x.id === bgId)
@@ -51,6 +85,12 @@ export class FakeClaudeCli implements ClaudeCliLike {
     if (waitingFor) e.waitingFor = waitingFor
     else delete e.waitingFor
   }
+}
+
+function abortError(): Error {
+  const err = new Error('The operation was aborted')
+  err.name = 'AbortError'
+  return err
 }
 
 export interface FakePtyRecord {
