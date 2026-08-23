@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
 import { NewSessionDialog } from './components/NewSessionDialog'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { PaneGrid } from './components/PaneGrid'
 import { Sidebar } from './components/Sidebar'
 import { initHydraClient } from './lib/hydra-client'
 import { useAppStore } from './store/app-store'
@@ -54,9 +56,9 @@ function App(): React.JSX.Element {
               </p>
             </div>
           ) : (
-            <div className={styles.empty} data-testid="grid-placeholder">
-              <p>La grilla de terminales llega en la próxima tarea.</p>
-            </div>
+            <ErrorBoundary label="la grilla">
+              <PaneGrid />
+            </ErrorBoundary>
           )}
         </div>
       </section>

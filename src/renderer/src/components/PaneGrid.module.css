@@ -1,0 +1,67 @@
+/* ---- normal mode ---- */
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+}
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.groupLabel {
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: #1e3a5f;
+  color: var(--info);
+  font-weight: 600;
+  font-size: 12px;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 420px;
+  gap: 12px;
+}
+.cell {
+  display: flex;
+  min-height: 0;
+}
+.cell > * {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- expanded mode: same DOM, different classes. Non-expanded panes stay mounted but invisible. ---- */
+.expandedWrap {
+  position: relative;
+  height: 100%;
+}
+.groupExpanded {
+  display: contents;
+}
+.hiddenLabel {
+  display: none;
+}
+.gridExpanded {
+  display: contents;
+}
+.expandedPane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+}
+.expandedPane > * {
+  flex: 1;
+  min-width: 0;
+}
+.hiddenPane {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+  pointer-events: none;
+}
