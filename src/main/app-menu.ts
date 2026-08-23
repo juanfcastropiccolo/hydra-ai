@@ -1,7 +1,10 @@
 // Minimal native application menu. Accelerators work even while xterm has keyboard focus.
 import { app, Menu, type MenuItemConstructorOptions } from 'electron'
 
-export function installAppMenu(handlers: { toggleFileTree: () => void }): void {
+export function installAppMenu(handlers: {
+  toggleFileTree: () => void
+  toggleSidebar: () => void
+}): void {
   const template: MenuItemConstructorOptions[] = [
     {
       label: app.name,

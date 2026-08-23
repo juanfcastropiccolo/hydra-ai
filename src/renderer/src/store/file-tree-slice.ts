@@ -9,6 +9,8 @@ export const HIGHLIGHT_MS = 2000
 export interface FileTreeState {
   open: boolean
   width: number
+  /** Sidebar collapsed to a rail (⌘B). */
+  collapsed: boolean
   /** Project whose tree is shown (derived from focus; see setProjectFromFocus). */
   projectId: string | null
   /** Root path of the shown project (absolute). */
@@ -27,8 +29,9 @@ export interface FileTreeState {
   loadingDirs: string[]
   error: string | null
 
-  setPrefs(p: { open?: boolean; width?: number }): void
+  setPrefs(p: { open?: boolean; width?: number; collapsed?: boolean }): void
   toggleOpen(): void
+  toggleCollapsed(): void
   /** Called whenever focus changes. Only switches project when the new focused project differs. */
   setProjectFromFocus(projectId: string | null, root: string | null): void
   setNodes(dir: string, entries: FsEntry[], now?: number): void
@@ -52,6 +55,7 @@ export function createFileTreeStore(): StoreApi<FileTreeState> {
   return createStore<FileTreeState>((set, get) => ({
     open: false,
     width: 300,
+    collapsed: false,
     projectId: null,
     root: null,
     nodes: {},
@@ -64,8 +68,14 @@ export function createFileTreeStore(): StoreApi<FileTreeState> {
     loadingDirs: [],
     error: null,
 
-    setPrefs: (p) => set((s) => ({ open: p.open ?? s.open, width: p.width ?? s.width })),
+    setPrefs: (p) =>
+      set((s) => ({
+        open: p.open ?? s.open,
+        width: p.width ?? s.width,
+        collapsed: p.collapsed ?? s.collapsed
+      })),
     toggleOpen: () => set((s) => ({ open: !s.open })),
+    toggleCollapsed: () => set((s) => ({ collapsed: !s.collapsed })),
     setProjectFromFocus: (projectId, root) => {
       if (projectId === null) return // losing focus keeps the last project (FR-2)
       if (projectId === get().projectId) return

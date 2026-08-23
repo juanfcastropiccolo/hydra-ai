@@ -90,6 +90,7 @@ export interface IpcEvents {
   'fs.changed': { root: string; dirs: string[]; all: boolean }
   'git.changed': { root: string; result: GitStatusResult }
   'ui.toggleFileTree': Record<string, never>
+  'ui.toggleSidebar': Record<string, never>
   'ui.openNewSession': { projectId: string; cwd: string }
 }
 

@@ -20,10 +20,15 @@ export function Sidebar(): React.JSX.Element {
   const user = { initials: 'JF', name: 'Juan' }
   const filesView = useFileTree((s) => s.open)
   const treeWidth = useFileTree((s) => s.width)
+  const collapsed = useFileTree((s) => s.collapsed)
   const [resizing, setResizing] = useState(false)
   const setView = (files: boolean): void => {
-    fileTreeStore.getState().setPrefs({ open: files })
-    void hydra.setFileTree({ open: files })
+    fileTreeStore.getState().setPrefs({ open: files, collapsed: false })
+    void hydra.setFileTree({ open: files, collapsed: false })
+  }
+  const setCollapsed = (c: boolean): void => {
+    fileTreeStore.getState().setPrefs({ collapsed: c })
+    void hydra.setFileTree({ collapsed: c })
   }
   const onResizeStart = (e: React.MouseEvent): void => {
     e.preventDefault()
@@ -44,13 +49,101 @@ export function Sidebar(): React.JSX.Element {
     window.addEventListener('mousemove', move)
     window.addEventListener('mouseup', up)
   }
+  if (collapsed) {
+    return (
+      <aside
+        className={`${styles.sidebar} ${styles.rail}`}
+        data-testid="sidebar"
+        data-view={filesView ? 'files' : 'sessions'}
+        data-collapsed="true"
+      >
+        <button
+          className={styles.railBtn}
+          onClick={() => setCollapsed(false)}
+          title="Expandir barra (⌘B)"
+          data-testid="sidebar-expand"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+        </button>
+        <img className={styles.railLogo} src={badge} alt="Hydra AI" />
+        <button
+          className={`${styles.tab} ${!filesView ? styles.tabActive : ''}`}
+          onClick={() => setView(false)}
+          title="Sesiones"
+          data-testid="tab-sessions"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="1.5" y="2" width="13" height="12" rx="2" />
+            <path d="M8 2v12M1.5 8h13" />
+          </svg>
+        </button>
+        <button
+          className={`${styles.tab} ${filesView ? styles.tabActive : ''}`}
+          onClick={() => setView(true)}
+          title="Archivos (⌘⇧E)"
+          data-testid="tab-files"
+        >
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M1.5 4.5A1.5 1.5 0 0 1 3 3h3.2l1.4 1.5H13A1.5 1.5 0 0 1 14.5 6v6A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12z" />
+            <path d="M5 9.5h6M5 11.5h4" opacity="0.7" />
+          </svg>
+        </button>
+        <div className={styles.railSpacer} />
+        <span className={styles.railAvatar} title={user.name}>
+          {user.initials}
+        </span>
+      </aside>
+    )
+  }
+
   return (
     <aside
       className={styles.sidebar}
       style={{ width: treeWidth }}
       data-testid="sidebar"
       data-view={filesView ? 'files' : 'sessions'}
+      data-collapsed="false"
     >
+      <button
+        className={styles.collapseBtn}
+        onClick={() => setCollapsed(true)}
+        title="Colapsar barra (⌘B)"
+        data-testid="sidebar-collapse"
+      >
+        <svg
+          viewBox="0 0 16 16"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M10 3L5 8l5 5" />
+        </svg>
+      </button>
       <div className={styles.tabs} data-testid="sidebar-tabs">
         <button
           className={`${styles.tab} ${!filesView ? styles.tabActive : ''}`}

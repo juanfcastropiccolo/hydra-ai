@@ -66,7 +66,10 @@ app.whenReady().then(async () => {
     })
   }
   registerIpc(ctx, () => mainWindow, e2eHooks)
-  installAppMenu({ toggleFileTree: () => ctx?.broadcast('ui.toggleFileTree', {}) })
+  installAppMenu({
+    toggleFileTree: () => ctx?.broadcast('ui.toggleFileTree', {}),
+    toggleSidebar: () => ctx?.broadcast('ui.toggleSidebar', {})
+  })
   await ctx.init()
 
   mainWindow = createWindow()

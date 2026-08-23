@@ -58,10 +58,15 @@ describe('ProjectStore', () => {
     expect(b.hiddenSessionIds()).toEqual(['S1'])
     expect(b.paneOrder()).toEqual(['S2', 'S1'])
     expect(b.sessionNames()).toEqual({ S1: 'Mi sesión' })
-    expect(b.fileTree()).toEqual({ open: false, width: 300 })
-    expect(b.setFileTree({ open: true, width: 420.4 })).toEqual({ open: true, width: 420 })
-    expect(b.setFileTree({ width: 10 })).toEqual({ open: true, width: 420 }) // below min → keep
-    expect(mk().load().ui.fileTree).toEqual({ open: true, width: 420 })
+    expect(b.fileTree()).toEqual({ open: false, width: 300, collapsed: false })
+    expect(b.setFileTree({ open: true, width: 420.4 })).toEqual({
+      open: true,
+      width: 420,
+      collapsed: false
+    })
+    expect(b.setFileTree({ width: 10 })).toEqual({ open: true, width: 420, collapsed: false }) // below min → keep
+    expect(b.setFileTree({ collapsed: true })).toEqual({ open: true, width: 420, collapsed: true })
+    expect(mk().load().ui.fileTree).toEqual({ open: true, width: 420, collapsed: true })
     b.setSessionName('S1', '')
     expect(b.sessionNames()).toEqual({})
     b.setHidden('S1', false)

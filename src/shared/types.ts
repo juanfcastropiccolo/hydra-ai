@@ -70,8 +70,10 @@ export interface FileTreePrefs {
   open: boolean
   /** Sidebar width in px (shared by both views, user-resizable). */
   width: number
+  /** Sidebar collapsed to a thin rail (⌘B). */
+  collapsed: boolean
 }
-export const DEFAULT_FILE_TREE_PREFS: FileTreePrefs = { open: false, width: 300 }
+export const DEFAULT_FILE_TREE_PREFS: FileTreePrefs = { open: false, width: 300, collapsed: false }
 export const FILE_TREE_MIN_WIDTH = 200
 
 /** One directory entry as listed by the main process (feature 002). */
@@ -100,7 +102,7 @@ export const EMPTY_HYDRA_FILE: HydraFile = {
     hiddenSessionIds: [],
     paneOrder: [],
     sessionNames: {},
-    fileTree: { open: false, width: 300 }
+    fileTree: { open: false, width: 300, collapsed: false }
   }
 }
 

@@ -58,8 +58,9 @@ export const hydra = {
     window.hydra.invoke('fs.contextMenu', req),
   gitStatus: (dir: string) => window.hydra.invoke('git.status', { dir }),
   getFileTree: () => window.hydra.invoke('ui.getFileTree'),
-  setFileTree: (patch: { open?: boolean; width?: number }) =>
+  setFileTree: (patch: { open?: boolean; width?: number; collapsed?: boolean }) =>
     window.hydra.invoke('ui.setFileTree', patch),
+  onToggleSidebar: (cb: () => void) => window.hydra.on('ui.toggleSidebar', cb),
   onFsChanged: (cb: (e: { root: string; dirs: string[]; all: boolean }) => void) =>
     window.hydra.on('fs.changed', cb),
   onGitChanged: (

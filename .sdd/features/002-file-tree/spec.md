@@ -20,6 +20,7 @@ Tengo un pane con foco. Aprieto el botón "Archivos" de la barra superior (o su 
 
 ### Panel
 
+1. **FR-1b (añadido 2026-08-23):** La barra izquierda se puede **colapsar a un riel** (botón chevron o ⌘B) que conserva el logo y los dos botones de vista; tocar una vista la vuelve a expandir en esa vista. El estado colapsado persiste.
 1. **FR-1:** La barra izquierda tiene una **solapa saliente** en su borde con dos vistas: **Sesiones** (la barra actual) y **Archivos** (el árbol). Elegir Archivos reemplaza el contenido de la barra por el árbol (la marca y el bloque de usuario se mantienen); ⌘⇧E alterna entre vistas. La vista activa persiste entre aperturas de la app. *(Ajuste 2026-08-23 pedido por Juan: originalmente era un panel a la derecha de la grilla.)*
 2. **FR-2:** El panel muestra el árbol del **proyecto del pane con foco**. Si ningún pane tiene foco, muestra el del **último pane que lo tuvo**; si nunca hubo foco, el del primer proyecto del sidebar. El encabezado del panel muestra el nombre y la ruta del proyecto que está mostrando.
 3. **FR-3:** Al cambiar el foco a un pane de **otro proyecto**, el panel cambia de árbol en menos de 1 segundo, conservando el estado de carpetas expandidas de cada proyecto por separado durante la sesión de la app.

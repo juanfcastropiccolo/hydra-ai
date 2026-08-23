@@ -67,3 +67,9 @@
 .errorBanner button {
   margin-left: auto;
 }
+
+/* No tab bulge when the sidebar is a rail → no gutter needed. */
+.shellCollapsed .topbar,
+.shellCollapsed .content {
+  padding-left: 14px;
+}

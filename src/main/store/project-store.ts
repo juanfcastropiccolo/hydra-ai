@@ -60,7 +60,8 @@ export function validateHydraFile(v: unknown): HydraFile | null {
     width:
       typeof ft.width === 'number' && Number.isFinite(ft.width) && ft.width >= FILE_TREE_MIN_WIDTH
         ? Math.round(ft.width)
-        : DEFAULT_FILE_TREE_PREFS.width
+        : DEFAULT_FILE_TREE_PREFS.width,
+    collapsed: typeof ft.collapsed === 'boolean' ? ft.collapsed : DEFAULT_FILE_TREE_PREFS.collapsed
   }
   return {
     version: 1,
@@ -201,7 +202,11 @@ export class ProjectStore {
     const next = { ...this.data.ui.fileTree, ...patch }
     if (!Number.isFinite(next.width) || next.width < FILE_TREE_MIN_WIDTH)
       next.width = this.data.ui.fileTree.width
-    this.data.ui.fileTree = { open: Boolean(next.open), width: Math.round(next.width) }
+    this.data.ui.fileTree = {
+      open: Boolean(next.open),
+      width: Math.round(next.width),
+      collapsed: Boolean(next.collapsed)
+    }
     this.save()
     return this.fileTree()
   }

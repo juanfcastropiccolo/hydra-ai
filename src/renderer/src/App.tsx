@@ -5,7 +5,7 @@ import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PaneGrid } from './components/PaneGrid'
 import { hydra } from './lib/hydra-client'
-import { fileTreeStore } from './store/file-tree-slice'
+import { fileTreeStore, useFileTree } from './store/file-tree-slice'
 import { Sidebar } from './components/Sidebar'
 import { initHydraClient } from './lib/hydra-client'
 import { useAppStore } from './store/app-store'
@@ -17,6 +17,7 @@ function App(): React.JSX.Element {
   const setError = useAppStore((s) => s.setError)
   const escape = useAppStore((s) => s.escape)
   const openDialog = useAppStore((s) => s.openNewSessionDialog)
+  const sidebarCollapsed = useFileTree((s) => s.collapsed)
 
   useEffect(() => initHydraClient(), [])
   // feature 002: prefs + menu accelerator + "Abrir terminal acá"
@@ -26,12 +27,17 @@ function App(): React.JSX.Element {
       fileTreeStore.getState().toggleOpen()
       void hydra.setFileTree({ open: fileTreeStore.getState().open })
     })
+    const offSidebar = hydra.onToggleSidebar(() => {
+      fileTreeStore.getState().toggleCollapsed()
+      void hydra.setFileTree({ collapsed: fileTreeStore.getState().collapsed })
+    })
     const offOpen = hydra.onOpenNewSession(async ({ projectId, cwd }) => {
       const suggestedName = await hydra.suggestSessionName(projectId)
       openDialog({ projectId, suggestedName, cwd })
     })
     return () => {
       offToggle()
+      offSidebar()
       offOpen()
     }
   }, [openDialog])
@@ -45,7 +51,7 @@ function App(): React.JSX.Element {
   }, [escape])
 
   return (
-    <div className={styles.shell}>
+    <div className={`${styles.shell} ${sidebarCollapsed ? styles.shellCollapsed : ''}`}>
       <Sidebar />
       <section className={styles.main}>
         <header className={styles.topbar}>
