@@ -1,7 +1,7 @@
 # Tasks: Analytics de uso
 
 Feature ID: 005
-Status: in_progress (tasks 1–16 hechos 2026-08-23; falta QA manual y cierre)
+Status: complete (2026-08-23)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo task que el código (unit primero en `shared`/`main`). Ningún task se marca `[x]` con tests rojos. Los AC de 001/002/004 (unit + E2E) deben seguir verdes en cada task.
@@ -33,8 +33,8 @@ Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo ta
 
 - [x] **15.** E2E fixture `e2e/fixtures-analytics.ts`: directorio de transcripts falsos (3 proyectos + 1 temporal, 6 sesiones con fechas fijas, una con subagente) generado desde las fixtures de test; `HYDRA_E2E_CLAUDE_PROJECTS`; E2E-9 (`e2e/07-analytics.spec.ts`): abrir Analytics → tarjetas con totales esperados, 7 columnas en 7d (con `now` fijo vía `HYDRA_E2E_NOW`), heatmap, proyectos sin el temporal, tabla ordenable, rango personalizado; volver a Sessions → mismos pids y terminales visibles — done when: verde.
 - [x] **16.** E2E-10: sesión falsa viva aparece marcada; clic → vuelve a Sessions con el pane enfocado; `analytics.changed` al agregar líneas al fixture en caliente → tarjetas se actualizan — done when: verde; 01–06 siguen verdes.
-- [ ] **17.** QA manual `docs/qa-005.md` (primer índice real: tiempo/progreso; look AC-11; al día con sesión trabajando; precios en `hydra.json`) + empaquetar `Hydra.app` 0.4.0 — done when: checklist completo por Juan; fallos → tasks de fix.
-- [ ] **18.** Cierre: README (sección Analytics), CLAUDE.md (módulos `analytics/`, reglas: reductor puro, caché versionado, temporales, `visibility:hidden` de la grilla), `.sdd/README.md`, `status.json` → complete, tag `v0.4.0` — done when: hecho y pusheado.
+- [x] **17.** QA manual `docs/qa-005.md` (primer índice real: tiempo/progreso; look AC-11; al día con sesión trabajando; precios en `hydra.json`) + empaquetar `Hydra.app` 0.4.0 — done when: checklist completo por Juan; fallos → tasks de fix.
+- [x] **18.** Cierre: README (sección Analytics), CLAUDE.md (módulos `analytics/`, reglas: reductor puro, caché versionado, temporales, `visibility:hidden` de la grilla), `.sdd/README.md`, `status.json` → complete, tag `v0.4.0` — done when: hecho y pusheado.
 
 ## Traceability
 

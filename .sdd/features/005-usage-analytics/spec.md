@@ -1,7 +1,7 @@
 # Analytics de uso
 
 Feature ID: 005
-Status: specified (aprobada 2026-08-23)
+Status: complete (2026-08-23)
 Last updated: 2026-08-23
 
 ## Problem

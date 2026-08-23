@@ -1,7 +1,7 @@
 # Plan: Analytics de uso
 
 Feature ID: 005
-Status: planned (aprobado 2026-08-23)
+Status: complete (2026-08-23)
 Last updated: 2026-08-23
 
 ## Chosen stack
