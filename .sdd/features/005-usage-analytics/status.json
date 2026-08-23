@@ -1,0 +1,10 @@
+{
+  "id": "005",
+  "slug": "usage-analytics",
+  "title": "Analytics de uso",
+  "phase": "specified",
+  "progress_pct": 20,
+  "depends_on": ["001"],
+  "created": "2026-08-23",
+  "updated": "2026-08-23"
+}
