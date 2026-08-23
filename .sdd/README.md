@@ -7,7 +7,7 @@ Proyecto gestionado con Spec-Driven Development. Ver `constitution.md` para los 
 - [001 — Workspace de sesiones de Claude Code](features/001-session-workspace/) — **complete (100%)** · v0.1.0 · QA manual 2026-08-23
 
 - [002 — Árbol de archivos del proyecto](features/002-file-tree/) — **complete (100%)** · v0.2.0 · pendiente menor: ⌘⇧E en .app
-- [004 — Importar contexto de otra sesión](features/004-import-context/) — **tasked (60%)** · implementación en curso · spike: `docs/spike-004-context.md`
+- [004 — Importar contexto de otra sesión](features/004-import-context/) — **in_progress (80%)** · tasks 1–10 hechos; faltan tests E2E/integración, QA y cierre · spike: `docs/spike-004-context.md`
 
 ## Backlog (aún sin spec, en orden tentativo)
 
