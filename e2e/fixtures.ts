@@ -49,3 +49,26 @@ export const test = base.extend<HydraFixture>({
   }
 })
 export { expect } from '@playwright/test'
+
+import { execFileSync } from 'node:child_process'
+import { mkdirSync, writeFileSync } from 'node:fs'
+
+/** Turn `dir` into a small git repo with known statuses (M / U / ignored). */
+export function seedGitProject(dir: string): void {
+  const git = (args: string[]): void => {
+    execFileSync('git', args, { cwd: dir, stdio: 'ignore' })
+  }
+  mkdirSync(join(dir, 'src'), { recursive: true })
+  mkdirSync(join(dir, 'dist'), { recursive: true })
+  writeFileSync(join(dir, 'src/index.ts'), 'export const a = 1\n')
+  writeFileSync(join(dir, 'README.md'), '# demo\n')
+  writeFileSync(join(dir, '.gitignore'), 'dist/\n')
+  writeFileSync(join(dir, 'dist/bundle.js'), '')
+  git(['init', '-q'])
+  git(['config', 'user.email', 'e2e@hydra'])
+  git(['config', 'user.name', 'e2e'])
+  git(['add', '-A'])
+  git(['commit', '-qm', 'init'])
+  writeFileSync(join(dir, 'src/index.ts'), 'export const a = 2\n') // M
+  writeFileSync(join(dir, 'nuevo.ts'), '') // U
+}
