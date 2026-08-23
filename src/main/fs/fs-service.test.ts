@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FsEntry } from '@shared/types'
-import { coalesceWatchEvents, sortEntries } from './fs-service'
+import { coalesceWatchEvents, isInsideGitDir, sortEntries } from './fs-service'
 
 describe('sortEntries', () => {
   it('folders first, then files, case-insensitive, numeric-aware', () => {
@@ -36,6 +36,14 @@ describe('coalesceWatchEvents', () => {
     ])
     expect(ev.all).toBe(false)
     expect(ev.dirs.sort()).toEqual(['/r', '/r/src', '/r/src/nuevo'])
+  })
+  it('drops events inside .git (avoids the git-status feedback loop); null when nothing remains', () => {
+    expect(
+      coalesceWatchEvents('/r', ['.git/index', '.git/refs/heads/main', 'sub/.git/HEAD'])
+    ).toBeNull()
+    expect(coalesceWatchEvents('/r', ['.git/index', 'src/a.ts'])?.dirs).toEqual(['/r/src'])
+    expect(isInsideGitDir('.gitignore')).toBe(false)
+    expect(isInsideGitDir('.git')).toBe(true)
   })
   it('a null filename forces a full re-list', () => {
     expect(coalesceWatchEvents('/r', ['a.ts', null])).toEqual({ root: '/r', dirs: [], all: true })

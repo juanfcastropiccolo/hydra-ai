@@ -29,8 +29,22 @@ export interface WatchEvent {
   all: boolean
 }
 
-/** Pure: collapse a burst of raw fs.watch events into one WatchEvent. */
-export function coalesceWatchEvents(root: string, raw: Array<string | null>): WatchEvent {
+/** True for `.git` itself or anything inside it (we never show it, and git writes there constantly). */
+export function isInsideGitDir(relPath: string): boolean {
+  return (
+    relPath === '.git' ||
+    relPath.startsWith('.git/') ||
+    relPath.includes('/.git/') ||
+    relPath.endsWith('/.git')
+  )
+}
+
+/**
+ * Pure: collapse a burst of raw fs.watch events into one WatchEvent, or null if nothing relevant.
+ * Events under `.git/` are dropped — otherwise our own `git status` (which touches .git/index)
+ * would re-trigger a refresh forever.
+ */
+export function coalesceWatchEvents(root: string, raw: Array<string | null>): WatchEvent | null {
   const dirs = new Set<string>()
   let all = false
   for (const filename of raw) {
@@ -38,11 +52,13 @@ export function coalesceWatchEvents(root: string, raw: Array<string | null>): Wa
       all = true
       continue
     }
+    if (isInsideGitDir(filename)) continue
     const abs = join(root, filename)
     // The changed *listing* is the parent dir; a rename/creation of a dir also affects the dir itself.
     dirs.add(dirname(abs))
   }
   if (all) return { root, dirs: [], all: true }
+  if (dirs.size === 0) return null
   return { root, dirs: [...dirs], all: false }
 }
 
@@ -176,6 +192,7 @@ export class FsService extends EventEmitter<FsServiceEvents> {
     w.pending = []
     w.timer = null
     if (raw.length === 0) return
-    this.emit('changed', coalesceWatchEvents(root, raw))
+    const ev = coalesceWatchEvents(root, raw)
+    if (ev) this.emit('changed', ev)
   }
 }
