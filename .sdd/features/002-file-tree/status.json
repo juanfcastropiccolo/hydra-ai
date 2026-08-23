@@ -1,0 +1,10 @@
+{
+  "id": "002",
+  "slug": "file-tree",
+  "title": "Árbol de archivos del proyecto",
+  "phase": "specified",
+  "progress_pct": 20,
+  "depends_on": ["001"],
+  "created": "2026-08-23",
+  "updated": "2026-08-23"
+}
