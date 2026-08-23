@@ -1,7 +1,7 @@
 # Graph Know — conocimiento y recuperación de contexto del trabajo pasado
 
 Feature ID: 006
-Status: specified (borrador — pendiente de aprobación)
+Status: specified (aprobada 2026-08-23)
 Last updated: 2026-08-23
 Base: investigación 2026-08-23 (GraphRAG/LightRAG/MiniRAG/HippoRAG/Zep-Graphiti/Mem0; ver plan) y decisión de Juan: el grafo existe para **optimizar cómo Claude accede al contexto del trabajo pasado**, no como visor decorativo.
 
@@ -99,4 +99,4 @@ Trabajo con Hydra abierta. En una sesión cualquiera le digo a Claude "fijate qu
 - [x] Acceso de Claude: MCP server local **HTTP servido por Hydra** (Juan).
 - [x] Fichas: **automáticas** con toggle (Juan).
 - [x] UI: buscador + grafo visual navegable en la sección Graph Know (Juan).
-- [ ] [NEEDS CLARIFICATION: cuando una sesión de Claude está corriendo **dentro de Hydra** y usa la tool, ¿los resultados deben excluir la propia sesión que consulta? Propuesta: sí, se excluye sola.]
+- [x] **Auto-exclusión:** la tool excluye de los resultados a la sesión que consulta, cuando puede identificarla (aprobado 2026-08-23).
