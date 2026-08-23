@@ -17,6 +17,8 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   const openDialog = useAppStore((s) => s.openNewSessionDialog)
   const controller = useRef<XTermController | null>(null)
   const [exitCode, setExitCode] = useState<number | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(session.name)
   const ended = session.state === 'ended' || exitCode !== null
   const attachable = Boolean(session.bgId)
 
@@ -87,6 +89,21 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
     openDialog({ projectId: session.projectId, suggestedName })
   }
   const onExit = useCallback((code: number) => setExitCode(code), [])
+  const startRename = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+    setDraft(session.name)
+    setEditing(true)
+  }
+  const commitRename = async (): Promise<void> => {
+    setEditing(false)
+    const name = draft.trim()
+    if (!name || name === session.name) return
+    try {
+      await hydra.renameSession(session.sessionId, name)
+    } catch (err) {
+      setError((err as Error).message)
+    }
+  }
 
   return (
     <section
@@ -100,9 +117,37 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
     >
       <header className={styles.header} data-testid="pane-header">
         <StatusLight state={ended ? 'ended' : session.state} waitingFor={session.waitingFor} />
-        <span className={styles.title} title={session.cwd}>
-          {session.name}
-        </span>
+        {editing ? (
+          <input
+            className={styles.titleInput}
+            value={draft}
+            autoFocus
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={() => void commitRename()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === 'Enter') void commitRename()
+              if (e.key === 'Escape') setEditing(false)
+            }}
+            data-testid="pane-rename-input"
+          />
+        ) : (
+          <span className={styles.title} title={session.cwd} data-testid="pane-title">
+            {session.name}
+          </span>
+        )}
+        {!editing && (
+          <button
+            className={styles.iconBtn}
+            onClick={startRename}
+            title="Renombrar sesión"
+            data-testid="pane-rename"
+          >
+            ✎
+          </button>
+        )}
         <button
           className={styles.iconBtn}
           onClick={(e) => {

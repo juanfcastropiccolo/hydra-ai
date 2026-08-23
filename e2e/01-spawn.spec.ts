@@ -40,3 +40,17 @@ test('AC-1/AC-2/2b/2c: add project → new session dialog → cancel → create 
   await expect(page.getByTestId('session-item')).toHaveCount(1)
   await expect(page.getByTestId('session-item')).toContainText('refactor-auth')
 })
+
+test('FR-6: rename a session from the pane header (pencil), persisted by Hydra', async ({
+  page
+}) => {
+  await page.getByTestId('add-project').click()
+  await page.getByTestId('new-session').click()
+  await page.getByTestId('create-session').click()
+  await expect(page.getByTestId('pane')).toHaveCount(1)
+  await page.getByTestId('pane-rename').click()
+  await page.getByTestId('pane-rename-input').fill('auth-refactor')
+  await page.keyboard.press('Enter')
+  await expect(page.getByTestId('pane-title')).toHaveText('auth-refactor')
+  await expect(page.getByTestId('session-item')).toContainText('auth-refactor')
+})

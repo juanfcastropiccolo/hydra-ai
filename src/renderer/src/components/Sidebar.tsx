@@ -1,4 +1,6 @@
 import styles from './Sidebar.module.css'
+import logo from '../assets/brand/hydra-logo.png'
+import wordmark from '../assets/brand/hydra-wordmark.png'
 import { ProjectList } from './ProjectList'
 
 const NAV = [
@@ -12,7 +14,10 @@ export function Sidebar(): React.JSX.Element {
   const user = { initials: 'JF', name: 'Juan' }
   return (
     <aside className={styles.sidebar} data-testid="sidebar">
-      <div className={styles.brand}>HYDRA AI</div>
+      <div className={styles.brand} data-testid="brand">
+        <img className={styles.brandLogo} src={logo} alt="" />
+        <img className={styles.brandWordmark} src={wordmark} alt="Hydra AI" />
+      </div>
       <nav className={styles.nav} aria-label="Secciones">
         {NAV.map((n) => (
           <button

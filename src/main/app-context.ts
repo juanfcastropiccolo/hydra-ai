@@ -73,7 +73,9 @@ export class AppContext {
         realpath: (p) => realpathSync(p),
         pollMs: this.opts.pollMs
       })
-      this.watcher.on('changed', (sessions) => this.broadcast('sessions.changed', { sessions }))
+      this.watcher.on('changed', (sessions) =>
+        this.broadcast('sessions.changed', { sessions: this.decorate(sessions) })
+      )
       this.hooks.on('event', (ev) => this.watcher?.applyHook(ev))
       this.watcher.start()
     }
@@ -100,8 +102,20 @@ export class AppContext {
     return this.cli
   }
 
+  /** Apply user-chosen display names (Hydra-side alias; the CLI has no rename for bg sessions). */
+  decorate(sessions: Session[]): Session[] {
+    const names = this.store.sessionNames()
+    return sessions.map((s) => (names[s.sessionId] ? { ...s, name: names[s.sessionId]! } : s))
+  }
+
   sessions(): Session[] {
-    return this.watcher?.list() ?? []
+    return this.decorate(this.watcher?.list() ?? [])
+  }
+
+  renameSession(sessionId: string, name: string): void {
+    if (!name.trim()) throw new Error('El nombre no puede estar vacío')
+    this.store.setSessionName(sessionId, name)
+    this.broadcast('sessions.changed', { sessions: this.sessions() })
   }
 
   /** Suggest `<project>-<n>` where n is 1 + number of sessions already in that project. */

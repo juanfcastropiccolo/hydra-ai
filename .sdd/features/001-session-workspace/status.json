@@ -2,8 +2,8 @@
   "id": "001",
   "slug": "session-workspace",
   "title": "Workspace de sesiones de Claude Code",
-  "phase": "in_progress",
-  "progress_pct": 80,
+  "phase": "complete",
+  "progress_pct": 100,
   "depends_on": [],
   "created": "2026-08-23",
   "updated": "2026-08-23"

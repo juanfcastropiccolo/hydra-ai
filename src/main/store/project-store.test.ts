@@ -49,6 +49,7 @@ describe('ProjectStore', () => {
     a.renameProject(p.id, 'Dos')
     a.setHidden('S1', true)
     a.setPaneOrder(['S2', 'S1'])
+    a.setSessionName('S1', '  Mi sesión ')
     const b = mk()
     b.load()
     expect(b.listProjects()).toEqual([
@@ -56,6 +57,9 @@ describe('ProjectStore', () => {
     ])
     expect(b.hiddenSessionIds()).toEqual(['S1'])
     expect(b.paneOrder()).toEqual(['S2', 'S1'])
+    expect(b.sessionNames()).toEqual({ S1: 'Mi sesión' })
+    b.setSessionName('S1', '')
+    expect(b.sessionNames()).toEqual({})
     b.setHidden('S1', false)
     b.removeProject('id-1')
     const c = mk()

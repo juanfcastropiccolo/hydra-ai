@@ -73,10 +73,7 @@ export function registerIpc(
   handle('sessions.suggestName', ({ projectId }) => ctx.suggestSessionName(projectId))
   handle('sessions.create', ({ projectId, name }) => ctx.createSession(projectId, name))
   handle('sessions.stop', ({ sessionId }) => ctx.stopSession(sessionId))
-  handle('sessions.rename', () => {
-    // The CLI has no rename for bg sessions yet; v1 keeps the name chosen at creation. (FR-6 partial)
-    throw new Error('Renombrar sesiones no está soportado por el CLI de Claude Code todavía')
-  })
+  handle('sessions.rename', ({ sessionId, name }) => ctx.renameSession(sessionId, name))
 
   handle('pty.open', ({ sessionId, cols, rows }) => ({ ptyId: ctx.openPty(sessionId, cols, rows) }))
   handle('pty.close', ({ ptyId }) => ctx.closePty(ptyId))

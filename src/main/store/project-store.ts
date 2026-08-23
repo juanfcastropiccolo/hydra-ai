@@ -41,10 +41,20 @@ export function validateHydraFile(v: unknown): HydraFile | null {
   const ui = isRecord(v.ui) ? v.ui : {}
   const strs = (x: unknown): string[] =>
     Array.isArray(x) ? x.filter((s): s is string => typeof s === 'string') : []
+  const names: Record<string, string> = {}
+  if (isRecord(ui.sessionNames)) {
+    for (const [k, val] of Object.entries(ui.sessionNames)) {
+      if (typeof val === 'string' && val.trim()) names[k] = val
+    }
+  }
   return {
     version: 1,
     projects,
-    ui: { hiddenSessionIds: strs(ui.hiddenSessionIds), paneOrder: strs(ui.paneOrder) }
+    ui: {
+      hiddenSessionIds: strs(ui.hiddenSessionIds),
+      paneOrder: strs(ui.paneOrder),
+      sessionNames: names
+    }
   }
 }
 
@@ -153,6 +163,17 @@ export class ProjectStore {
     if (hidden) set.add(sessionId)
     else set.delete(sessionId)
     this.data.ui.hiddenSessionIds = [...set]
+    this.save()
+  }
+
+  sessionNames(): Record<string, string> {
+    return { ...this.data.ui.sessionNames }
+  }
+
+  setSessionName(sessionId: string, name: string | null): void {
+    const trimmed = name?.trim()
+    if (trimmed) this.data.ui.sessionNames[sessionId] = trimmed
+    else delete this.data.ui.sessionNames[sessionId]
     this.save()
   }
 

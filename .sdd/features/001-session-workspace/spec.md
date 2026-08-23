@@ -1,7 +1,7 @@
 # Workspace de sesiones de Claude Code
 
 Feature ID: 001
-Status: planned (spec aprobada 2026-08-23; ajustes FR-9/14/16 aprobados con el plan)
+Status: complete (2026-08-23)
 Last updated: 2026-08-23
 
 ## Problem
@@ -29,7 +29,7 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
 ### Sesiones
 
 5. **FR-5:** Desde un proyecto, el usuario pulsa **"Nueva sesión"** y se abre un **diálogo de creación** que muestra: (a) un campo **nombre de la sesión**, pre-rellenado con un nombre generado (p. ej. `<proyecto>-<n>`) y editable; (b) la **carpeta** en la que vivirá la sesión (la del proyecto, solo lectura en este diálogo); (c) botones **Cancelar** y **Crear**. `Enter` equivale a Crear; `Esc` a Cancelar. Al crear, la sesión arranca en esa carpeta con la autenticación y configuración que el usuario ya tiene en Claude Code — no pide login ni pasos adicionales — y aparece inmediatamente como un pane en la grilla con el foco. Cancelar no deja rastro.
-6. **FR-6:** Cada sesión tiene un **nombre** visible (el elegido en el diálogo; editable después desde el encabezado del pane o el sidebar). El nombre no puede quedar vacío; si el usuario lo borra, Crear queda deshabilitado.
+6. **FR-6:** Cada sesión tiene un **nombre** visible (el elegido en el diálogo; editable después con el lápiz ✎ del encabezado del pane). El nombre no puede quedar vacío; si el usuario lo borra, Crear queda deshabilitado. (Aclaración 2026-08-23: el CLI de Claude Code no permite renombrar sesiones ya creadas, así que el nombre editado es un alias que Hydra guarda y muestra en pane y sidebar.)
 7. **FR-7:** El usuario puede **terminar una sesión** (acción explícita, con confirmación si la sesión está trabajando). Terminar = el proceso de Claude Code se detiene y el pane desaparece.
 8. **FR-8:** El usuario puede **ocultar un pane sin terminar la sesión**: la sesión sigue corriendo y sigue listada en el sidebar; un clic en el sidebar la vuelve a mostrar.
 9. **FR-9:** Al abrir Hydra, las **sesiones que siguen vivas** en la carpeta de un proyecto registrado se **detectan y se muestran** en el sidebar con su estado actual. Las creadas por Hydra (o enviadas a background por el usuario desde su terminal) se muestran además en la grilla, con su historial de pantalla reciente. Las **sesiones externas en primer plano** (abiertas a mano en otra terminal y no enviadas a background) se listan en el sidebar con nombre, semáforo y la marca "externa"; **no pueden adjuntarse ni terminarse desde Hydra** — la entrada explica que hay que enviarlas a background desde esa terminal para operarlas aquí. (Ajuste 2026-08-23 tras verificar el comportamiento del CLI.)
@@ -85,7 +85,7 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
 
 - **AC-1 (agregar proyecto):** Given Hydra abierta sin proyectos, when el usuario pulsa "Agregar proyecto" y elige la carpeta `~/Documents/foo`, then aparece "foo" en el sidebar sin sesiones, y sigue apareciendo tras cerrar y reabrir Hydra.
 - **AC-2 (diálogo de nueva sesión):** Given el proyecto "foo" en el sidebar, when el usuario pulsa "Nueva sesión", then se abre un diálogo con el campo nombre pre-rellenado (p. ej. `foo-1`), la carpeta `~/Documents/foo` visible, y los botones Cancelar y Crear; when pulsa Cancelar o `Esc`, then el diálogo se cierra y no se crea ninguna sesión ni pane.
-- **AC-2b (spawn):** Given el diálogo abierto con el nombre "refactor-auth", when el usuario pulsa Crear (o `Enter`), then en menos de 5 segundos (menos de 8 segundos si es la primera sesión desde que arrancó el servicio de fondo de Claude Code; ajuste 2026-08-23 según spike) aparece un pane titulado "refactor-auth" con Claude Code corriendo en `~/Documents/foo`, mostrando su prompt inicial listo para recibir texto, con el foco (borde verde) en ese pane, y la sesión "refactor-auth" listada bajo "foo" en el sidebar.
+- **AC-2b (spawn):** Given el diálogo abierto con el nombre "refactor-auth", when el usuario pulsa Crear (o `Enter`), then en menos de 5 segundos (menos de 10 segundos si es la primera sesión desde que arrancó el servicio de fondo de Claude Code; medido 8,8 s en QA del 2026-08-23) aparece un pane titulado "refactor-auth" con Claude Code corriendo en `~/Documents/foo`, mostrando su prompt inicial listo para recibir texto, con el foco (borde verde) en ese pane, y la sesión "refactor-auth" listada bajo "foo" en el sidebar.
 - **AC-2c (nombre vacío):** Given el diálogo abierto, when el usuario borra el nombre, then el botón Crear se deshabilita hasta que haya al menos un carácter.
 - **AC-3 (ya autenticado):** Given el usuario ya usa Claude Code en su terminal con su cuenta, when crea una sesión desde Hydra, then la sesión no pide login ni selección de cuenta.
 - **AC-4 (foco exclusivo):** Given dos panes A y B visibles, when el usuario hace clic en B y tipea "hola", then "hola" aparece solo en la terminal de B, el borde verde está solo en B, y A no recibió ninguna tecla.

@@ -33,6 +33,8 @@ export const hydra = {
   createSession: (projectId: string, name: string) =>
     window.hydra.invoke('sessions.create', { projectId, name }),
   stopSession: (sessionId: string) => window.hydra.invoke('sessions.stop', { sessionId }),
+  renameSession: (sessionId: string, name: string) =>
+    window.hydra.invoke('sessions.rename', { sessionId, name }),
   setHidden: (sessionId: string, hidden: boolean) =>
     window.hydra.invoke('ui.setHidden', { sessionId, hidden }),
   openPty: (sessionId: string, cols: number, rows: number) =>

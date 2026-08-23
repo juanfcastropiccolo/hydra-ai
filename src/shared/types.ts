@@ -58,13 +58,15 @@ export interface HydraFile {
   ui: {
     hiddenSessionIds: string[]
     paneOrder: string[]
+    /** Display-name overrides chosen by the user (the CLI has no rename for bg sessions). */
+    sessionNames: Record<string, string>
   }
 }
 
 export const EMPTY_HYDRA_FILE: HydraFile = {
   version: 1,
   projects: [],
-  ui: { hiddenSessionIds: [], paneOrder: [] }
+  ui: { hiddenSessionIds: [], paneOrder: [], sessionNames: {} }
 }
 
 /** Result of locating the Claude Code CLI at startup. */

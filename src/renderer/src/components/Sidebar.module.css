@@ -7,13 +7,21 @@
 }
 .brand {
   margin: 14px 14px 10px;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: var(--radius);
-  background: #1f3b2a;
-  color: var(--accent);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-align: center;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.brandLogo {
+  height: 34px;
+  width: auto;
+}
+.brandWordmark {
+  height: 22px;
+  width: auto;
 }
 .nav {
   display: grid;

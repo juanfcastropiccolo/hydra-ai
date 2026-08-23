@@ -1,7 +1,7 @@
 # Tasks: Workspace de sesiones de Claude Code
 
 Feature ID: 001
-Status: in_progress (task 0 completado 2026-08-23)
+Status: complete (2026-08-23)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verificable. Los tests van **en el mismo task** que el código que prueban (TDD donde aplica: unit primero en `shared`/`main`). Ningún task se marca `[x]` con tests rojos.
@@ -47,11 +47,13 @@ Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verif
 - [x] **24.** E2E-1: agregar proyecto (ruta temporal inyectada) → Nueva sesión → diálogo (nombre, carpeta, Cancelar no crea) → Crear → pane con título y borde verde (AC-1, AC-2/2b/2c).
 - [x] **25.** E2E-2: dos panes; clic en B + tipeo → solo la PTY falsa de B recibe y solo B tiene borde; clic en sidebar + tipeo → ninguna recibe (AC-4, AC-5).
 - [x] **26.** E2E-3: expandir por botón y por doble clic, contraer por botón/doble clic/`Esc` (sin foco en term), resize de ventana → `pty.resize` recibido con cols/rows nuevos (AC-9, AC-10, AC-18).
-- [~] **27.** (app empaquetada ✅, checklist en docs/qa-001.md ✅, **pendiente QA manual de Juan: AC-17, hooks reales AC-6/7/8, AC-19, cierre real**) Empaquetar `Hydra.app` final x64 y checklist manual `docs/qa-001.md` (AC-3, AC-11, AC-12, AC-15, AC-17 desde Finder en limpio, AC-19, AC-8b) — done when: checklist completo con fecha y resultado por AC; cualquier fallo abre un task de fix antes de cerrar la feature.
+- [x] **27.** (QA manual de Juan ✅ 2026-08-23: AC-17, AC-6/7/8 con hooks reales, AC-19, cierre real) Empaquetar `Hydra.app` final x64 y checklist manual `docs/qa-001.md` (AC-3, AC-11, AC-12, AC-15, AC-17 desde Finder en limpio, AC-19, AC-8b) — done when: checklist completo con fecha y resultado por AC; cualquier fallo abre un task de fix antes de cerrar la feature.
 
 ## Fase 5 — Cierre
 
-- [~] **28.** (README ✅, CLAUDE.md ✅; status → complete cuando cierre el task 27) README del repo (qué es Hydra, requisitos, `npm run dev/test/package`, estructura), `CLAUDE.md` del proyecto (convenciones para sesiones futuras), actualizar `status.json` → `complete` y `.sdd/README.md` — done when: una sesión nueva de Claude Code en el repo entiende el proyecto leyendo solo README + CLAUDE.md.
+- [x] **29 (extra, pedido en QA).** Renombrar sesión desde el header con ✎ (alias en Hydra) + branding (logo/wordmark en sidebar, ícono .icns de la app) — done: E2E `FR-6` verde, `Hydra.app` re-empaquetada.
+
+- [x] **28.** README del repo (qué es Hydra, requisitos, `npm run dev/test/package`, estructura), `CLAUDE.md` del proyecto (convenciones para sesiones futuras), actualizar `status.json` → `complete` y `.sdd/README.md` — done when: una sesión nueva de Claude Code en el repo entiende el proyecto leyendo solo README + CLAUDE.md.
 
 ## Traceability
 
