@@ -1,7 +1,7 @@
 # Hydra AI — Constitution
 
 Estado: APROBADA (2026-08-23)
-Última actualización: 2026-08-23
+Última actualización: 2026-08-23 (ADR-4 corregida, ADR-5/6 añadidas al aprobar plan 001)
 
 ## Purpose
 
@@ -66,4 +66,6 @@ Hoy es una herramienta personal de su autor; está diseñada para poder distribu
 | 2026-08-23 | Electron + TS + React + xterm.js + node-pty, descartando Tauri y Swift nativo | `node-pty` es el PTY de VS Code (18M desc/mes) vs. plugin Tauri inmaduro (45k totales); UI web resuelve file tree, charts y grafos; Swift obligaba a construir todo desde cero. Costo de RAM/bundle irrelevante para herramienta de dev. | todas |
 | 2026-08-23 | Sin tmux: se usa el daemon nativo de Claude Code (`--bg`, `agents --json`, `attach`, hooks) | Claude Code 2.1.2xx ya trae supervisor, persistencia, reconexión y estado por sesión. Reimplementarlo con tmux duplica riesgo. | todas |
 | 2026-08-23 | Estado de sesión vía hooks HTTP (push) + `agents --json` (reconciliación), nunca inferido del stream de la PTY | Inferir del texto es frágil ante cambios del TUI; el CLI ya reporta `working/waiting/idle` y `waitingFor`. | semáforo |
-| 2026-08-23 | Panes lanzan el CLI con `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1` (+ `DISABLE_MOUSE`) | Bugs conocidos de xterm.js con el renderer fullscreen (scroll salta al tope, copiar roto). Validar en la primera feature. | terminal panes |
+| 2026-08-23 | ~~Panes lanzan el CLI con `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN=1`~~ **Reemplazada:** los panes corren `claude attach`, que renderiza siempre en modo fullscreen (ignora esa variable). Se acepta fullscreen; si la captura de mouse molesta, `CLAUDE_CODE_DISABLE_MOUSE=1` en el env del attach. Se valida en el spike inicial de 001. | Verificado en doc oficial al planificar 001: attach fuerza fullscreen; el modo está diseñado para terminales tipo xterm.js y corrige el salto de scroll del renderer clásico. | terminal panes |
+| 2026-08-23 | Sesiones de Hydra = `claude --bg --name` + `claude attach` en PTY propia; nunca `claude` interactivo directo en la PTY | Una sesión interactiva muere con su terminal; la background vive en el daemon → FR-10/FR-9 gratis. | 001 |
+| 2026-08-23 | Hydra no persiste sesiones, solo proyectos y preferencias de UI | El CLI (`agents --json`) es la fuente de verdad; duplicarla diverge. | 001 |

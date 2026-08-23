@@ -1,7 +1,7 @@
 # Workspace de sesiones de Claude Code
 
 Feature ID: 001
-Status: specified (aprobada 2026-08-23)
+Status: planned (spec aprobada 2026-08-23; ajustes FR-9/14/16 aprobados con el plan)
 Last updated: 2026-08-23
 
 ## Problem
@@ -32,7 +32,7 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
 6. **FR-6:** Cada sesión tiene un **nombre** visible (el elegido en el diálogo; editable después desde el encabezado del pane o el sidebar). El nombre no puede quedar vacío; si el usuario lo borra, Crear queda deshabilitado.
 7. **FR-7:** El usuario puede **terminar una sesión** (acción explícita, con confirmación si la sesión está trabajando). Terminar = el proceso de Claude Code se detiene y el pane desaparece.
 8. **FR-8:** El usuario puede **ocultar un pane sin terminar la sesión**: la sesión sigue corriendo y sigue listada en el sidebar; un clic en el sidebar la vuelve a mostrar.
-9. **FR-9:** Al abrir Hydra, las **sesiones que siguen vivas** (creadas por Hydra en una ejecución anterior, o creadas desde una terminal externa en la carpeta de un proyecto registrado) se **detectan y se muestran** en el sidebar y en la grilla, con su estado actual y su historial de pantalla reciente.
+9. **FR-9:** Al abrir Hydra, las **sesiones que siguen vivas** en la carpeta de un proyecto registrado se **detectan y se muestran** en el sidebar con su estado actual. Las creadas por Hydra (o enviadas a background por el usuario desde su terminal) se muestran además en la grilla, con su historial de pantalla reciente. Las **sesiones externas en primer plano** (abiertas a mano en otra terminal y no enviadas a background) se listan en el sidebar con nombre, semáforo y la marca "externa"; **no pueden adjuntarse ni terminarse desde Hydra** — la entrada explica que hay que enviarlas a background desde esa terminal para operarlas aquí. (Ajuste 2026-08-23 tras verificar el comportamiento del CLI.)
 10. **FR-10:** Cerrar Hydra **no termina** ninguna sesión.
 
 ### Grilla y panes
@@ -44,9 +44,9 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
     - 🟢 **Verde — trabajando:** Claude está procesando, ejecutando herramientas o generando respuesta.
     - 🔴 **Rojo — esperando acción del usuario:** Claude está bloqueado en un prompt de permiso, una pregunta, un diálogo o cualquier cosa que solo el usuario puede destrabar.
     - 🟡 **Amarillo — ocioso:** no está corriendo nada; esperando un prompt nuevo, terminada o detenida.
-    El cambio de estado debe reflejarse en pantalla en **menos de 2 segundos** desde que ocurre.
+    El cambio de estado debe reflejarse en pantalla en **menos de 2 segundos** para sesiones creadas por Hydra y en **menos de 3 segundos** para sesiones externas. (Ajuste 2026-08-23.)
 15. **FR-15 — Foco:** un clic en cualquier parte de un pane le da el foco. El pane con foco se distingue con un **borde verde** claramente visible; ningún otro pane lo tiene. Todo lo que el usuario tipea va **únicamente** al pane con foco. Si ningún pane tiene foco, el tipeo no va a ninguna sesión.
-16. **FR-16 — Expandir:** el botón expandir lleva el pane a ocupar **toda el área central** (el sidebar permanece visible). El mismo botón (ahora "contraer") o la tecla `Esc` con el pane expandido lo devuelven a la grilla. Mientras un pane está expandido, los demás siguen corriendo, siguen recibiendo salida y sus semáforos en el sidebar siguen actualizándose.
+16. **FR-16 — Expandir:** el botón expandir lleva el pane a ocupar **toda el área central** (el sidebar permanece visible). El mismo botón (ahora "contraer") lo devuelve a la grilla; la tecla `Esc` también lo contrae **cuando el foco no está dentro de la terminal** (si está, `Esc` va a Claude Code, como en cualquier terminal). (Ajuste 2026-08-23.) Mientras un pane está expandido, los demás siguen corriendo, siguen recibiendo salida y sus semáforos en el sidebar siguen actualizándose.
 17. **FR-17 — Doble clic:** hacer doble clic en **cualquier parte** de un pane (encabezado o área de terminal) equivale a pulsar expandir/contraer. Consecuencia asumida: dentro del área de terminal el doble clic **no** selecciona palabras; la selección de texto se hace arrastrando con el mouse (clic sostenido), que sigue funcionando con normalidad. Decisión de producto del 2026-08-23.
 18. **FR-18:** Al **redimensionar** la ventana, expandir o contraer, la terminal de cada pane se ajusta al nuevo tamaño sin dejar texto cortado ni artefactos.
 
@@ -72,7 +72,7 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
 
 - **Carpeta de proyecto borrada o movida** después de agregarla: el proyecto se muestra con un aviso y no permite crear sesiones hasta que se corrija la ruta.
 - **Dos proyectos con el mismo nombre** (carpetas homónimas en rutas distintas): se distinguen por ruta; el nombre visible puede repetirse.
-- **Sesión externa en una carpeta de proyecto** (el usuario abrió Claude Code a mano en iTerm en esa carpeta): aparece en el sidebar como sesión del proyecto, con semáforo; se puede adjuntar a un pane. Terminarla desde Hydra debe pedir confirmación explícita indicando que es externa.
+- **Sesión externa en una carpeta de proyecto** (el usuario abrió Claude Code a mano en iTerm en esa carpeta): aparece en el sidebar como sesión del proyecto, con semáforo y marca "externa"; adjuntar y terminar están deshabilitados con explicación. Si el usuario la envía a background desde su terminal, en el siguiente refresco pasa a ser adjuntable y terminable como cualquier otra.
 - **Más de 6 panes visibles:** la grilla hace scroll; el rendimiento debe mantenerse usable (ver AC-12).
 - **Expandir un pane y cerrar la app:** al reabrir, la grilla vuelve a estado normal (no se persiste el estado expandido).
 - **Pérdida de foco de la ventana** (usuario pasa a otra app) y vuelta: el pane que tenía foco lo recupera; el borde nunca queda en un pane distinto al que recibe teclado.
@@ -103,7 +103,8 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
 - **AC-16 (sin Claude Code):** Given una máquina donde Claude Code no está instalado o no es ejecutable, when se abre Hydra, then se muestra un mensaje que indica el problema y cómo resolverlo, y el botón "Nueva sesión" está deshabilitado.
 - **AC-17 (.app desde Finder):** Given la app empaquetada, when el usuario la abre con doble clic desde el Finder (sin ninguna terminal abierta), then puede agregar un proyecto y crear una sesión funcional (AC-2 se cumple).
 - **AC-18 (resize):** Given 4 panes visibles, when el usuario redimensiona la ventana, then cada terminal se reajusta al nuevo tamaño y una línea de 80 caracteres escrita a continuación se ve completa, sin cortes.
-- **AC-19 (sesión externa detectada):** Given el proyecto "foo" registrado, when el usuario abre Claude Code a mano en `~/Documents/foo` desde iTerm, then en menos de 5 segundos aparece como sesión de "foo" en el sidebar con su semáforo, y puede adjuntarse a un pane.
+- **AC-19 (sesión externa detectada):** Given el proyecto "foo" registrado, when el usuario abre Claude Code a mano en `~/Documents/foo` desde iTerm, then en menos de 5 segundos aparece como sesión de "foo" en el sidebar con su semáforo y la marca "externa", y los botones adjuntar/terminar están deshabilitados con una explicación; when el usuario envía esa sesión a background desde iTerm, then en menos de 5 segundos pasa a ser adjuntable y al adjuntarla aparece en la grilla.
+- **AC-8b (latencia externa):** Given una sesión externa listada, when cambia de estado, then su semáforo en el sidebar se actualiza en menos de 3 segundos.
 
 ## Integration
 
@@ -118,5 +119,5 @@ Abro Hydra desde el Dock. A la izquierda veo mis proyectos; cada uno lista sus s
 Todas resueltas el 2026-08-23:
 
 - [x] **Doble clic:** en cualquier parte del pane (FR-17). Se asume la pérdida de la selección de palabra por doble clic dentro de la terminal; el arrastre sigue seleccionando.
-- [x] **Sesiones externas:** sí, se muestran y se pueden adjuntar (FR-9, AC-19); terminarlas pide confirmación explícita.
+- [x] **Sesiones externas:** se muestran con semáforo; adjuntables/terminables solo si están en background (FR-9, AC-19). Ajustado el 2026-08-23 al verificar que `attach` solo acepta sesiones background.
 - [x] **Grilla:** global, agrupada por proyecto, con scroll vertical (FR-11).
