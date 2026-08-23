@@ -9,3 +9,4 @@ LICENSE.md
 tsconfig.json
 tsconfig.*.json
 .sdd
+test/fixtures
