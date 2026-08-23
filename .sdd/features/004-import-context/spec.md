@@ -1,7 +1,7 @@
 # Importar contexto de otra sesión
 
 Feature ID: 004
-Status: specified (borrador — pendiente de aprobación)
+Status: specified (aprobada 2026-08-23)
 Last updated: 2026-08-23
 
 ## Problem
@@ -96,5 +96,5 @@ Tengo el pane de la sesión "api-fix" con foco. Pulso el botón **Importar conte
 
 - [x] **¿Se envía solo o queda pegado?** Queda pegado, el humano revisa y pulsa Enter (decisión de Juan, 2026-08-23).
 - [x] **¿Modelo fijo o configurable?** Haiku por defecto, preferencia persistida; UI en 007 Config (Juan, 2026-08-23).
-- [ ] [NEEDS CLARIFICATION: ¿el resumen se pide en el idioma de la conversación origen, o siempre en español? Propuesta: en el idioma de la conversación (el prompt de traspaso lo indica).]
-- [ ] [NEEDS CLARIFICATION: ¿hace falta la opción de **editar el texto introductorio** (FR-11) como preferencia, o alcanza con editarlo en el prompt cada vez? Propuesta: alcanza con el prompt; si se pide seguido, va a 007.]
+- [x] **Idioma del resumen:** el de la conversación origen (Juan, 2026-08-23).
+- [x] **Texto introductorio:** fijo; se edita en el prompt tal cual (Juan, 2026-08-23).
