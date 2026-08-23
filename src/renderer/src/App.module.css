@@ -14,7 +14,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 10px 14px 10px 46px; /* left gutter for the sidebar tab bulge */
   border-bottom: 1px solid var(--border);
   background: var(--bg-elev);
 }
@@ -36,7 +36,7 @@
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: 12px 14px;
+  padding: 12px 14px 12px 46px; /* left gutter for the sidebar tab bulge */
 }
 .topbarBtn {
   padding: 3px 10px;
