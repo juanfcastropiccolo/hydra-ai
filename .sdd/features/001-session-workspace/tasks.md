@@ -1,14 +1,14 @@
 # Tasks: Workspace de sesiones de Claude Code
 
 Feature ID: 001
-Status: tasked (aprobado 2026-08-23)
+Status: in_progress (task 0 completado 2026-08-23)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verificable. Los tests van **en el mismo task** que el código que prueban (TDD donde aplica: unit primero en `shared`/`main`). Ningún task se marca `[x]` con tests rojos.
 
 ## Fase 0 — Spike de riesgo (antes de cualquier UI)
 
-- [ ] **0.** Spike: `claude attach` dentro de xterm.js en Electron — done when: un script mínimo (`spikes/attach-xterm/`, fuera de `src/`, desechable) abre una ventana Electron con un xterm, spawnea `claude --bg --name spike` + `claude attach <id>` vía node-pty y se verifica a mano: (a) el TUI se dibuja sin basura, (b) el scroll con rueda funciona, (c) arrastrar selecciona texto (con o sin `CLAUDE_CODE_DISABLE_MOUSE=1` — anotar cuál), (d) resize de ventana redibuja bien, (e) `Ctrl+Z`/`←` desadjunta sin matar la sesión, (f) tiempo desde `--bg` hasta prompt visible (primera vez y segunda). Resultado escrito en `docs/spike-001-attach.md` con la decisión sobre `DISABLE_MOUSE` y el ADR-4 de la Constitution actualizado. Si (a) o (b) fallan sin solución → **parar y volver al plan**.
+- [x] **0.** Spike: ✅ GO (2026-08-23, ver docs/spike-001-attach.md) — `claude attach` dentro de xterm.js en Electron — done when: un script mínimo (`spikes/attach-xterm/`, fuera de `src/`, desechable) abre una ventana Electron con un xterm, spawnea `claude --bg --name spike` + `claude attach <id>` vía node-pty y se verifica a mano: (a) el TUI se dibuja sin basura, (b) el scroll con rueda funciona, (c) arrastrar selecciona texto (con o sin `CLAUDE_CODE_DISABLE_MOUSE=1` — anotar cuál), (d) resize de ventana redibuja bien, (e) `Ctrl+Z`/`←` desadjunta sin matar la sesión, (f) tiempo desde `--bg` hasta prompt visible (primera vez y segunda). Resultado escrito en `docs/spike-001-attach.md` con la decisión sobre `DISABLE_MOUSE` y el ADR-4 de la Constitution actualizado. Si (a) o (b) fallan sin solución → **parar y volver al plan**.
 
 ## Fase 1 — Setup
 
@@ -20,7 +20,7 @@ Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verif
 ## Fase 2 — Capa main: contrato con Claude Code (TDD)
 
 - [ ] **5.** `src/shared/types.ts` + `src/shared/ipc.ts`: tipos `Project`, `Session`, `SessionState`, `Pane`, `HydraFile` y el contrato IPC tipado (canales + payloads) — done when: compila y es importado por main y renderer sin `any`.
-- [ ] **6.** `EnvResolver`: resolver PATH del login shell + localizar `claude` — done when: unit tests del parseo de PATH y de la búsqueda (`~/.local/bin/claude`, `which`, PATH resuelto); test de integración devuelve la ruta real de `claude` en esta máquina; si no se encuentra, devuelve un error tipado con mensaje accionable (base de AC-16).
+- [ ] **6.** `EnvResolver`: resolver PATH del login shell (**`-lc`, no `-ilc`**: el interactivo hizo timeout en el spike; timeout 3 s) + localizar `claude` — done when: unit tests del parseo de PATH y de la búsqueda (`~/.local/bin/claude`, `which`, PATH resuelto); test de integración devuelve la ruta real de `claude` en esta máquina; si no se encuentra, devuelve un error tipado con mensaje accionable (base de AC-16).
 - [ ] **7.** `ClaudeCli.listSessions()`: ejecutar `claude agents --json` y parsear/validar — done when: fixtures reales capturadas en `test/fixtures/agents-*.json` (bg working, bg waiting+waitingFor, bg idle/blocked sin prompt, interactive idle/busy, done, sin pid, salida vacía, JSON inválido) y unit tests de `parseAgentsJson()` para todas; un error de parseo nunca lanza: devuelve `{ sessions: [], error }`.
 - [ ] **8.** `mapSessionState()`: tabla `status/state/pid/kind` → `working | waiting | idle | ended` — done when: unit tests cubren toda la tabla de casos del plan (incl. `state: blocked` + `status: idle` → `idle`, `waiting` → `waiting`, `busy` → `working`, sin pid → `ended`) y un caso desconocido → `idle` con warning.
 - [ ] **9.** `ClaudeCli.spawnBackground({cwd, name, settingsJson})` + `parseBackgroundedLine()` — done when: unit test del parseo de `backgrounded · <id> · <name>`; test de integración crea una sesión real en un dir temporal, la encuentra en `listSessions()` con `id` y `kind: background`, y la limpia con `stop`+`rm` (también implementados acá, `ClaudeCli.stop/remove`).
