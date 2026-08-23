@@ -17,7 +17,10 @@ const bg = (over: Partial<AgentEntry> = {}): AgentEntry => ({
   ...over
 })
 
-function make(entriesRef: { current: AgentEntry[] }, t = { now: 1000 }) {
+function make(
+  entriesRef: { current: AgentEntry[] },
+  t = { now: 1000 }
+): { w: SessionWatcher; listSessions: ReturnType<typeof vi.fn>; changes: number[] } {
   const listSessions = vi.fn(async (): Promise<{ entries: AgentEntry[]; error?: string }> => ({
     entries: entriesRef.current
   }))
