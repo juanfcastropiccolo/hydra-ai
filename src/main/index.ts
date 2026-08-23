@@ -2,7 +2,8 @@ import { app, shell, BrowserWindow } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import { AppContext } from './app-context'
-import { registerIpc } from './ipc'
+import { registerIpc, type E2EHooks } from './ipc'
+import { createFakePtySpawn, FakeClaudeCli } from './testing/fakes'
 
 let mainWindow: BrowserWindow | null = null
 let ctx: AppContext | null = null
@@ -41,11 +42,29 @@ app.whenReady().then(async () => {
   electronApp.setAppUserModelId('ai.hydra.app')
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))
 
-  ctx = new AppContext({
-    hydraFilePath: join(app.getPath('userData'), 'hydra.json'),
-    fakeNoClaude: process.env['HYDRA_FAKE_NO_CLAUDE'] === '1'
-  })
-  registerIpc(ctx, () => mainWindow)
+  const e2e = process.env['HYDRA_E2E'] === '1'
+  const userData = process.env['HYDRA_USER_DATA'] ?? app.getPath('userData')
+  let e2eHooks: E2EHooks | undefined
+  if (e2e) {
+    const fakeCli = new FakeClaudeCli()
+    const fakePty = createFakePtySpawn()
+    ctx = new AppContext({
+      hydraFilePath: join(userData, 'hydra.json'),
+      fakeCli,
+      ptySpawn: fakePty.spawn,
+      pollMs: 300
+    })
+    e2eHooks = {
+      ptyRecords: () => [...fakePty.records.entries()].map(([pid, r]) => ({ pid, ...r })),
+      setStatus: (bgId, status, waitingFor) => fakeCli.setStatus(bgId, status, waitingFor)
+    }
+  } else {
+    ctx = new AppContext({
+      hydraFilePath: join(userData, 'hydra.json'),
+      fakeNoClaude: process.env['HYDRA_FAKE_NO_CLAUDE'] === '1'
+    })
+  }
+  registerIpc(ctx, () => mainWindow, e2eHooks)
   await ctx.init()
 
   mainWindow = createWindow()

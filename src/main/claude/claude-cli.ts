@@ -41,7 +41,22 @@ export class ClaudeCliError extends Error {
   }
 }
 
-export class ClaudeCli {
+/** The subset AppContext depends on; FakeClaudeCli (E2E) implements it too. */
+export interface ClaudeCliLike {
+  readonly binaryPath: string
+  version(): Promise<string | undefined>
+  listSessions(opts?: { all?: boolean; cwd?: string }): Promise<ParseAgentsResult>
+  spawnBackground(opts: {
+    cwd: string
+    name: string
+    settingsJson?: string
+  }): Promise<{ bgId: string }>
+  stop(bgId: string): Promise<void>
+  remove(bgId: string): Promise<void>
+  findByBgId(bgId: string): Promise<AgentEntry | undefined>
+}
+
+export class ClaudeCli implements ClaudeCliLike {
   private readonly runner: Runner
   private readonly timeoutMs: number
 

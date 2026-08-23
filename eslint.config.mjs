@@ -39,5 +39,12 @@ export default defineConfig(
       ...eslintPluginReactRefresh.configs.vite.rules
     }
   },
+  {
+    files: ['e2e/**/*.ts'],
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      'react-hooks/rules-of-hooks': 'off'
+    }
+  },
   eslintConfigPrettier
 )

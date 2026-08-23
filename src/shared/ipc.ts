@@ -30,6 +30,20 @@ export interface IpcInvoke {
   'ui.setHidden': { args: [{ sessionId: string; hidden: boolean }]; result: void }
 
   'claude.availability': { args: []; result: ClaudeAvailability }
+
+  /** E2E only (HYDRA_E2E=1): what each fake PTY received. Rejects otherwise. */
+  'e2e.ptyRecords': {
+    args: []
+    result: Array<{
+      pid: number
+      args: string[]
+      writes: string[]
+      resizes: Array<{ cols: number; rows: number }>
+      killed: boolean
+    }>
+  }
+  /** E2E only: flip a fake session's status so the traffic light changes. */
+  'e2e.setStatus': { args: [{ bgId: string; status: string; waitingFor?: string }]; result: void }
 }
 
 /** Fire-and-forget messages (renderer → main, via ipcRenderer.send). */

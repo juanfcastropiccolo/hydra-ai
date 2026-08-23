@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto'
 import type { BrowserWindow } from 'electron'
 import type { ClaudeAvailability, Session } from '@shared/types'
 import type { IpcEvents } from '@shared/ipc'
-import { ClaudeCli } from './claude/claude-cli'
+import { ClaudeCli, type ClaudeCliLike } from './claude/claude-cli'
 import { resolveEnv, type ResolvedEnv } from './env/env-resolver'
 import { buildHookSettingsJson } from './hooks/hook-events'
 import { HooksServer } from './hooks/hooks-server'
@@ -18,6 +18,8 @@ export interface AppContextOptions {
   ptySpawn?: PtySpawn
   /** Test hook: force "claude not found" (HYDRA_FAKE_NO_CLAUDE=1). */
   fakeNoClaude?: boolean
+  /** Test hook: inject a fake CLI (E2E). Skips EnvResolver's binary lookup. */
+  fakeCli?: ClaudeCliLike
   pollMs?: number
 }
 
@@ -25,7 +27,7 @@ export class AppContext {
   readonly store: ProjectStore
   readonly hooks = new HooksServer()
   readonly pty: PtyManager
-  cli: ClaudeCli | null = null
+  cli: ClaudeCliLike | null = null
   watcher: SessionWatcher | null = null
   availability: ClaudeAvailability = {
     ok: false,
@@ -55,8 +57,13 @@ export class AppContext {
           hint: 'Quitá la variable de entorno para volver a habilitarlo.'
         }
       : this.resolved.claude
+    if (this.opts.fakeCli) {
+      this.availability = { ok: true, binaryPath: this.opts.fakeCli.binaryPath }
+    }
     if (this.availability.ok) {
-      this.cli = new ClaudeCli({ binaryPath: this.availability.binaryPath, env: this.resolved.env })
+      this.cli =
+        this.opts.fakeCli ??
+        new ClaudeCli({ binaryPath: this.availability.binaryPath, env: this.resolved.env })
       const version = await this.cli.version()
       if (version) this.availability = { ...this.availability, version }
       const cli = this.cli
@@ -87,7 +94,7 @@ export class AppContext {
     return this.resolved?.env ?? process.env
   }
 
-  requireCli(): ClaudeCli {
+  requireCli(): ClaudeCliLike {
     if (!this.cli)
       throw new Error(this.availability.ok ? 'CLI not initialised' : this.availability.message)
     return this.cli

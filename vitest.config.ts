@@ -12,7 +12,14 @@ export default defineConfig({
       'src/renderer/src/store/**/*.test.ts',
       'test/**/*.test.ts'
     ],
-    exclude: ['**/node_modules/**', 'out/**', 'release/**', 'spikes/**', 'e2e/**'],
+    exclude: [
+      '**/node_modules/**',
+      'out/**',
+      'release/**',
+      'spikes/**',
+      'e2e/**',
+      'playwright-report/**'
+    ],
     passWithNoTests: true,
     coverage: {
       provider: 'v8',

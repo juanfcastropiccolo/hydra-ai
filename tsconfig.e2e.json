@@ -1,0 +1,13 @@
+{
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "include": ["e2e/**/*", "src/preload/*.d.ts", "src/shared/**/*", "playwright.config.ts"],
+  "compilerOptions": {
+    "composite": false,
+    "strict": true,
+    "noEmit": true,
+    "types": ["node"],
+    "lib": ["ES2022", "DOM"],
+    "baseUrl": ".",
+    "paths": { "@shared/*": ["src/shared/*"] }
+  }
+}

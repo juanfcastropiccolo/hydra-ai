@@ -17,7 +17,7 @@
     "package:dir": "npm run build && electron-builder --mac --x64 --dir",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
-    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web && npm run typecheck:e2e",
     "lint": "eslint --cache .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -25,7 +25,9 @@
     "test:watch": "vitest",
     "postinstall": "electron-builder install-app-deps && node node_modules/electron/install.js",
     "test:coverage": "vitest run --coverage",
-    "test:electron": "electron test/electron/pty-smoke.cjs"
+    "test:electron": "electron test/electron/pty-smoke.cjs",
+    "test:e2e": "npm run build && playwright test",
+    "typecheck:e2e": "tsc --noEmit -p tsconfig.e2e.json"
   },
   "dependencies": {
     "@electron-toolkit/utils": "^4.0.0",
@@ -39,6 +41,7 @@
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
     "@electron-toolkit/eslint-config-ts": "^3.1.0",
     "@electron-toolkit/tsconfig": "^2.0.0",
+    "@playwright/test": "^1.62.1",
     "@types/node": "^22.19.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

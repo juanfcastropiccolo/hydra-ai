@@ -13,7 +13,32 @@ function on<C extends SendChannel>(channel: C, fn: (payload: IpcSend[C]) => void
   ipcMain.on(channel, (_e, payload) => fn(payload as IpcSend[C]))
 }
 
-export function registerIpc(ctx: AppContext, getWindow: () => BrowserWindow | null): void {
+export interface E2EHooks {
+  ptyRecords: () => Array<{
+    pid: number
+    args: string[]
+    writes: string[]
+    resizes: Array<{ cols: number; rows: number }>
+    killed: boolean
+  }>
+  setStatus: (bgId: string, status: string, waitingFor?: string) => void
+}
+
+export function registerIpc(
+  ctx: AppContext,
+  getWindow: () => BrowserWindow | null,
+  e2e?: E2EHooks
+): void {
+  handle('e2e.ptyRecords', () => {
+    if (!e2e) throw new Error('E2E hooks not enabled')
+    return e2e.ptyRecords()
+  })
+  handle('e2e.setStatus', ({ bgId, status, waitingFor }) => {
+    if (!e2e) throw new Error('E2E hooks not enabled')
+    e2e.setStatus(bgId, status, waitingFor)
+    void ctx.watcher?.poll()
+  })
+
   handle('claude.availability', () => ctx.availability)
 
   handle('projects.list', () => ctx.store.listProjects())
@@ -34,6 +59,7 @@ export function registerIpc(ctx: AppContext, getWindow: () => BrowserWindow | nu
     return p
   })
   handle('projects.pickFolder', async () => {
+    if (process.env['HYDRA_E2E_PICK_FOLDER']) return process.env['HYDRA_E2E_PICK_FOLDER']
     const win = getWindow()
     const opts: Electron.OpenDialogOptions = {
       properties: ['openDirectory', 'createDirectory'],
