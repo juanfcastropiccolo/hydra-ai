@@ -1,7 +1,7 @@
 # Plan: Importar contexto de otra sesión
 
 Feature ID: 004
-Status: planned (aprobado 2026-08-23)
+Status: complete (2026-08-23)
 Last updated: 2026-08-23
 Base empírica: `docs/spike-004-context.md` (GO).
 
