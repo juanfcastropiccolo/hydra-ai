@@ -108,6 +108,16 @@ export function registerIpc(
   handle('ui.getFileTree', () => ctx.store.fileTree())
   handle('ui.setFileTree', (patch) => ctx.store.setFileTree(patch))
 
+  // ---- feature 004: import context ----
+  handle('context.summarize', ({ importId, sourceSessionId }) => {
+    if (!ctx.importer)
+      throw new Error(ctx.availability.ok ? 'CLI not initialised' : ctx.availability.message)
+    return ctx.importer.summarize({ importId, sourceSessionId })
+  })
+  handle('context.cancel', ({ importId }) => ctx.importer?.cancel(importId))
+  handle('ui.getImportContext', () => ctx.store.importContext())
+  handle('ui.setImportContext', (patch) => ctx.store.setImportContext(patch))
+
   handle('ui.getHidden', () => ctx.store.hiddenSessionIds())
   handle('ui.setHidden', ({ sessionId, hidden }) => ctx.store.setHidden(sessionId, hidden))
 }

@@ -5,6 +5,7 @@ import type { BrowserWindow } from 'electron'
 import type { ClaudeAvailability, Session } from '@shared/types'
 import type { IpcEvents } from '@shared/ipc'
 import { ClaudeCli, type ClaudeCliLike } from './claude/claude-cli'
+import { ContextImporter } from './context/context-importer'
 import { FsActions } from './fs/fs-actions'
 import { FsService } from './fs/fs-service'
 import { GitService } from './git/git-service'
@@ -35,6 +36,8 @@ export class AppContext {
   fsActions!: FsActions
   cli: ClaudeCliLike | null = null
   watcher: SessionWatcher | null = null
+  /** Feature 004: handoff summaries of other sessions (null until the CLI is available). */
+  importer: ContextImporter | null = null
   availability: ClaudeAvailability = {
     ok: false,
     reason: 'error',
@@ -93,6 +96,13 @@ export class AppContext {
       )
       this.hooks.on('event', (ev) => this.watcher?.applyHook(ev))
       this.watcher.start()
+      this.importer = new ContextImporter({
+        cli: () => cli,
+        // decorated: the block names the session the way the user sees it (alias, FR-11)
+        getSession: (id) => this.sessions().find((s) => s.sessionId === id),
+        getProject: (id) => this.store.getProject(id),
+        prefs: () => this.store.importContext()
+      })
     }
     this.pty.on('data', (e) => this.broadcast('pty.data', e))
     this.pty.on('exit', (e) => this.broadcast('pty.exit', e))
@@ -232,6 +242,7 @@ export class AppContext {
   }
 
   async dispose(): Promise<void> {
+    this.importer?.dispose()
     this.fs.dispose()
     this.watcher?.stop()
     this.pty.disposeAll() // clients only; sessions keep running (FR-10)
