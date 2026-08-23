@@ -208,7 +208,7 @@ export class ClaudeCli implements ClaudeCliLike {
           ? ` Revisá la preferencia de modelo (ui.importContext.model = "${opts.model}").`
           : ''
       throw new ClaudeCliError(
-        `No se pudo resumir la sesión (claude -p exit ${r.code}): ${parsed.message}.${hint}`,
+        `No se pudo resumir la sesión (claude -p exit ${r.code}): ${parsed.message.replace(/\.$/, '')}.${hint}`,
         r
       )
     }

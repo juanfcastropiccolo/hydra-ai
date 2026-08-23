@@ -8,6 +8,9 @@ describe('cleanIpcMessage', () => {
         "Error invoking remote method 'context.summarize': Error: La sesión origen ya no existe"
       )
     ).toBe('La sesión origen ya no existe')
+    expect(
+      cleanIpcMessage("Error invoking remote method 'context.summarize': ClaudeCliError: bad model")
+    ).toBe('bad model')
     expect(cleanIpcMessage('plain')).toBe('plain')
   })
 })

@@ -44,5 +44,5 @@ export async function cancelImport(target: string): Promise<void> {
 
 /** Electron prefixes IPC rejections with "Error invoking remote method '…': Error: "; strip it. */
 export function cleanIpcMessage(msg: string): string {
-  return msg.replace(/^Error invoking remote method '[^']*':\s*(Error:\s*)?/, '').trim()
+  return msg.replace(/^Error invoking remote method '[^']*':\s*(\w*Error:\s*)?/, '').trim()
 }
