@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
 import { AnalyticsView } from './components/analytics/AnalyticsView'
+import { GraphKnowView } from './components/know/GraphKnowView'
 import { ImportContextDialog } from './components/ImportContextDialog'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -90,7 +91,11 @@ function App(): React.JSX.Element {
       <section className={styles.main}>
         <header className={styles.topbar}>
           <span className={styles.topbarTitle} data-testid="topbar-title">
-            {centerView === 'analytics' ? 'Analytics' : 'Sesiones'}
+            {centerView === 'analytics'
+              ? 'Analytics'
+              : centerView === 'graph'
+                ? 'Graph Know'
+                : 'Sesiones'}
           </span>
           <span className={styles.topbarSpacer} />
           <span className={styles.topbarTitle} data-testid="claude-status">
@@ -136,6 +141,13 @@ function App(): React.JSX.Element {
             >
               <ErrorBoundary label="analytics">
                 <AnalyticsView />
+              </ErrorBoundary>
+            </div>
+          )}
+          {centerView === 'graph' && (
+            <div className={`${styles.content} ${styles.contentAnalytics}`} data-testid="know-view">
+              <ErrorBoundary label="graph know">
+                <GraphKnowView />
               </ErrorBoundary>
             </div>
           )}

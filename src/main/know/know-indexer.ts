@@ -180,13 +180,26 @@ export class KnowIndexer extends EventEmitter<KnowIndexerEvents> {
         for (const e of neigh) include.add(e.to)
       }
     } else {
-      include = new Set(
-        [...degree.entries()]
-          .filter(([n]) => !n.startsWith('h:')) // facts only when expanding a session
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, limit)
-          .map(([n]) => n)
-      )
+      // Initial view: projects, the most active sessions, and entities shared by ≥ 2 sessions
+      // (the bridges that make multi-hop useful). Single-session files show up on expand.
+      const sessionsByDegree = [...degree.entries()]
+        .filter(([n]) => n.startsWith('s:'))
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, Math.floor(limit * 0.5))
+        .map(([n]) => n)
+      include = new Set(sessionsByDegree)
+      for (const n of ix.graph.nodes) if (n.startsWith('p:')) include.add(n)
+      const shared: Array<[string, number]> = []
+      for (const [n, edges] of ix.graph.adj) {
+        if (!n.startsWith('f:') && !n.startsWith('t:')) continue
+        const sessions = new Set(edges.filter((e) => e.to.startsWith('s:')).map((e) => e.to))
+        if (sessions.size >= 2) shared.push([n, sessions.size])
+      }
+      shared.sort((a, b) => b[1] - a[1])
+      for (const [n] of shared) {
+        if (include.size >= limit) break
+        include.add(n)
+      }
     }
     const label = (id: string): string => {
       const kind = id[0]

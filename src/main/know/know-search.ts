@@ -6,6 +6,7 @@ import { bm25Scores, buildBm25, type Bm25Index } from './bm25'
 import { addEdge, emptyGraph, ppr, type KnowGraph } from './graph'
 import { rrf, topOf } from './rrf'
 import { tokenize } from './term-bag'
+import { isTempCwd } from '@shared/analytics/temp-paths'
 
 export interface KnowSessionMeta {
   sessionId: string
@@ -42,6 +43,7 @@ export function buildSearchIndex(corpus: KnowCorpus): KnowSearchIndex {
     addEdge(graph, s, `p:${meta.projectKey}`, 1)
     docs.push({ id: meta.sessionId, bag: k.termBag })
     for (const [file, n] of Object.entries(k.files)) {
+      if (isTempCwd(file)) continue // scratch files from test runs add noise, not knowledge
       const fk = `f:${fileKey(file)}`
       addEdge(graph, s, fk, Math.min(5, n))
       entityNodes.set(fileKey(file), fk)
@@ -165,6 +167,9 @@ export function searchKnow(
 
 function summaryFallback(k: SessionKnowledge): string | null {
   if (k.card?.summary) return k.card.summary
-  const files = Object.keys(k.files).slice(0, 5)
+  const files = Object.keys(k.files)
+    .filter((f) => !isTempCwd(f))
+    .slice(0, 5)
+    .map((f) => f.split('/').slice(-2).join('/'))
   return files.length ? `Archivos tocados: ${files.join(', ')}` : null
 }

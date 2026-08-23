@@ -76,6 +76,23 @@ export const hydra = {
   onAnalyticsSessions: (
     cb: (e: { sessions: import('@shared/analytics/types').SessionSummary[]; now: number }) => void
   ) => window.hydra.on('analytics.sessions', cb),
+  // feature 006
+  knowOpen: () => window.hydra.invoke('know.open'),
+  knowStatus: () => window.hydra.invoke('know.status'),
+  knowSearch: (q: import('@shared/know/types').KnowSearchQuery) =>
+    window.hydra.invoke('know.search', q),
+  knowCard: (sessionId: string) => window.hydra.invoke('know.card', { sessionId }),
+  knowGeneratePending: () => window.hydra.invoke('know.generatePending'),
+  knowGenerateOne: (sessionId: string) => window.hydra.invoke('know.generateOne', { sessionId }),
+  knowGetPrefs: () => window.hydra.invoke('know.getPrefs'),
+  knowSetPrefs: (patch: Partial<import('@shared/know/types').KnowPrefs>) =>
+    window.hydra.invoke('know.setPrefs', patch),
+  knowConnectMcp: () => window.hydra.invoke('know.connectMcp'),
+  knowDisconnectMcp: () => window.hydra.invoke('know.disconnectMcp'),
+  knowGraph: (opts: { expand?: string[]; limit?: number }) =>
+    window.hydra.invoke('know.graph', opts),
+  onKnowStatus: (cb: (s: import('@shared/know/types').KnowStatus) => void) =>
+    window.hydra.on('know.status', cb),
   // feature 004
   summarizeContext: (importId: string, sourceSessionId: string) =>
     window.hydra.invoke('context.summarize', { importId, sourceSessionId }),
