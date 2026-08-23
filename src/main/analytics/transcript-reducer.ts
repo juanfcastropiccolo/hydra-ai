@@ -9,9 +9,15 @@
 //  - `system` / `turn_duration` carries `durationMs` for one completed turn;
 //  - titles: `custom-title` > `ai-title` > first human prompt.
 import type { SessionSummary, TokenCounts } from '@shared/analytics/types'
+import { addToBag, capBag, type TermBag } from '../know/term-bag'
 
 export interface TranscriptState {
   cwd: string | null
+  /** Feature 006: knowledge pass (term bag capped at finalize; JSON-serialisable). */
+  termBag: TermBag
+  files: Record<string, number>
+  commands: string[]
+
   gitBranch: string | null
   customTitle: string | null
   aiTitle: string | null
@@ -41,6 +47,9 @@ const grid = (): number[][] => Array.from({ length: 7 }, () => Array.from({ leng
 export function emptyState(): TranscriptState {
   return {
     cwd: null,
+    termBag: {},
+    files: {},
+    commands: [],
     gitBranch: null,
     customTitle: null,
     aiTitle: null,
@@ -153,6 +162,7 @@ export function reduceTranscriptLine(
       const turn = isHumanTurn(rec)
       if (turn) {
         state.userTurns++
+        if (turn.text) addToBag(state.termBag, turn.text, 2) // user words weigh more
         if (state.firstPrompt === null && turn.text.trim()) state.firstPrompt = turn.text.trim()
         if (!Number.isNaN(ts)) {
           const { dow, hour } = localParts(ts, opts.timeZone)
@@ -167,9 +177,33 @@ export function reduceTranscriptLine(
       if (!Number.isNaN(ts)) touchTs(state, ts)
       if (!isRecord(msg)) return state
       const content = Array.isArray(msg.content) ? msg.content : []
-      for (const block of content)
-        if (isRecord(block) && block.type === 'tool_use' && typeof block.name === 'string')
+      for (const block of content) {
+        if (!isRecord(block)) continue
+        if (block.type === 'text' && typeof block.text === 'string')
+          addToBag(state.termBag, block.text, 1)
+        if (block.type === 'tool_use' && typeof block.name === 'string') {
           state.tools[block.name] = (state.tools[block.name] ?? 0) + 1
+          const input = isRecord(block.input) ? block.input : {}
+          const filePath =
+            typeof input.file_path === 'string'
+              ? input.file_path
+              : typeof input.path === 'string'
+                ? input.path
+                : null
+          if (FILE_TOOLS.has(block.name) && filePath)
+            state.files[filePath] = (state.files[filePath] ?? 0) + 1
+          if (block.name === 'Bash' && typeof input.command === 'string') {
+            const first = input.command.trim().split(/\s+/)[0] ?? ''
+            if (
+              first &&
+              first.length <= 40 &&
+              state.commands.length < COMMANDS_CAP &&
+              !state.commands.includes(first)
+            )
+              state.commands.push(first)
+          }
+        }
+      }
       const id = typeof msg.id === 'string' ? msg.id : null
       if (id && state.seenMessageIds.includes(id)) return state // same response, another block
       if (id) state.seenMessageIds.push(id)
@@ -208,6 +242,9 @@ function touchTs(state: TranscriptState, ts: number): void {
 }
 
 const TITLE_MAX = 80
+const FILE_TOOLS = new Set(['Edit', 'Write', 'Read', 'NotebookEdit', 'MultiEdit'])
+const COMMANDS_CAP = 50
+const TERMBAG_CAP = 2000
 
 /** Merge `subagents` (already reduced) into `state` and produce the summary sent to the renderer. */
 export function finalizeSession(
@@ -266,4 +303,24 @@ export function finalizeSession(
   }
   if (state.gitBranch) out.gitBranch = state.gitBranch
   return out
+}
+
+/** Feature 006: knowledge view over the same reduced states (parent + subagents merged). */
+export function knowledgeOf(
+  state: TranscriptState,
+  subagents: TranscriptState[] = []
+): { termBag: TermBag; files: Record<string, number>; commands: string[] } {
+  const termBag: TermBag = { ...state.termBag }
+  const files: Record<string, number> = { ...state.files }
+  const commands = [...state.commands]
+  for (const s of subagents) {
+    for (const [t, n] of Object.entries(s.termBag)) termBag[t] = (termBag[t] ?? 0) + n
+    for (const [f, n] of Object.entries(s.files)) files[f] = (files[f] ?? 0) + n
+    for (const c of s.commands)
+      if (!commands.includes(c) && commands.length < COMMANDS_CAP) commands.push(c)
+  }
+  // title terms count too (searchable even for quiet sessions)
+  if (state.customTitle) addToBag(termBag, state.customTitle, 3)
+  if (state.aiTitle) addToBag(termBag, state.aiTitle, 3)
+  return { termBag: capBag(termBag, TERMBAG_CAP), files, commands }
 }

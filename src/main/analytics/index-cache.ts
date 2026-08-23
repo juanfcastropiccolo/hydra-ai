@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from '
 import { dirname } from 'node:path'
 import type { TranscriptState } from './transcript-reducer'
 
-export const INDEX_CACHE_VERSION = 1
+export const INDEX_CACHE_VERSION = 2 // v2: knowledge pass fields in TranscriptState (006)
 
 export interface CachedFile {
   mtimeMs: number

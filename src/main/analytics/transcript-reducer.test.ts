@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 import {
   emptyState,
   finalizeSession,
+  knowledgeOf,
   localParts,
   reduceTranscriptLine,
   type TranscriptState
@@ -193,5 +194,73 @@ describe('reduceTranscriptLine + finalizeSession', () => {
     expect(
       localParts(Date.parse('2026-08-10T02:30:00Z'), 'America/Argentina/Buenos_Aires')
     ).toEqual({ day: '2026-08-09', dow: 0, hour: 23 })
+  })
+})
+
+describe('knowledge pass (006)', () => {
+  it('collects touched files, commands and a weighted term bag; subagents merge; titles indexed', () => {
+    const st = emptyState()
+    const lines = [
+      {
+        type: 'user',
+        timestamp: '2026-01-01T10:00:00Z',
+        message: { role: 'user', content: 'Arreglar el watcher del file tree' }
+      },
+      {
+        type: 'assistant',
+        timestamp: '2026-01-01T10:00:05Z',
+        message: {
+          id: 'm1',
+          model: 'claude-opus-5',
+          content: [
+            { type: 'text', text: 'Voy a editar el servicio' },
+            { type: 'tool_use', name: 'Edit', input: { file_path: '/p/src/fs/fs-service.ts' } },
+            { type: 'tool_use', name: 'Read', input: { file_path: '/p/src/fs/fs-service.ts' } },
+            { type: 'tool_use', name: 'Bash', input: { command: 'npm test -- fs' } },
+            { type: 'tool_use', name: 'Bash', input: { command: 'npm run lint' } },
+            { type: 'tool_use', name: 'Bash', input: { command: 'git status' } }
+          ],
+          usage: { input_tokens: 1, output_tokens: 1 }
+        }
+      },
+      { type: 'ai-title', aiTitle: 'Watcher del árbol', sessionId: 's' }
+    ]
+    for (const l of lines) reduceTranscriptLine(st, JSON.stringify(l), { timeZone: 'UTC' })
+    const sub = emptyState()
+    reduceTranscriptLine(
+      sub,
+      JSON.stringify({
+        type: 'assistant',
+        timestamp: '2026-01-01T10:01:00Z',
+        message: {
+          id: 'm2',
+          model: 'claude-haiku-4-5',
+          content: [{ type: 'tool_use', name: 'Write', input: { file_path: '/p/docs/nota.md' } }],
+          usage: { input_tokens: 1, output_tokens: 1 }
+        }
+      }),
+      { timeZone: 'UTC' }
+    )
+    const k = knowledgeOf(st, [sub])
+    expect(k.files).toEqual({ '/p/src/fs/fs-service.ts': 2, '/p/docs/nota.md': 1 })
+    expect(k.commands).toEqual(['npm', 'git'])
+    expect(k.termBag['watcher']).toBeGreaterThanOrEqual(2 + 3) // user(x2) + title(x3)
+    expect(k.termBag['arbol']).toBe(3)
+    expect(k.termBag['editar']).toBe(1)
+    expect(k.termBag['fs-service.ts']).toBeUndefined() // tool inputs are not text
+  })
+
+  it('knowledge fields survive the JSON round-trip (cache)', () => {
+    const st = emptyState()
+    reduceTranscriptLine(
+      st,
+      JSON.stringify({
+        type: 'user',
+        timestamp: '2026-01-01T00:00:00Z',
+        message: { role: 'user', content: 'hola watcher' }
+      })
+    )
+    const back = JSON.parse(JSON.stringify(st)) as TranscriptState
+    expect(knowledgeOf(back).termBag['watcher']).toBe(2)
   })
 })
