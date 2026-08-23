@@ -12,7 +12,9 @@ export interface MappedState {
  * Traffic-light mapping. Pure. Decision table (see plan 001 §Semáforo):
  *   status waiting                → waiting (🔴) regardless of state
  *   status working | busy         → working (🟢)
- *   state done | failed | stopped → ended
+ *   state failed | stopped        → ended
+ *   state done without pid        → ended   ("done" with a live pid = last turn finished; the
+ *                                            session is still running → falls through to status)
  *   no pid (process gone)         → ended
  *   status idle                   → idle (🟡)   (incl. bg "state: blocked" w/o prompt)
  *   anything else                 → idle, flagged unknown
@@ -25,8 +27,8 @@ export function mapSessionState(
 
   if (status === 'waiting') return { state: 'waiting', waitingFor: e.waitingFor ?? 'unknown' }
   if (status === 'working' || status === 'busy') return { state: 'working' }
-  if (state === 'done' || state === 'failed' || state === 'stopped') return { state: 'ended' }
-  if (e.pid === undefined) return { state: 'ended' }
+  if (state === 'failed' || state === 'stopped') return { state: 'ended' }
+  if (e.pid === undefined) return { state: 'ended' } // incl. state 'done' once the process is gone
   if (status === 'idle') return { state: 'idle' }
   return { state: 'idle', unknown: true }
 }

@@ -33,6 +33,12 @@ describe('mapSessionState — decision table', () => {
       'idle'
     ],
     ['bg done (no pid)', { kind: 'background', state: 'done' }, 'ended'],
+    // Observed with claude 2.1.241 after a completed turn: the process is alive and idle.
+    [
+      'bg done with live pid',
+      { kind: 'background', state: 'done', status: 'idle', pid: 1 },
+      'idle'
+    ],
     ['bg stopped (no pid)', { kind: 'background', state: 'stopped' }, 'ended'],
     ['bg failed', { kind: 'background', state: 'failed', pid: 1 }, 'ended'],
     ['interactive busy', { kind: 'interactive', status: 'busy', pid: 1 }, 'working'],
