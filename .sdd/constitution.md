@@ -1,7 +1,7 @@
 # Hydra AI — Constitution
 
 Estado: APROBADA (2026-08-23)
-Última actualización: 2026-08-23 (ADR-4 corregida, ADR-5/6 añadidas al aprobar plan 001)
+Última actualización: 2026-08-23 (cláusula de transcripts ampliada y superficie MCP añadida al aprobar plan 006)
 
 ## Purpose
 
@@ -28,7 +28,7 @@ Hoy es una herramienta personal de su autor; está diseñada para poder distribu
 - **Lenguaje:** TypeScript en modo `strict`, en todos los procesos.
 - **Runtime de app:** Electron (proceso main en Node; renderer con React). Target **macOS 14+, x64** primero; arm64/universal cuando haya hardware para probarlo.
 - **Terminal:** xterm.js en el renderer; PTYs reales vía `node-pty` (distribución con binarios precompilados) en el proceso main.
-- **Integración con Claude Code:** exclusivamente a través de su CLI público (`claude --bg`, `claude agents --json`, `claude attach`, `claude logs/stop/rm`) y de su sistema de hooks. Nunca leer estructuras internas no documentadas salvo los transcripts `.jsonl` de `~/.claude/projects/` para analíticas.
+- **Integración con Claude Code:** exclusivamente a través de su CLI público (`claude --bg`, `claude agents --json`, `claude attach`, `claude logs/stop/rm`) y de su sistema de hooks. Nunca leer estructuras internas no documentadas salvo los transcripts `.jsonl` de `~/.claude/projects/` para analíticas y Graph Know (solo lectura).
 - **Persistencia local:** archivos JSON en el directorio de datos de la app (proyectos, layout). Sin base de datos hasta que una feature lo justifique.
 - **Build/empaquetado:** `electron-builder` → `Hydra.app` + `.dmg`. Firma ad-hoc por ahora; notarización queda como feature futura.
 - **Infra:** ninguna. Todo local. Sin backend, sin telemetría, sin red salvo la que haga el propio CLI de Claude.
@@ -63,6 +63,9 @@ Hoy es una herramienta personal de su autor; está diseñada para poder distribu
 
 | Fecha | Decisión | Razón | Features afectadas |
 |------|----------|-------|--------------------|
+| 2026-08-23 | La cláusula "transcripts solo para analíticas" se amplía a "analíticas y Graph Know" (siempre solo lectura) | 006 construye el índice de conocimiento sobre los mismos transcripts que 005 | 005, 006 |
+| 2026-08-23 | Hydra **expone** un MCP server HTTP local (127.0.0.1, solo lectura) que las sesiones de Claude consumen; se registra únicamente vía `claude mcp add` y con consentimiento explícito del usuario | La recuperación de contexto (006) debe estar disponible para cualquier sesión; MCP es el mecanismo público de Claude Code para tools externas | 006 |
+| 2026-08-23 | Primera dependencia de runtime: `@modelcontextprotocol/sdk` (Anthropic) | Implementar el protocolo MCP a mano es riesgo sin valor; el SDK es del mismo proveedor que el CLI. Sigue vigente "sin deps hasta que duela" para todo lo demás (BM25/PPR/layout propios) | 006 |
 | 2026-08-23 | Electron + TS + React + xterm.js + node-pty, descartando Tauri y Swift nativo | `node-pty` es el PTY de VS Code (18M desc/mes) vs. plugin Tauri inmaduro (45k totales); UI web resuelve file tree, charts y grafos; Swift obligaba a construir todo desde cero. Costo de RAM/bundle irrelevante para herramienta de dev. | todas |
 | 2026-08-23 | Sin tmux: se usa el daemon nativo de Claude Code (`--bg`, `agents --json`, `attach`, hooks) | Claude Code 2.1.2xx ya trae supervisor, persistencia, reconexión y estado por sesión. Reimplementarlo con tmux duplica riesgo. | todas |
 | 2026-08-23 | Estado de sesión vía hooks HTTP (push) + `agents --json` (reconciliación), nunca inferido del stream de la PTY | Inferir del texto es frágil ante cambios del TUI; el CLI ya reporta `working/waiting/idle` y `waitingFor`. | semáforo |
