@@ -2,8 +2,8 @@
   "id": "005",
   "slug": "usage-analytics",
   "title": "Analytics de uso",
-  "phase": "tasked",
-  "progress_pct": 60,
+  "phase": "in_progress",
+  "progress_pct": 80,
   "depends_on": [
     "001"
   ],
