@@ -4,7 +4,7 @@ Proyecto gestionado con Spec-Driven Development. Ver `constitution.md` para los 
 
 ## Features
 
-- [001 — Workspace de sesiones de Claude Code](features/001-session-workspace/) — planned (40%)
+- [001 — Workspace de sesiones de Claude Code](features/001-session-workspace/) — tasked (60%)
 
 ## Backlog (aún sin spec, en orden tentativo)
 
