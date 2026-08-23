@@ -27,6 +27,7 @@ import {
   type CenterView,
   type ModelPricing
 } from '@shared/analytics/types'
+import { DEFAULT_KNOW_PREFS, type KnowPrefs } from '@shared/know/types'
 
 export interface ProjectStoreDeps {
   filePath: string
@@ -79,11 +80,23 @@ export function validateHydraFile(v: unknown): HydraFile | null {
         ? ic.model.trim()
         : DEFAULT_IMPORT_CONTEXT_PREFS.model
   }
-  const centerView: CenterView = ui.centerView === 'analytics' ? 'analytics' : 'sessions'
+  const centerView: CenterView =
+    ui.centerView === 'analytics' || ui.centerView === 'graph' ? ui.centerView : 'sessions'
   const an = isRecord(ui.analytics) ? ui.analytics : {}
   const analytics: AnalyticsPrefs = {
     range: validRange(an.range) ?? DEFAULT_ANALYTICS_PREFS.range,
     pricing: validPricing(an.pricing)
+  }
+  const kn = isRecord(ui.know) ? ui.know : {}
+  const know: KnowPrefs = {
+    autoCards: typeof kn.autoCards === 'boolean' ? kn.autoCards : DEFAULT_KNOW_PREFS.autoCards,
+    port:
+      typeof kn.port === 'number' &&
+      Number.isInteger(kn.port) &&
+      kn.port >= 1024 &&
+      kn.port <= 65535
+        ? kn.port
+        : DEFAULT_KNOW_PREFS.port
   }
   return {
     version: 1,
@@ -95,7 +108,8 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       fileTree,
       importContext,
       centerView,
-      analytics
+      analytics,
+      know
     }
   }
 }
@@ -282,7 +296,7 @@ export class ProjectStore {
     return this.data.ui.centerView
   }
   setCenterView(view: CenterView): CenterView {
-    this.data.ui.centerView = view === 'analytics' ? 'analytics' : 'sessions'
+    this.data.ui.centerView = view === 'analytics' || view === 'graph' ? view : 'sessions'
     this.save()
     return this.centerView()
   }
@@ -297,6 +311,24 @@ export class ProjectStore {
     this.data.ui.analytics = next
     this.save()
     return this.analytics()
+  }
+
+  know(): KnowPrefs {
+    return { ...this.data.ui.know }
+  }
+  setKnow(patch: Partial<KnowPrefs>): KnowPrefs {
+    const next = { ...this.data.ui.know }
+    if (typeof patch.autoCards === 'boolean') next.autoCards = patch.autoCards
+    if (
+      typeof patch.port === 'number' &&
+      Number.isInteger(patch.port) &&
+      patch.port >= 1024 &&
+      patch.port <= 65535
+    )
+      next.port = patch.port
+    this.data.ui.know = next
+    this.save()
+    return this.know()
   }
 
   paneOrder(): string[] {

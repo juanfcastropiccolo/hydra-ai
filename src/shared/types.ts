@@ -1,5 +1,6 @@
 // Domain types shared by main and renderer. Keep this file free of Node/DOM imports.
 import type { AnalyticsPrefs, CenterView } from './analytics/types'
+import type { KnowPrefs } from './know/types'
 
 /** A folder the user registered in the sidebar. Persisted in hydra.json. */
 export interface Project {
@@ -69,6 +70,8 @@ export interface HydraFile {
     centerView: CenterView
     /** Feature 005: analytics dashboard preferences. */
     analytics: AnalyticsPrefs
+    /** Feature 006: Graph Know preferences. */
+    know: KnowPrefs
   }
 }
 
@@ -119,7 +122,8 @@ export const EMPTY_HYDRA_FILE: HydraFile = {
     fileTree: { open: false, width: 300, collapsed: false },
     importContext: { model: 'haiku' },
     centerView: 'sessions',
-    analytics: { range: '7d', pricing: {} }
+    analytics: { range: '7d', pricing: {} },
+    know: { autoCards: true, port: 4855 }
   }
 }
 

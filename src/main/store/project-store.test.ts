@@ -36,7 +36,8 @@ describe('ProjectStore', () => {
         fileTree: { open: false, width: 300, collapsed: false },
         importContext: { model: 'haiku' },
         centerView: 'sessions',
-        analytics: { range: '7d', pricing: {} }
+        analytics: { range: '7d', pricing: {} },
+        know: { autoCards: true, port: 4855 }
       }
     })
     s.addProject({ path: '/Users/u/foo/' })
@@ -102,8 +103,14 @@ describe('ProjectStore', () => {
         }
       }).pricing
     ).toEqual({ 'claude-x': { input: 1, output: 5, cacheWrite: 1.25, cacheRead: 0.1 } })
+    // feature 006
+    expect(b.know()).toEqual({ autoCards: true, port: 4855 })
+    expect(b.setKnow({ autoCards: false, port: 5001 })).toEqual({ autoCards: false, port: 5001 })
+    expect(b.setKnow({ port: 80 })).toEqual({ autoCards: false, port: 5001 }) // <1024 → keep
+    expect(b.setCenterView('graph')).toBe('graph')
     const reloaded = mk().load().ui
-    expect(reloaded.centerView).toBe('analytics')
+    expect(reloaded.centerView).toBe('graph')
+    expect(reloaded.know).toEqual({ autoCards: false, port: 5001 })
     expect(reloaded.analytics.pricing['claude-x']?.output).toBe(5)
     b.setSessionName('S1', '')
     expect(b.sessionNames()).toEqual({})
@@ -180,16 +187,25 @@ describe('validateHydraFile', () => {
         fileTree: { open: false, width: 300, collapsed: false },
         importContext: { model: 'haiku' },
         centerView: 'sessions',
-        analytics: { range: '7d', pricing: {} }
+        analytics: { range: '7d', pricing: {} },
+        know: { autoCards: true, port: 4855 }
       }
     })
     expect(
       validateHydraFile({
         version: 1,
         projects: [],
-        ui: { centerView: 'nope', analytics: { range: 'weird', pricing: 3 } }
+        ui: {
+          centerView: 'nope',
+          analytics: { range: 'weird', pricing: 3 },
+          know: { autoCards: 'x', port: -1 }
+        }
       })?.ui
-    ).toMatchObject({ centerView: 'sessions', analytics: { range: '7d', pricing: {} } })
+    ).toMatchObject({
+      centerView: 'sessions',
+      analytics: { range: '7d', pricing: {} },
+      know: { autoCards: true, port: 4855 }
+    })
     expect(
       validateHydraFile({ version: 1, projects: [], ui: { fileTree: { open: 'yes', width: -5 } } })
         ?.ui.fileTree
