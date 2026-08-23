@@ -13,5 +13,4 @@ Proyecto gestionado con Spec-Driven Development. Ver `constitution.md` para los 
 
 - 002-fix — ⌘⇧E no alterna la vista en la `.app` empaquetada (sí en dev/E2E). Investigar captura de teclas en producción.
 - ~~003 — Chat box por pane~~ (descartada el 2026-08-23 por decisión de Juan; el número no se reutiliza).
-- 006 — Graph Know (grafo de conocimiento entre proyectos/sesiones).
 - 007 — Config (hereda: `ui.importContext.model` y, si se quiere, `--max-budget-usd` para el resumen de 004).
