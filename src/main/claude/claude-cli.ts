@@ -57,6 +57,18 @@ export interface ClaudeCliLike {
   findByBgId(bgId: string): Promise<AgentEntry | undefined>
   /** Feature 004: handoff summary of a session via `claude -p --resume --fork-session`. */
   summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult>
+  /** Feature 006: generic one-shot prompt (optionally resuming a conversation). */
+  runPrompt(opts: RunPromptOptions): Promise<SummarizeResult>
+}
+
+export interface RunPromptOptions {
+  cwd: string
+  model: string
+  prompt: string
+  /** When set, the prompt runs over that conversation (fork, no persistence). */
+  resumeSessionId?: string
+  signal?: AbortSignal
+  timeoutMs?: number
 }
 
 export interface SummarizeOptions {
@@ -178,24 +190,22 @@ export class ClaudeCli implements ClaudeCliLike {
   }
 
   /**
-   * `claude -p --resume <id> --fork-session --no-session-persistence --model <m> --output-format json <prompt>`
-   * run in the session's cwd. Reads the whole conversation, returns the model's answer, and leaves
-   * no transcript behind (verified in docs/spike-004-context.md). Rejects with an AbortError when
-   * `signal` fires; with ClaudeCliError (readable message) on any CLI failure.
+   * `claude -p [--resume <id> --fork-session] --no-session-persistence --model <m> --output-format json <prompt>`
+   * run in `cwd`. With `resumeSessionId` it reads that whole conversation and leaves no transcript
+   * behind and the source untouched (verified in docs/spike-004-context.md). Rejects with an
+   * AbortError when `signal` fires; with ClaudeCliError (readable message) on any CLI failure.
    */
-  async summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult> {
-    const args = [
-      '-p',
-      '--resume',
-      opts.sessionId,
-      '--fork-session',
+  async runPrompt(opts: RunPromptOptions): Promise<SummarizeResult> {
+    const args = ['-p']
+    if (opts.resumeSessionId) args.push('--resume', opts.resumeSessionId, '--fork-session')
+    args.push(
       '--no-session-persistence',
       '--model',
       opts.model,
       '--output-format',
       'json',
       opts.prompt
-    ]
+    )
     const r = await this.runner(args, {
       cwd: opts.cwd,
       timeoutMs: opts.timeoutMs ?? 90_000,
@@ -213,6 +223,18 @@ export class ClaudeCli implements ClaudeCliLike {
       )
     }
     return { text: parsed.text, raw: parsed }
+  }
+
+  /** Feature 004 wrapper kept for clarity: handoff summary of a live session. */
+  async summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult> {
+    return this.runPrompt({
+      resumeSessionId: opts.sessionId,
+      cwd: opts.cwd,
+      model: opts.model,
+      prompt: opts.prompt,
+      ...(opts.signal ? { signal: opts.signal } : {}),
+      ...(opts.timeoutMs !== undefined ? { timeoutMs: opts.timeoutMs } : {})
+    })
   }
 
   /** Convenience: find the entry for a bg id in a fresh listing. */

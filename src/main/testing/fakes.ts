@@ -1,6 +1,11 @@
 // Deterministic fakes for E2E (HYDRA_E2E=1). No real Claude, no real PTY.
 import type { AgentEntry, ParseAgentsResult } from '../claude/agents-json'
-import type { ClaudeCliLike, SummarizeOptions, SummarizeResult } from '../claude/claude-cli'
+import type {
+  ClaudeCliLike,
+  RunPromptOptions,
+  SummarizeOptions,
+  SummarizeResult
+} from '../claude/claude-cli'
 import type { PtyProcess, PtySpawn, PtySpawnOptions } from '../pty/pty-manager'
 
 export class FakeClaudeCli implements ClaudeCliLike {
@@ -77,6 +82,22 @@ export class FakeClaudeCli implements ClaudeCliLike {
     ].join('\n')
     return { text, raw: { ok: true, text } }
   }
+  /** Feature 006: canned card JSON (or echo) for runPrompt. */
+  async runPrompt(opts: RunPromptOptions): Promise<SummarizeResult> {
+    const text = JSON.stringify({
+      summary: `Ficha falsa de ${opts.resumeSessionId ?? 'ad-hoc'}`,
+      facts: [
+        {
+          text: 'Se decidió usar bracketed paste',
+          kind: 'decision',
+          entities: ['paste', 'src/shared/paste.ts']
+        }
+      ],
+      superseded_ids: []
+    })
+    return { text, raw: { ok: true, text } }
+  }
+
   /** Test hook: flip a session's reported status (e.g. to 'waiting'). */
   setStatus(bgId: string, status: string, waitingFor?: string): void {
     const e = this.entries.find((x) => x.id === bgId)
