@@ -1,0 +1,94 @@
+.project {
+  margin-bottom: 10px;
+}
+.projectRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid transparent;
+}
+.projectRow.missing {
+  border-color: var(--warn);
+}
+.caret {
+  width: 14px;
+  color: var(--fg-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.name {
+  flex: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+.nameInput {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 6px;
+}
+.badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: var(--danger);
+  color: #1c1c1e;
+  font-weight: 700;
+  font-size: 11px;
+  display: grid;
+  place-content: center;
+}
+.iconBtn {
+  padding: 2px 6px;
+  font-size: 12px;
+  line-height: 1;
+}
+.sessions {
+  margin: 4px 0 0 18px;
+  display: grid;
+  gap: 2px;
+}
+.session {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+}
+.session:hover {
+  background: var(--bg-panel);
+}
+.sessionHidden {
+  opacity: 0.7;
+}
+.sessionName {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.external {
+  font-size: 10px;
+  color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0 4px;
+}
+.warnText {
+  color: var(--warn);
+  font-size: 11px;
+  margin: 4px 0 0 18px;
+}
+.muted {
+  color: var(--fg-muted);
+}
