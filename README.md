@@ -17,6 +17,7 @@ npm install          # instala deps; el postinstall garantiza el binario de Elec
 npm run dev          # Electron + Vite con HMR
 npm test             # unit/integración (Vitest, src/main + src/shared)
 npm run test:electron  # smoke: node-pty cargando dentro de Electron
+npm run test:e2e     # Playwright + Electron sobre out/ con CLI/PTY falsos (HYDRA_E2E=1)
 npm run typecheck && npm run lint && npm run format:check
 npm run package      # → release/Hydra.app (+ .dmg), x64, firma ad-hoc
 ```
@@ -31,6 +32,14 @@ Hydra usa [`@lydell/node-pty`](https://www.npmjs.com/package/@lydell/node-pty), 
 - `electron-builder` lo saca del `asar` (`asarUnpack: node_modules/@lydell/node-pty*/**`) porque el `.node` y el `spawn-helper` tienen que existir como archivos reales en disco.
 
 Si en el futuro se agrega arm64, alcanza con empaquetar `--arm64`/`--universal`: el paquete opcional correspondiente se instala solo.
+
+## Cómo funciona (feature 001)
+
+- **Sidebar** con proyectos (carpetas) y sus sesiones, semáforo 🟢 trabajando / 🔴 esperando tu acción / 🟡 ocioso, y contador rojo por proyecto.
+- **＋** en un proyecto → diálogo (nombre, carpeta, Cancelar/Crear) → `claude --bg --name …` en esa carpeta, con hooks HTTP inyectados vía `--settings` para el semáforo en tiempo real.
+- Cada pane es una **PTY real** corriendo `claude attach <id>` dentro de xterm.js. Clic = foco (borde verde, teclas solo ahí). Doble clic o ⤢ = expandir; `Esc` contrae cuando la terminal no tiene el foco. ⊟ oculta sin terminar; ✕ termina.
+- Cerrar Hydra **no** mata sesiones: viven en el daemon de Claude Code; al reabrir se reconectan. Sesiones abiertas a mano en otra terminal aparecen como "externa" (solo lectura) hasta que las mandes a background con `/bg`.
+- QA manual y desvíos: `docs/qa-001.md`. Spike técnico: `docs/spike-001-attach.md`.
 
 ## Estructura
 
