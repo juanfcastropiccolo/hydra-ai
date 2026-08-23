@@ -1,41 +1,65 @@
-import { useEffect, useState } from 'react'
-import type { ClaudeAvailability, Project, Session } from '@shared/types'
+import { useEffect } from 'react'
+import styles from './App.module.css'
+import { ClaudeUnavailable } from './components/ClaudeUnavailable'
+import { Sidebar } from './components/Sidebar'
+import { initHydraClient } from './lib/hydra-client'
+import { useAppStore } from './store/app-store'
 
-// Temporary wiring probe (task 14). Real UI replaces this from task 15/16 on.
 function App(): React.JSX.Element {
-  const [availability, setAvailability] = useState<ClaudeAvailability | null>(null)
-  const [projects, setProjects] = useState<Project[]>([])
-  const [sessions, setSessions] = useState<Session[]>([])
+  const availability = useAppStore((s) => s.availability)
+  const projects = useAppStore((s) => s.projects)
+  const lastError = useAppStore((s) => s.lastError)
+  const setError = useAppStore((s) => s.setError)
+  const escape = useAppStore((s) => s.escape)
 
+  useEffect(() => initHydraClient(), [])
   useEffect(() => {
-    void window.hydra.invoke('claude.availability').then(setAvailability)
-    void window.hydra.invoke('projects.list').then(setProjects)
-    void window.hydra.invoke('sessions.list').then(setSessions)
-    const offA = window.hydra.on('claude.availability', setAvailability)
-    const offP = window.hydra.on('projects.changed', (e) => setProjects(e.projects))
-    const offS = window.hydra.on('sessions.changed', (e) => setSessions(e.sessions))
-    return () => {
-      offA()
-      offP()
-      offS()
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape' && escape()) e.preventDefault()
     }
-  }, [])
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [escape])
 
   return (
-    <main className="app">
-      <h1>Hydra AI</h1>
-      <p data-testid="availability">
-        Claude Code:{' '}
-        {availability === null
-          ? '…'
-          : availability.ok
-            ? `OK (${availability.version ?? availability.binaryPath})`
-            : `NO — ${availability.message}`}
-      </p>
-      <p data-testid="counts">
-        Proyectos: {projects.length} · Sesiones: {sessions.length}
-      </p>
-    </main>
+    <div className={styles.shell}>
+      <Sidebar />
+      <section className={styles.main}>
+        <header className={styles.topbar}>
+          <span className={styles.topbarTitle}>Sesiones</span>
+          <span className={styles.topbarSpacer} />
+          <span className={styles.topbarTitle} data-testid="claude-status">
+            {availability === null
+              ? 'Claude Code: …'
+              : availability.ok
+                ? `Claude Code ${availability.version ?? ''}`
+                : 'Claude Code: no disponible'}
+          </span>
+        </header>
+        {lastError && (
+          <div className={styles.errorBanner} role="alert">
+            <span>⚠️ {lastError}</span>
+            <button onClick={() => setError(null)}>Cerrar</button>
+          </div>
+        )}
+        <div className={styles.content}>
+          {availability && !availability.ok ? (
+            <ClaudeUnavailable availability={availability} />
+          ) : projects.length === 0 ? (
+            <div className={styles.empty} data-testid="empty-state">
+              <h2>Sin proyectos todavía</h2>
+              <p>
+                Agregá una carpeta desde el panel de la izquierda para empezar a crear sesiones.
+              </p>
+            </div>
+          ) : (
+            <div className={styles.empty} data-testid="grid-placeholder">
+              <p>La grilla de terminales llega en la próxima tarea.</p>
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
   )
 }
 

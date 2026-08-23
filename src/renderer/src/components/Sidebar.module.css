@@ -1,0 +1,80 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border-right: 1px solid var(--border);
+  min-height: 0;
+}
+.brand {
+  margin: 14px 14px 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #1f3b2a;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+.nav {
+  display: grid;
+  gap: 6px;
+  margin: 0 14px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+}
+.navBtn {
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+}
+.navBtnActive {
+  background: var(--bg-pane);
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+.divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 24px;
+}
+.projects {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 14px;
+}
+.projectsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--fg-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 4px 0 8px;
+}
+.addBtn {
+  padding: 2px 8px;
+  font-size: 12px;
+}
+.user {
+  margin: 12px 14px 14px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: #1f3b2a;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--warn);
+  color: #1c1c1e;
+  display: grid;
+  place-content: center;
+  font-weight: 700;
+  font-size: 12px;
+}
