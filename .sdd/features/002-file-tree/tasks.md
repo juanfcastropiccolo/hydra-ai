@@ -30,8 +30,8 @@ Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo ta
 
 - [x] **15.** E2E fixture: proyecto temp con `git init`, `src/index.ts` (modificado), `nuevo.ts` (untracked), `.gitignore` con `dist/`, `dist/x.js`, `README.md`; E2E-4 (`e2e/04-file-tree.spec.ts`): abrir por botón y ⌘⇧E, encabezado con nombre/ruta, carpetas primero, `.git` oculto, iconos por tipo, badges `M`/`U`, `dist` atenuado, expandir lazy (`src`), crear archivo desde el test → aparece resaltado < 2 s, filtro, Colapsar todo, teclado + Esc devuelve foco (AC-1/3/4/5/10/11/13 parcial) — done when: verde.
 - [x] **16.** E2E-5 (`e2e/05-file-tree-dnd.spec.ts`): dos proyectos, panel sigue al foco (AC-2); DnD de `src/index.ts` al pane del mismo proyecto → PTY falso recibe `src/index.ts ` y foco; al pane del otro → ruta absoluta; abrir/cerrar panel ×5 → mismo pid de PTY, tipeo solo al pane con foco (AC-9, AC-12) — done when: verde.
-- [ ] **17.** QA manual `docs/qa-002.md` (AC-6/7/8, ⌘⇧E con foco en xterm, repo grande real con `node_modules`, Revelar en Finder, VS Code) + empaquetar `Hydra.app` 0.2.0 — done when: checklist completo por Juan; fallos → tasks de fix.
-- [ ] **18.** Cierre: README (sección "Árbol de archivos"), CLAUDE.md (módulos nuevos y reglas: un watcher por root, git CLI), `status.json` → `complete`, `.sdd/README.md`, tag `v0.2.0` — done when: hecho y pusheado.
+- [~] **17.** (app 0.2.0 empaquetada, checklist en docs/qa-002.md; pendiente QA manual de Juan: AC-6/7/8, ⌘⇧E, DnD real) QA manual `docs/qa-002.md` (AC-6/7/8, ⌘⇧E con foco en xterm, repo grande real con `node_modules`, Revelar en Finder, VS Code) + empaquetar `Hydra.app` 0.2.0 — done when: checklist completo por Juan; fallos → tasks de fix.
+- [~] **18.** (README/CLAUDE.md ✅; status → complete al cerrar 17) Cierre: README (sección "Árbol de archivos"), CLAUDE.md (módulos nuevos y reglas: un watcher por root, git CLI), `status.json` → `complete`, `.sdd/README.md`, tag `v0.2.0` — done when: hecho y pusheado.
 
 ## Traceability
 

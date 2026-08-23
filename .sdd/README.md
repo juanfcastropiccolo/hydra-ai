@@ -6,7 +6,7 @@ Proyecto gestionado con Spec-Driven Development. Ver `constitution.md` para los 
 
 - [001 — Workspace de sesiones de Claude Code](features/001-session-workspace/) — **complete (100%)** · v0.1.0 · QA manual 2026-08-23
 
-- [002 — Árbol de archivos del proyecto](features/002-file-tree/) — tasked (60%)
+- [002 — Árbol de archivos del proyecto](features/002-file-tree/) — in_progress (80%, 16/18 tasks; pendiente QA manual)
 
 ## Backlog (aún sin spec, en orden tentativo)
 

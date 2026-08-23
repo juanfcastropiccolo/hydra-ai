@@ -39,7 +39,8 @@ Si en el futuro se agrega arm64, alcanza con empaquetar `--arm64`/`--universal`:
 - **＋** en un proyecto → diálogo (nombre, carpeta, Cancelar/Crear) → `claude --bg --name …` en esa carpeta, con hooks HTTP inyectados vía `--settings` para el semáforo en tiempo real.
 - Cada pane es una **PTY real** corriendo `claude attach <id>` dentro de xterm.js. Clic = foco (borde verde, teclas solo ahí). Doble clic o ⤢ = expandir; `Esc` contrae cuando la terminal no tiene el foco. ⊟ oculta sin terminar; ✕ termina.
 - Cerrar Hydra **no** mata sesiones: viven en el daemon de Claude Code; al reabrir se reconectan. Sesiones abiertas a mano en otra terminal aparecen como "externa" (solo lectura) hasta que las mandes a background con `/bg`.
-- QA manual y desvíos: `docs/qa-001.md`. Spike técnico: `docs/spike-001-attach.md`.
+- **Árbol de archivos (feature 002):** la barra izquierda tiene una solapa a mitad de altura con dos vistas: _Sesiones_ y _Archivos_ (⌘⇧E alterna). _Archivos_ muestra el árbol del proyecto del pane con foco, estilo editor: iconos por tipo, estado git (M/U/D, punto en carpetas, ignorados atenuados), actualización en vivo, filtro, teclado. Doble clic abre con la app por defecto; clic derecho: Finder, copiar rutas, editor, "Abrir terminal acá". Arrastrar un archivo a un pane escribe su ruta en esa sesión.
+- QA manual y desvíos: `docs/qa-001.md`, `docs/qa-002.md`. Spike técnico: `docs/spike-001-attach.md`.
 
 ## Estructura
 

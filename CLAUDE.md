@@ -13,8 +13,8 @@ App de escritorio macOS (Electron + React + xterm.js + node-pty) que muestra y o
 
 ## Mapa
 
-- `src/main/` — `app-context.ts` (wiring), `claude/` (wrapper del CLI + parseo con fixtures), `sessions/` (SessionWatcher: poll + hooks → estado), `hooks/` (HTTP server para hooks de Claude Code), `pty/` (PtyManager), `store/` (hydra.json), `env/` (PATH real: las apps del Finder no heredan el PATH del shell), `testing/` (fakes E2E).
-- `src/renderer/src/` — `store/app-store.ts` (zustand; invariantes de foco/expandir), `components/` (Sidebar, ProjectList, NewSessionDialog, PaneGrid, Pane, XTermView).
+- `src/main/` — `app-context.ts` (wiring), `claude/` (wrapper del CLI + parseo con fixtures), `sessions/` (SessionWatcher: poll + hooks → estado), `hooks/` (HTTP server para hooks de Claude Code), `pty/` (PtyManager), `store/` (hydra.json), `env/` (PATH real: las apps del Finder no heredan el PATH del shell), `fs/` (FsService: listado lazy + `fs.watch` recursivo; FsActions: abrir/Finder/editor/menú), `git/` (porcelain parser + GitService), `app-menu.ts` (menú nativo, ⌘⇧E), `testing/` (fakes E2E).
+- `src/renderer/src/` — `store/app-store.ts` (zustand; invariantes de foco/expandir), `store/file-tree-slice.ts` (árbol: follow-focus, expandidos por proyecto), `components/` (Sidebar con solapa Sesiones/Archivos, ProjectList, NewSessionDialog, PaneGrid, Pane, XTermView, `file-tree/`).
 - `src/shared/` — tipos e `ipc.ts` (contrato tipado; todo lo que cruza procesos pasa por ahí).
 
 ## Reglas que muerden
@@ -24,4 +24,5 @@ App de escritorio macOS (Electron + React + xterm.js + node-pty) que muestra y o
 - **PaneGrid** mantiene el mismo árbol DOM en modo grilla y expandido (solo cambian clases) para no remontar xterm.
 - `claude attach` siempre renderiza fullscreen; está bien (spike 001). No setear `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN`.
 - `EnvResolver` usa `$SHELL -lc` (no `-ilc`: colgó 5 s en la máquina del autor).
+- **File tree:** un solo `fs.watch` por raíz; los eventos bajo `.git/**` se descartan (si no, `git status` realimenta el watcher). `GitService` devuelve la raíz en la forma de ruta del caller (symlinks `/var` vs `/private/var`). Estado git via CLI, nunca librerías.
 - Commits: Conventional Commits; un task de SDD ≈ un commit. Código/commits en inglés, docs en español.
