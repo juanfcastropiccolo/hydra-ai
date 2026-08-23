@@ -2,8 +2,8 @@
   "id": "002",
   "slug": "file-tree",
   "title": "Árbol de archivos del proyecto",
-  "phase": "in_progress",
-  "progress_pct": 80,
+  "phase": "complete",
+  "progress_pct": 100,
   "depends_on": [
     "001"
   ],
