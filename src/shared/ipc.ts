@@ -1,6 +1,13 @@
 // Typed IPC contract between main and renderer. Both sides import from here;
 // nothing crosses the bridge that is not described in these two maps.
 import type {
+  KnowPrefs,
+  KnowSearchHit,
+  KnowSearchQuery,
+  KnowStatus,
+  SessionCard
+} from './know/types'
+import type {
   AnalyticsPrefs,
   AnalyticsProgress,
   CenterView,
@@ -97,6 +104,34 @@ export interface IpcInvoke {
   'ui.getCenterView': { args: []; result: CenterView }
   'ui.setCenterView': { args: [CenterView]; result: CenterView }
 
+  // ---- feature 006: graph know ----
+  /** Opens/refreshes the knowledge layer (piggybacks on the analytics index) and starts the MCP server. */
+  'know.open': { args: []; result: KnowStatus }
+  'know.close': { args: []; result: void }
+  'know.status': { args: []; result: KnowStatus }
+  'know.search': { args: [KnowSearchQuery]; result: KnowSearchHit[] }
+  'know.card': { args: [{ sessionId: string }]; result: SessionCard | null }
+  /** Approve the initial backfill (or force-generate everything pending). */
+  'know.generatePending': { args: []; result: void }
+  'know.generateOne': { args: [{ sessionId: string }]; result: boolean }
+  'know.setPrefs': { args: [Partial<KnowPrefs>]; result: KnowPrefs }
+  'know.getPrefs': { args: []; result: KnowPrefs }
+  'know.connectMcp': { args: []; result: KnowStatus }
+  'know.disconnectMcp': { args: []; result: KnowStatus }
+  /** Graph slice for the visual canvas: top nodes + edges, or the neighbourhood of `expand`. */
+  'know.graph': {
+    args: [{ expand?: string[]; limit?: number }]
+    result: {
+      nodes: Array<{
+        id: string
+        label: string
+        kind: 'project' | 'session' | 'file' | 'topic' | 'fact'
+        weight: number
+      }>
+      edges: Array<{ a: string; b: string; w: number }>
+    }
+  }
+
   /** E2E only (HYDRA_E2E=1): what each fake PTY received. Rejects otherwise. */
   'e2e.ptyRecords': {
     args: []
@@ -136,6 +171,8 @@ export interface IpcEvents {
   'analytics.progress': AnalyticsProgress
   /** Full current list (temp-dir sessions already excluded). */
   'analytics.sessions': { sessions: SessionSummary[]; now: number }
+  // ---- feature 006 ----
+  'know.status': KnowStatus
 }
 
 export type InvokeChannel = keyof IpcInvoke

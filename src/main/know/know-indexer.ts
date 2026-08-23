@@ -154,6 +154,81 @@ export class KnowIndexer extends EventEmitter<KnowIndexerEvents> {
     return this.ix
   }
 
+  /** Graph slice for the visual canvas: top-degree nodes (or the given nodes + neighbours) with labels. */
+  graphSlice(opts: { expand?: string[]; limit?: number } = {}): {
+    nodes: Array<{
+      id: string
+      label: string
+      kind: 'project' | 'session' | 'file' | 'topic' | 'fact'
+      weight: number
+    }>
+    edges: Array<{ a: string; b: string; w: number }>
+  } {
+    const ix = this.searchIndex()
+    const limit = Math.max(10, Math.min(opts.limit ?? 120, 300))
+    const degree = new Map<string, number>()
+    for (const [n, edges] of ix.graph.adj)
+      degree.set(
+        n,
+        edges.reduce((a, e) => a + e.w, 0)
+      )
+    let include: Set<string>
+    if (opts.expand?.length) {
+      include = new Set(opts.expand.filter((n) => ix.graph.nodes.has(n)))
+      for (const n of [...include]) {
+        const neigh = [...(ix.graph.adj.get(n) ?? [])].sort((a, b) => b.w - a.w).slice(0, 25)
+        for (const e of neigh) include.add(e.to)
+      }
+    } else {
+      include = new Set(
+        [...degree.entries()]
+          .filter(([n]) => !n.startsWith('h:')) // facts only when expanding a session
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, limit)
+          .map(([n]) => n)
+      )
+    }
+    const label = (id: string): string => {
+      const kind = id[0]
+      const rest = id.slice(2)
+      if (kind === 's') return ix.corpus.sessions.get(rest)?.meta.title ?? rest
+      if (kind === 'p') {
+        for (const { meta } of ix.corpus.sessions.values())
+          if (meta.projectKey === rest) return meta.projectLabel
+        return rest
+      }
+      if (kind === 'f') return rest.split('/').slice(-2).join('/')
+      if (kind === 'h') {
+        for (const card of Object.values(this.cardsFile.cards))
+          for (const f of card.facts)
+            if (f.id === rest) return f.text.length > 60 ? f.text.slice(0, 59) + '…' : f.text
+        return rest
+      }
+      return rest
+    }
+    const kindOf = (id: string): 'project' | 'session' | 'file' | 'topic' | 'fact' =>
+      id.startsWith('p:')
+        ? 'project'
+        : id.startsWith('s:')
+          ? 'session'
+          : id.startsWith('f:')
+            ? 'file'
+            : id.startsWith('h:')
+              ? 'fact'
+              : 'topic'
+    const nodes = [...include].map((id) => ({
+      id,
+      label: label(id),
+      kind: kindOf(id),
+      weight: degree.get(id) ?? 1
+    }))
+    const edges: Array<{ a: string; b: string; w: number }> = []
+    for (const id of include)
+      for (const e of ix.graph.adj.get(id) ?? [])
+        if (include.has(e.to) && id < e.to) edges.push({ a: id, b: e.to, w: e.w })
+    return { nodes, edges }
+  }
+
   search(q: KnowSearchQuery, deps: Omit<SearchDeps, 'snippetFor'> = {}): KnowSearchHit[] {
     return searchKnow(this.searchIndex(), q, {
       ...deps,

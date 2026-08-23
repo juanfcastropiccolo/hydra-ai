@@ -8,6 +8,9 @@ import type { ClaudeAvailability, Session } from '@shared/types'
 import type { IpcEvents } from '@shared/ipc'
 import { ClaudeCli, type ClaudeCliLike } from './claude/claude-cli'
 import { AnalyticsIndexer } from './analytics/analytics-indexer'
+import { CardQueue } from './know/card-queue'
+import { KnowIndexer } from './know/know-indexer'
+import { KnowMcpServer } from './know/mcp-server'
 import { ContextImporter } from './context/context-importer'
 import { FsActions } from './fs/fs-actions'
 import { FsService } from './fs/fs-service'
@@ -23,6 +26,8 @@ export interface AppContextOptions {
   hydraFilePath: string
   /** Feature 005: where the transcript index cache lives (userData). */
   analyticsCachePath: string
+  /** Feature 006: where session knowledge cards live (userData). */
+  knowCardsPath: string
   /** Feature 005: transcripts root; default ~/.claude/projects (E2E points it at a fixture dir). */
   claudeProjectsRoot?: string
   /** Test hook: fake PTY factory (E2E mode). */
@@ -47,6 +52,9 @@ export class AppContext {
   importer: ContextImporter | null = null
   /** Feature 005: transcript index (created lazily on first analytics.open). */
   private analytics: AnalyticsIndexer | null = null
+  /** Feature 006: knowledge layer (lazy). */
+  private knowParts: { know: KnowIndexer; queue: CardQueue; mcp: KnowMcpServer } | null = null
+  private mcpRegistered = false
   availability: ClaudeAvailability = {
     ok: false,
     reason: 'error',
@@ -268,6 +276,89 @@ export class AppContext {
     return this.analytics
   }
 
+  // ---- feature 006 ----
+  knowLayer(): { know: KnowIndexer; queue: CardQueue; mcp: KnowMcpServer } {
+    if (!this.knowParts) {
+      const analytics = this.analyticsIndexer()
+      const know = new KnowIndexer({
+        analytics,
+        cardsPath: this.opts.knowCardsPath,
+        getProjects: () => this.store.listProjects(),
+        home: process.env['HOME'] ?? ''
+      })
+      const queue = new CardQueue({
+        know,
+        cli: () => this.cli,
+        model: () => this.store.importContext().model,
+        autoCards: () => this.store.know().autoCards,
+        isSessionBusy: (sessionId) => {
+          const s = this.watcher?.list().find((x) => x.sessionId === sessionId)
+          return s ? s.state === 'working' || s.state === 'waiting' : false
+        }
+      })
+      const mcp = new KnowMcpServer(
+        {
+          search: (q) =>
+            know.search(q, {
+              liveSessionIds: new Set((this.watcher?.list() ?? []).map((s) => s.sessionId))
+            }),
+          sessionContext: (id) => {
+            const meta = know.meta(id)
+            return meta ? { card: know.card(id) ?? null, title: meta.title, cwd: meta.cwd } : null
+          },
+          version: process.env['npm_package_version'] ?? '0.5.0'
+        },
+        this.store.know().port
+      )
+      const emitStatus = (): void => this.broadcast('know.status', this.knowStatus())
+      know.on('changed', emitStatus)
+      queue.on('changed', emitStatus)
+      this.knowParts = { know, queue, mcp }
+    }
+    return this.knowParts
+  }
+
+  knowStatus(): import('@shared/know/types').KnowStatus {
+    const { know, queue, mcp } = this.knowLayer()
+    const cards = Object.values(know.cards())
+    return {
+      indexedSessions: know.searchIndex().corpus.sessions.size,
+      cardsDone: cards.length,
+      cardsPending: know.pending().length,
+      generating: queue.generating(),
+      estCostUsd: cards.reduce((n, c) => n + (c.costUsd ?? 0), 0),
+      autoCards: this.store.know().autoCards,
+      mcp: { state: mcp.state, port: this.store.know().port, registered: this.mcpRegistered },
+      lastError: queue.lastError
+    }
+  }
+
+  async knowOpen(): Promise<import('@shared/know/types').KnowStatus> {
+    const { queue, mcp } = this.knowLayer()
+    void this.analyticsIndexer().open() // ensures the base index is fresh + watching
+    if (mcp.state !== 'serving') await mcp.start()
+    if (this.cli) this.mcpRegistered = (await this.cli.mcpGet('hydra-know')).registered
+    queue.kick()
+    return this.knowStatus()
+  }
+
+  async knowConnectMcp(): Promise<import('@shared/know/types').KnowStatus> {
+    const { mcp } = this.knowLayer()
+    if (mcp.state !== 'serving') await mcp.start()
+    if (!this.cli)
+      throw new Error(this.availability.ok ? 'CLI not initialised' : this.availability.message)
+    await this.cli.mcpAdd('hydra-know', mcp.url)
+    this.mcpRegistered = true
+    return this.knowStatus()
+  }
+
+  async knowDisconnectMcp(): Promise<import('@shared/know/types').KnowStatus> {
+    if (!this.cli) throw new Error('CLI not initialised')
+    await this.cli.mcpRemove('hydra-know')
+    this.mcpRegistered = false
+    return this.knowStatus()
+  }
+
   /** Wall clock for the dashboard; E2E pins it with HYDRA_E2E_NOW (ISO or ms). */
   analyticsNow(): number {
     const pinned = process.env['HYDRA_E2E_NOW']
@@ -279,6 +370,7 @@ export class AppContext {
   }
 
   async dispose(): Promise<void> {
+    this.knowParts?.mcp.stop()
     this.analytics?.close()
     this.importer?.dispose()
     this.fs.dispose()

@@ -52,6 +52,7 @@ app.whenReady().then(async () => {
     ctx = new AppContext({
       hydraFilePath: join(userData, 'hydra.json'),
       analyticsCachePath: join(userData, 'analytics-index.json'),
+      knowCardsPath: join(userData, 'know-cards.json'),
       claudeProjectsRoot: process.env['HYDRA_E2E_CLAUDE_PROJECTS'] ?? join(userData, 'no-projects'),
       fakeCli,
       ptySpawn: fakePty.spawn,
@@ -65,6 +66,7 @@ app.whenReady().then(async () => {
     ctx = new AppContext({
       hydraFilePath: join(userData, 'hydra.json'),
       analyticsCachePath: join(userData, 'analytics-index.json'),
+      knowCardsPath: join(userData, 'know-cards.json'),
       fakeNoClaude: process.env['HYDRA_FAKE_NO_CLAUDE'] === '1'
     })
   }

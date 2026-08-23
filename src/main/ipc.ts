@@ -130,6 +130,32 @@ export function registerIpc(
   handle('ui.getCenterView', () => ctx.store.centerView())
   handle('ui.setCenterView', (view) => ctx.store.setCenterView(view))
 
+  // ---- feature 006: graph know ----
+  handle('know.open', () => ctx.knowOpen())
+  handle('know.close', () => {
+    /* index/watcher shared with analytics; MCP keeps serving while the app runs */
+  })
+  handle('know.status', () => ctx.knowStatus())
+  handle('know.search', (q) =>
+    ctx.knowLayer().know.search(q, {
+      liveSessionIds: new Set((ctx.watcher?.list() ?? []).map((s) => s.sessionId))
+    })
+  )
+  handle('know.card', ({ sessionId }) => ctx.knowLayer().know.card(sessionId) ?? null)
+  handle('know.generatePending', () => {
+    ctx.knowLayer().queue.approveBackfill()
+  })
+  handle('know.generateOne', ({ sessionId }) => ctx.knowLayer().queue.generateOne(sessionId))
+  handle('know.getPrefs', () => ctx.store.know())
+  handle('know.setPrefs', (patch) => {
+    const prefs = ctx.store.setKnow(patch)
+    ctx.knowLayer().queue.kick()
+    return prefs
+  })
+  handle('know.connectMcp', () => ctx.knowConnectMcp())
+  handle('know.disconnectMcp', () => ctx.knowDisconnectMcp())
+  handle('know.graph', (opts) => ctx.knowLayer().know.graphSlice(opts))
+
   handle('ui.getHidden', () => ctx.store.hiddenSessionIds())
   handle('ui.setHidden', ({ sessionId, hidden }) => ctx.store.setHidden(sessionId, hidden))
 }
