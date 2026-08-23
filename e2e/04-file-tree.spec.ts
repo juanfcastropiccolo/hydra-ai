@@ -26,12 +26,12 @@ test('AC-1/3/4: files tab shows the focused project tree with icons, git badges,
   const rels = await rows.evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset['rel']))
   // folders first (dist, src), then files; .git hidden
   expect(rels).toEqual(['dist', 'src', '.gitignore', 'nuevo.ts', 'README.md'])
-  const status = async (rel: string): Promise<string | null> =>
-    page.locator(`[data-testid=tree-row][data-rel="${rel}"]`).getAttribute('data-status')
-  expect(await status('dist')).toBe('ignored')
-  expect(await status('src')).toBe('modified')
-  expect(await status('nuevo.ts')).toBe('untracked')
-  expect(await status('README.md')).toBe('')
+  const row = (rel: string): import('@playwright/test').Locator =>
+    page.locator(`[data-testid=tree-row][data-rel="${rel}"]`)
+  await expect(row('dist')).toHaveAttribute('data-status', 'ignored')
+  await expect(row('src')).toHaveAttribute('data-status', 'modified')
+  await expect(row('nuevo.ts')).toHaveAttribute('data-status', 'untracked')
+  await expect(row('README.md')).toHaveAttribute('data-status', '')
   // icons
   await expect(
     page.locator('[data-testid=tree-row][data-rel="README.md"] [data-testid=file-icon]')
