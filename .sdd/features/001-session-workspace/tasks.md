@@ -43,10 +43,10 @@ Convenciones: un task ≈ un commit (Conventional Commits). "done when" es verif
 
 ## Fase 4 — Testing E2E y empaquetado
 
-- [ ] **23.** Playwright + Electron: harness con modo `HYDRA_E2E=1` (PTY y `ClaudeCli` falsos inyectados en main, deterministas) — done when: un test abre la app y ve el sidebar vacío.
-- [ ] **24.** E2E-1: agregar proyecto (ruta temporal inyectada) → Nueva sesión → diálogo (nombre, carpeta, Cancelar no crea) → Crear → pane con título y borde verde (AC-1, AC-2/2b/2c).
-- [ ] **25.** E2E-2: dos panes; clic en B + tipeo → solo la PTY falsa de B recibe y solo B tiene borde; clic en sidebar + tipeo → ninguna recibe (AC-4, AC-5).
-- [ ] **26.** E2E-3: expandir por botón y por doble clic, contraer por botón/doble clic/`Esc` (sin foco en term), resize de ventana → `pty.resize` recibido con cols/rows nuevos (AC-9, AC-10, AC-18).
+- [x] **23.** Playwright + Electron: harness con modo `HYDRA_E2E=1` (PTY y `ClaudeCli` falsos inyectados en main, deterministas) — done when: un test abre la app y ve el sidebar vacío.
+- [x] **24.** E2E-1: agregar proyecto (ruta temporal inyectada) → Nueva sesión → diálogo (nombre, carpeta, Cancelar no crea) → Crear → pane con título y borde verde (AC-1, AC-2/2b/2c).
+- [x] **25.** E2E-2: dos panes; clic en B + tipeo → solo la PTY falsa de B recibe y solo B tiene borde; clic en sidebar + tipeo → ninguna recibe (AC-4, AC-5).
+- [x] **26.** E2E-3: expandir por botón y por doble clic, contraer por botón/doble clic/`Esc` (sin foco en term), resize de ventana → `pty.resize` recibido con cols/rows nuevos (AC-9, AC-10, AC-18).
 - [ ] **27.** Empaquetar `Hydra.app` final x64 y checklist manual `docs/qa-001.md` (AC-3, AC-11, AC-12, AC-15, AC-17 desde Finder en limpio, AC-19, AC-8b) — done when: checklist completo con fecha y resultado por AC; cualquier fallo abre un task de fix antes de cerrar la feature.
 
 ## Fase 5 — Cierre
