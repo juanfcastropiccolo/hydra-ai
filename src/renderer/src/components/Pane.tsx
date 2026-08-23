@@ -51,6 +51,7 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   // after a 'Reintentar pegado', or when a hidden pane is shown again.
   useEffect(() => {
     if (importState?.phase !== 'ready' || !importState.text) return
+    if (!ptyId && !ended) return // terminal not attached yet (e.g. pane just re-shown): wait
     const ok = canImportInto({ session, ptyId, ended, importRunning: false })
     if (!ok.ok || !ptyId) {
       importContextStore.getState().markBlocked(session.sessionId)
