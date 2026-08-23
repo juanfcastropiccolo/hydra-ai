@@ -1,7 +1,7 @@
 # Analytics de uso
 
 Feature ID: 005
-Status: specified (borrador — pendiente de aprobación)
+Status: specified (aprobada 2026-08-23)
 Last updated: 2026-08-23
 
 ## Problem
@@ -32,7 +32,7 @@ Pulso **Analytics** en la barra lateral y el área central pasa de la grilla de 
 
 ### Datos
 
-10. **FR-10 — Fuente:** **todos** los transcripts locales de Claude Code de la máquina (todas las carpetas de proyecto, todas las sesiones, incluidas las creadas fuera de Hydra y las de proyectos no registrados). Se leen **solo lectura**; Hydra nunca los modifica ni mueve.
+10. **FR-10 — Fuente:** **todos** los transcripts locales de Claude Code de la máquina (todas las carpetas de proyecto, todas las sesiones, incluidas las creadas fuera de Hydra y las de proyectos no registrados). Se leen **solo lectura**; Hydra nunca los modifica ni mueve. **FR-10b:** las sesiones cuya carpeta está bajo un directorio temporal del sistema (`/tmp`, `/private/tmp`, `/var/folders`, `/private/var/folders`) se **excluyen** de la vista y de todos los agregados (son pruebas, no trabajo).
 11. **FR-11 — Qué se mide por sesión:** identificador, carpeta (→ proyecto), título, inicio y fin, cantidad de turnos de usuario y de mensajes del asistente, tokens de entrada / salida / creación de caché / lectura de caché **por modelo**, duración acumulada de turnos, herramientas invocadas (conteo por nombre; se guarda aunque no se muestre en esta versión, sirve para 006), rama git si está. Los sub-agentes que Claude Code guarda aparte se suman a su sesión padre.
 12. **FR-12 — Índice incremental:** la primera apertura indexa todo con una **barra de progreso** (archivos procesados / total) y la vista se va poblando; las siguientes aperturas son **inmediatas** porque el resumen de cada transcript se conserva en un caché local y solo se re-procesan los archivos que cambiaron (y, si solo crecieron, solo la parte nueva). El caché se puede borrar desde la vista ("Reindexar") y se reconstruye solo si está corrupto o de una versión anterior.
 13. **FR-13 — Al día:** mientras la vista está abierta, las sesiones que siguen escribiendo se reflejan en menos de **10 s** (sin parpadeos ni pérdida de la posición de scroll). Cerrar la vista libera la observación.
@@ -97,4 +97,4 @@ Pulso **Analytics** en la barra lateral y el área central pasa de la grilla de 
 - [x] Ubicación: reemplaza el área central (Juan).
 - [x] Profundidad: dashboard + tabla de sesiones; sin detalle por sesión (Juan).
 - [x] Look: moderno y cuidado, gráficos propios (Juan: "canchero y moderno").
-- [ ] [NEEDS CLARIFICATION: ¿la barra por proyecto y la tabla deben **ocultar** los proyectos de prueba/temporales (rutas bajo `/tmp`, `/private/tmp`)? Propuesta: mostrarlos, pero agrupados al final como "Temporales" y excluibles con un toggle.]
+- [x] **Proyectos temporales** (rutas bajo `/tmp`, `/private/tmp`, `/var/folders`): **no se muestran** ni cuentan en ningún agregado (Juan, 2026-08-23). Queda como regla FR-10b.
