@@ -24,11 +24,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "postinstall": "electron-builder install-app-deps && node node_modules/electron/install.js",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:electron": "electron test/electron/pty-smoke.cjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0"
+    "@electron-toolkit/utils": "^4.0.0",
+    "@lydell/node-pty": "^1.1.0"
   },
   "devDependencies": {
     "@electron-toolkit/eslint-config-prettier": "^3.0.0",
