@@ -10,6 +10,7 @@ export default defineConfig({
     include: [
       'src/{main,preload,shared}/**/*.test.ts',
       'src/renderer/src/store/**/*.test.ts',
+      'src/renderer/src/lib/**/*.test.ts',
       'src/renderer/src/components/file-tree/*.test.ts',
       'test/**/*.test.ts'
     ],
@@ -24,7 +25,12 @@ export default defineConfig({
     passWithNoTests: true,
     coverage: {
       provider: 'v8',
-      include: ['src/main/**', 'src/shared/**', 'src/renderer/src/store/**'],
+      include: [
+        'src/main/**',
+        'src/shared/**',
+        'src/renderer/src/store/**',
+        'src/renderer/src/lib/**'
+      ],
       exclude: ['src/main/index.ts', '**/*.test.ts', '**/*.d.ts'],
       reporter: ['text', 'html']
     }
