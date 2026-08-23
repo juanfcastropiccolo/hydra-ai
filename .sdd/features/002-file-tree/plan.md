@@ -1,7 +1,7 @@
 # Plan: Árbol de archivos del proyecto
 
 Feature ID: 002
-Status: planned (borrador, pendiente de aprobación)
+Status: planned (aprobado 2026-08-23)
 Last updated: 2026-08-23
 
 ## Chosen stack
