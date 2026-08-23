@@ -40,7 +40,8 @@ Si en el futuro se agrega arm64, alcanza con empaquetar `--arm64`/`--universal`:
 - Cada pane es una **PTY real** corriendo `claude attach <id>` dentro de xterm.js. Clic = foco (borde verde, teclas solo ahí). Doble clic o ⤢ = expandir; `Esc` contrae cuando la terminal no tiene el foco. ⊟ oculta sin terminar; ✕ termina.
 - Cerrar Hydra **no** mata sesiones: viven en el daemon de Claude Code; al reabrir se reconectan. Sesiones abiertas a mano en otra terminal aparecen como "externa" (solo lectura) hasta que las mandes a background con `/bg`.
 - **Árbol de archivos (feature 002):** la barra izquierda tiene una solapa a mitad de altura con dos vistas: _Sesiones_ y _Archivos_ (⌘⇧E alterna). _Archivos_ muestra el árbol del proyecto del pane con foco, estilo editor: iconos por tipo, estado git (M/U/D, punto en carpetas, ignorados atenuados), actualización en vivo, filtro, teclado. Doble clic abre con la app por defecto; clic derecho: Finder, copiar rutas, editor, "Abrir terminal acá". Arrastrar un archivo a un pane escribe su ruta en esa sesión.
-- QA manual y desvíos: `docs/qa-001.md`, `docs/qa-002.md`. Spike técnico: `docs/spike-001-attach.md`.
+- **Importar contexto (feature 004):** ⇩ en el encabezado de un pane en reposo → elegís otra sesión activa (de cualquier proyecto) → Hydra le pide al propio Claude Code un resumen de traspaso de esa conversación (`claude -p --resume --fork-session --no-session-persistence`, modelo `haiku` por defecto, configurable en `hydra.json → ui.importContext.model`) y lo **pega en el prompt del pane sin enviarlo**, con una introducción en tu voz: lo revisás, editás y mandás con Enter. La sesión origen no se toca. Si el pane dejó de estar en reposo mientras se generaba, no se pega: aparece un aviso con Copiar / Reintentar pegado.
+- QA manual y desvíos: `docs/qa-001.md`, `docs/qa-002.md`, `docs/qa-004.md`. Spikes técnicos: `docs/spike-001-attach.md`, `docs/spike-004-context.md`.
 
 ## Estructura
 

@@ -1,6 +1,6 @@
 {
   "name": "hydra-ai",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Hydra AI — macOS workspace for running and watching multiple Claude Code sessions side by side",
   "main": "./out/main/index.js",
   "author": "Juan F. Castro Piccolo",
