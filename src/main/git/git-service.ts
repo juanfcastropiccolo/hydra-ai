@@ -1,6 +1,7 @@
 // GitService: repo root + working-tree status via the real `git` CLI (feature 002).
 // One status run in flight per root; callers coalesce via refresh() debounce.
 import { execFile } from 'node:child_process'
+import { realpathSync } from 'node:fs'
 import type { GitStatusResult } from '@shared/types'
 import { parseGitPorcelain } from './porcelain'
 
@@ -12,6 +13,19 @@ export interface GitServiceOptions {
     args: string[],
     cwd: string
   ) => Promise<{ code: number; stdout: Buffer; stderr: string }>
+  /** Injectable realpath (tests). */
+  realpath?: (p: string) => string
+}
+
+/**
+ * git prints the toplevel as a realpath (/private/var/… on macOS) while callers may hold the
+ * symlinked form (/var/…). Express the root in the caller's form so path prefixes line up.
+ */
+export function rootInCallerForm(dir: string, realDir: string, root: string): string {
+  const suffix = realDir.startsWith(root) ? realDir.slice(root.length) : null
+  if (suffix !== null && dir.endsWith(suffix))
+    return dir.slice(0, dir.length - suffix.length) || '/'
+  return root
 }
 
 export class GitService {
@@ -19,9 +33,11 @@ export class GitService {
   private readonly runner: NonNullable<GitServiceOptions['runner']>
   private inflight = new Map<string, Promise<GitStatusResult>>()
   private rootCache = new Map<string, Promise<string | null>>()
+  private readonly realpath: (p: string) => string
 
   constructor(private readonly opts: GitServiceOptions) {
     this.timeoutMs = opts.timeoutMs ?? 5000
+    this.realpath = opts.realpath ?? ((p) => realpathSync(p))
     this.runner = opts.runner ?? this.defaultRunner
   }
 
@@ -61,7 +77,15 @@ export class GitService {
     const p = (async (): Promise<string | null> => {
       try {
         const r = await this.runner(['rev-parse', '--show-toplevel'], dir)
-        return r.code === 0 ? r.stdout.toString('utf8').trim() || null : null
+        const root = r.code === 0 ? r.stdout.toString('utf8').trim() || null : null
+        if (!root) return null
+        let realDir = dir
+        try {
+          realDir = this.realpath(dir)
+        } catch {
+          /* keep */
+        }
+        return rootInCallerForm(dir.replace(/\/+$/, ''), realDir, root)
       } catch {
         return null
       }

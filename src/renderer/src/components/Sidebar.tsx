@@ -61,7 +61,17 @@ export function Sidebar(): React.JSX.Element {
           aria-pressed={!filesView}
           data-testid="tab-sessions"
         >
-          ▣
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="1.5" y="2" width="13" height="12" rx="2" />
+            <path d="M8 2v12M1.5 8h13" />
+          </svg>
         </button>
         <button
           className={`${styles.tab} ${filesView ? styles.tabActive : ''}`}
@@ -70,7 +80,17 @@ export function Sidebar(): React.JSX.Element {
           aria-pressed={filesView}
           data-testid="tab-files"
         >
-          ▤
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M1.5 4.5A1.5 1.5 0 0 1 3 3h3.2l1.4 1.5H13A1.5 1.5 0 0 1 14.5 6v6A1.5 1.5 0 0 1 13 13.5H3A1.5 1.5 0 0 1 1.5 12z" />
+            <path d="M5 9.5h6M5 11.5h4" opacity="0.7" />
+          </svg>
         </button>
       </div>
       {filesView && (

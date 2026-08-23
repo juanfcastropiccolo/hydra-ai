@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { GitService } from './git-service'
+import { GitService, rootInCallerForm } from './git-service'
 
 const ok = (s: string): { code: number; stdout: Buffer; stderr: string } => ({
   code: 0,
@@ -47,5 +47,32 @@ describe('GitService (unit, fake runner)', () => {
       }
     })
     expect(await g.status('/x')).toEqual({ root: null, statuses: {} })
+  })
+})
+
+describe('rootInCallerForm', () => {
+  it('maps a realpath root back into the symlinked form the caller used', () => {
+    expect(
+      rootInCallerForm('/var/t/proj/src', '/private/var/t/proj/src', '/private/var/t/proj')
+    ).toBe('/var/t/proj')
+    expect(rootInCallerForm('/var/t/proj', '/private/var/t/proj', '/private/var/t/proj')).toBe(
+      '/var/t/proj'
+    )
+  })
+  it('keeps the git root when forms do not line up', () => {
+    expect(rootInCallerForm('/x/y', '/x/y', '/x')).toBe('/x')
+    expect(rootInCallerForm('/elsewhere', '/real/other', '/real')).toBe('/real')
+  })
+  it('GitService uses it (fake runner + realpath)', async () => {
+    const g = new GitService({
+      env: {},
+      realpath: (p) => p.replace(/^\/var\//, '/private/var/'),
+      runner: async (args) =>
+        args[0] === 'rev-parse' ? ok('/private/var/t/proj\n') : ok(' M a.ts\0')
+    })
+    expect(await g.status('/var/t/proj/sub')).toEqual({
+      root: '/var/t/proj',
+      statuses: { 'a.ts': 'modified' }
+    })
   })
 })

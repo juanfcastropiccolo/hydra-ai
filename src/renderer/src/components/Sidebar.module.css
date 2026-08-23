@@ -7,35 +7,49 @@
   min-height: 0;
   min-width: 0;
 }
-/* Protruding tab on the right edge: switches the sidebar content (sessions / files). */
+/* Bulge tab at mid-height on the sidebar's right edge: switches the sidebar content (sessions / files). */
 .tabs {
   position: absolute;
-  top: 96px;
-  right: -22px;
+  top: 50%;
+  right: -30px;
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  padding: 8px 5px 8px 7px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 14px 14px 0;
+  box-shadow: 4px 0 14px rgba(0, 0, 0, 0.35);
   z-index: 5;
 }
 .tab {
-  width: 22px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   padding: 0;
-  border-radius: 0 8px 8px 0;
+  border-radius: 8px;
   border: 1px solid var(--border);
-  border-left: none;
   background: var(--bg-panel);
   color: var(--fg-muted);
-  font-size: 12px;
-  line-height: 1;
   display: grid;
   place-content: center;
+  transition:
+    background 120ms ease,
+    color 120ms ease,
+    border-color 120ms ease;
+}
+.tab svg {
+  width: 14px;
+  height: 14px;
+  display: block;
 }
 .tab:hover {
   color: var(--fg);
+  border-color: var(--accent-dim);
 }
 .tabActive {
-  background: var(--bg-elev);
+  background: #1f3b2a;
   color: var(--accent);
   border-color: var(--accent-dim);
 }
