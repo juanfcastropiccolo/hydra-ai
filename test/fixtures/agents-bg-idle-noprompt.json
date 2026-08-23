@@ -1,0 +1,13 @@
+[
+  {
+    "pid": 76177,
+    "id": "7fd3402f",
+    "cwd": "/Users/u/projects/foo",
+    "kind": "background",
+    "startedAt": 1787456376133,
+    "sessionId": "7fd3402f-f032-4779-bafb-1a2d78eb47a6",
+    "name": "hydra-probe-noprompt",
+    "status": "idle",
+    "state": "blocked"
+  }
+]

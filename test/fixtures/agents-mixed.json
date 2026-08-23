@@ -1,0 +1,84 @@
+[
+  {
+    "pid": 46059,
+    "cwd": "/Users/juanfcastropiccolo/Documents/Personal/prune-propuestas",
+    "kind": "interactive",
+    "startedAt": 1787344670694,
+    "sessionId": "15502626-65bb-40b7-8246-ec30ae3d9831",
+    "name": "prune-propuestas-26",
+    "status": "idle"
+  },
+  {
+    "pid": 72094,
+    "cwd": "/Users/juanfcastropiccolo/Documents/Personal/hydra-ai",
+    "kind": "interactive",
+    "startedAt": 1787454349964,
+    "sessionId": "50a81624-2ccc-494d-b31b-08ca83019685",
+    "name": "hydra-ai-25",
+    "status": "busy"
+  },
+  {
+    "pid": 76177,
+    "id": "7fd3402f",
+    "cwd": "/Users/u/projects/foo",
+    "kind": "background",
+    "startedAt": 1787456376133,
+    "sessionId": "7fd3402f-f032-4779-bafb-1a2d78eb47a6",
+    "name": "hydra-probe-noprompt",
+    "status": "idle",
+    "state": "blocked"
+  },
+  {
+    "pid": 1001,
+    "id": "aaaa0001",
+    "cwd": "/Users/u/projects/foo",
+    "kind": "background",
+    "startedAt": 1787456000000,
+    "sessionId": "aaaa0001-0000-0000-0000-000000000001",
+    "name": "foo-1",
+    "status": "working",
+    "state": "working"
+  },
+  {
+    "pid": 1002,
+    "id": "aaaa0002",
+    "cwd": "/Users/u/projects/foo",
+    "kind": "background",
+    "startedAt": 1787456000000,
+    "sessionId": "aaaa0002-0000-0000-0000-000000000002",
+    "name": "foo-2",
+    "status": "waiting",
+    "state": "blocked",
+    "waitingFor": "permission prompt"
+  },
+  {
+    "pid": 1003,
+    "id": "aaaa0003",
+    "cwd": "/Users/u/projects/bar",
+    "kind": "background",
+    "startedAt": 1787456000000,
+    "sessionId": "aaaa0003-0000-0000-0000-000000000003",
+    "name": "bar-1",
+    "status": "waiting",
+    "state": "blocked",
+    "waitingFor": "input needed"
+  },
+  {
+    "id": "aaaa0004",
+    "cwd": "/Users/u/projects/foo",
+    "kind": "background",
+    "startedAt": 1787456000000,
+    "sessionId": "aaaa0004-0000-0000-0000-000000000004",
+    "name": "foo-done",
+    "state": "done"
+  },
+  {
+    "id": "aaaa0005",
+    "cwd": "/Users/u/projects/foo",
+    "kind": "background",
+    "startedAt": 1787456000000,
+    "sessionId": "aaaa0005-0000-0000-0000-000000000005",
+    "name": "foo-stopped",
+    "state": "stopped"
+  }
+]

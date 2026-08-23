@@ -1,0 +1,20 @@
+[
+  {
+    "pid": 46059,
+    "cwd": "/Users/juanfcastropiccolo/Documents/Personal/prune-propuestas",
+    "kind": "interactive",
+    "startedAt": 1787344670694,
+    "sessionId": "15502626-65bb-40b7-8246-ec30ae3d9831",
+    "name": "prune-propuestas-26",
+    "status": "idle"
+  },
+  {
+    "pid": 72094,
+    "cwd": "/Users/juanfcastropiccolo/Documents/Personal/hydra-ai",
+    "kind": "interactive",
+    "startedAt": 1787454349964,
+    "sessionId": "50a81624-2ccc-494d-b31b-08ca83019685",
+    "name": "hydra-ai-25",
+    "status": "busy"
+  }
+]
