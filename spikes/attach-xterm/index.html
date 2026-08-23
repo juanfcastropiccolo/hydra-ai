@@ -1,0 +1,49 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="node_modules/@xterm/xterm/css/xterm.css">
+<style>
+  html,body{margin:0;height:100%;background:#1e1e1e;color:#ddd;font:13px system-ui}
+  #bar{display:flex;gap:8px;align-items:center;padding:6px 10px;background:#2a2a2a}
+  #bar button{font:12px system-ui}
+  #wrap{position:absolute;top:36px;left:0;right:0;bottom:0;padding:6px;border:3px solid transparent;box-sizing:border-box}
+  #wrap.focused{border-color:#4ade80}
+  #term{height:100%;width:100%}
+  #log{margin-left:auto;opacity:.8;font-family:ui-monospace,monospace}
+</style></head><body>
+<div id="bar">
+  <button id="spawn">1) --bg + attach</button>
+  <label><input type="checkbox" id="nomouse"> CLAUDE_CODE_DISABLE_MOUSE=1</label>
+  <button id="detach">detach (kill attach client)</button>
+  <button id="ctrlz">send Ctrl+Z</button>
+  <button id="list">agents --json</button>
+  <button id="cleanup">cleanup (stop+rm all spike sessions)</button>
+  <span id="log">idle</span>
+</div>
+<div id="wrap"><div id="term"></div></div>
+<script src="node_modules/@xterm/xterm/lib/xterm.js"></script>
+<script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+<script>
+  const log = (m) => { document.getElementById('log').textContent = m; console.log('[ui]', m); };
+  const term = new Terminal({ cursorBlink: true, fontSize: 13, scrollback: 5000, allowProposedApi: true });
+  const fit = new FitAddon.FitAddon(); term.loadAddon(fit);
+  const wrap = document.getElementById('wrap');
+  term.open(document.getElementById('term')); fit.fit();
+  term.onData(d => window.spike.write(d));
+  window.spike.onData(d => term.write(d));
+  window.spike.onExit(c => log('attach exited code ' + c));
+  // focus truth = xterm's textarea
+  term.textarea.addEventListener('focus', () => wrap.classList.add('focused'));
+  term.textarea.addEventListener('blur', () => wrap.classList.remove('focused'));
+  wrap.addEventListener('mousedown', () => term.focus());
+  let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit.fit(); window.spike.resize({ cols: term.cols, rows: term.rows }); }, 50); }).observe(wrap);
+  document.getElementById('spawn').onclick = async () => {
+    const t = performance.now(); log('spawning…');
+    const r = await window.spike.spawn({ cols: term.cols, rows: term.rows, disableMouse: document.getElementById('nomouse').checked });
+    log(r.error ? 'ERROR ' + r.error : `attached ${r.bgId} (mouse ${r.disableMouse ? 'OFF' : 'on'}) in ${Math.round(performance.now() - t)}ms`);
+    term.focus();
+  };
+  document.getElementById('detach').onclick = () => window.spike.detach().then(() => log('detached'));
+  document.getElementById('ctrlz').onclick = () => { window.spike.write('\x1a'); term.focus(); };
+  document.getElementById('list').onclick = async () => { const l = await window.spike.list(); console.log(l); log(JSON.stringify(l.map ? l.map(s => [s.id, s.kind, s.status, s.state]) : l)); };
+  document.getElementById('cleanup').onclick = async () => log('cleaned ' + JSON.stringify(await window.spike.cleanup()));
+  term.focus();
+</script></body></html>
