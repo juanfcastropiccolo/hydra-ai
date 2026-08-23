@@ -146,3 +146,46 @@ describe('ClaudeCli.summarizeSession (unit, fake runner)', () => {
     ).rejects.toBe(abort)
   })
 })
+
+describe('ClaudeCli.mcp* (unit, fake runner)', () => {
+  it('add removes first then adds with http transport at user scope; failures throw readable', async () => {
+    const calls: string[][] = []
+    const runner = vi.fn<Runner>(async (args) => {
+      calls.push(args)
+      return { stdout: 'ok', stderr: '', code: 0 }
+    })
+    await cli(runner).mcpAdd('hydra-know', 'http://127.0.0.1:4855/mcp')
+    expect(calls).toEqual([
+      ['mcp', 'remove', 'hydra-know', '-s', 'user'],
+      ['mcp', 'add', '--transport', 'http', 'hydra-know', 'http://127.0.0.1:4855/mcp', '-s', 'user']
+    ])
+    const failing = vi.fn<Runner>(async (args) =>
+      args[1] === 'add'
+        ? { stdout: '', stderr: 'boom', code: 1 }
+        : { stdout: '', stderr: '', code: 0 }
+    )
+    await expect(cli(failing).mcpAdd('x', 'http://u')).rejects.toThrow(/mcp add failed.*boom/s)
+  })
+  it('get parses the URL and reports unregistered on failure; remove is tolerant', async () => {
+    const runner = vi.fn<Runner>(async (args) =>
+      args[1] === 'get'
+        ? {
+            stdout: 'hydra-know:\n  URL: http://127.0.0.1:4855/mcp\n  Status: connected',
+            stderr: '',
+            code: 0
+          }
+        : { stdout: '', stderr: '', code: 0 }
+    )
+    expect(await cli(runner).mcpGet('hydra-know')).toEqual({
+      registered: true,
+      url: 'http://127.0.0.1:4855/mcp'
+    })
+    const missing = vi.fn<Runner>(async () => ({
+      stdout: '',
+      stderr: 'No MCP server found',
+      code: 1
+    }))
+    expect(await cli(missing).mcpGet('nope')).toEqual({ registered: false })
+    await cli(runner).mcpRemove('hydra-know')
+  })
+})

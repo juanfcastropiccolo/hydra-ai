@@ -59,6 +59,10 @@ export interface ClaudeCliLike {
   summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult>
   /** Feature 006: generic one-shot prompt (optionally resuming a conversation). */
   runPrompt(opts: RunPromptOptions): Promise<SummarizeResult>
+  /** Feature 006: register/inspect/remove the hydra-know MCP server in the user's Claude config. */
+  mcpAdd(name: string, url: string): Promise<void>
+  mcpGet(name: string): Promise<{ registered: boolean; url?: string }>
+  mcpRemove(name: string): Promise<void>
 }
 
 export interface RunPromptOptions {
@@ -235,6 +239,32 @@ export class ClaudeCli implements ClaudeCliLike {
       ...(opts.signal ? { signal: opts.signal } : {}),
       ...(opts.timeoutMs !== undefined ? { timeoutMs: opts.timeoutMs } : {})
     })
+  }
+
+  /** `claude mcp add --transport http <name> <url> -s user` (idempotent: re-add repairs a stale URL). */
+  async mcpAdd(name: string, url: string): Promise<void> {
+    await this.runner(['mcp', 'remove', name, '-s', 'user'], { timeoutMs: this.timeoutMs })
+    const r = await this.runner(['mcp', 'add', '--transport', 'http', name, url, '-s', 'user'], {
+      timeoutMs: this.timeoutMs
+    })
+    if (r.code !== 0)
+      throw new ClaudeCliError(
+        `claude mcp add failed (exit ${r.code}): ${(r.stderr || r.stdout).trim()}`,
+        r
+      )
+  }
+
+  /** `claude mcp get <name>`; registered=false on non-zero exit. */
+  async mcpGet(name: string): Promise<{ registered: boolean; url?: string }> {
+    const r = await this.runner(['mcp', 'get', name], { timeoutMs: this.timeoutMs })
+    if (r.code !== 0) return { registered: false }
+    const m = /(https?:\/\/\S+)/.exec(r.stdout)
+    return m?.[1] ? { registered: true, url: m[1] } : { registered: true }
+  }
+
+  /** `claude mcp remove <name> -s user`; tolerant if absent. */
+  async mcpRemove(name: string): Promise<void> {
+    await this.runner(['mcp', 'remove', name, '-s', 'user'], { timeoutMs: this.timeoutMs })
   }
 
   /** Convenience: find the entry for a bg id in a fresh listing. */

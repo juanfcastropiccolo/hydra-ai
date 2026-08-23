@@ -98,6 +98,19 @@ export class FakeClaudeCli implements ClaudeCliLike {
     return { text, raw: { ok: true, text } }
   }
 
+  /** Feature 006: in-memory MCP registry for E2E. */
+  readonly mcpRegistry = new Map<string, string>()
+  async mcpAdd(name: string, url: string): Promise<void> {
+    this.mcpRegistry.set(name, url)
+  }
+  async mcpGet(name: string): Promise<{ registered: boolean; url?: string }> {
+    const url = this.mcpRegistry.get(name)
+    return url ? { registered: true, url } : { registered: false }
+  }
+  async mcpRemove(name: string): Promise<void> {
+    this.mcpRegistry.delete(name)
+  }
+
   /** Test hook: flip a session's reported status (e.g. to 'waiting'). */
   setStatus(bgId: string, status: string, waitingFor?: string): void {
     const e = this.entries.find((x) => x.id === bgId)
