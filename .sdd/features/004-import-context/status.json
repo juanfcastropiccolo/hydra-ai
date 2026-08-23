@@ -1,0 +1,10 @@
+{
+  "id": "004",
+  "slug": "import-context",
+  "title": "Importar contexto de otra sesión",
+  "phase": "specified",
+  "progress_pct": 20,
+  "depends_on": ["001"],
+  "created": "2026-08-23",
+  "updated": "2026-08-23"
+}
