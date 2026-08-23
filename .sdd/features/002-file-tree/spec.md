@@ -1,7 +1,7 @@
 # Árbol de archivos del proyecto
 
 Feature ID: 002
-Status: specified (pendiente de aprobación)
+Status: specified (aprobada 2026-08-23)
 Last updated: 2026-08-23
 
 ## Problem
