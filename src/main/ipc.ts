@@ -118,6 +118,15 @@ export function registerIpc(
   handle('ui.getImportContext', () => ctx.store.importContext())
   handle('ui.setImportContext', (patch) => ctx.store.setImportContext(patch))
 
+  // ---- feature 005: analytics ----
+  handle('analytics.open', () => ctx.analyticsIndexer().open())
+  handle('analytics.close', () => ctx.analyticsIndexer().close())
+  handle('analytics.reindex', () => ctx.analyticsIndexer().reindex())
+  handle('ui.getAnalytics', () => ctx.store.analytics())
+  handle('ui.setAnalytics', (patch) => ctx.store.setAnalytics(patch))
+  handle('ui.getCenterView', () => ctx.store.centerView())
+  handle('ui.setCenterView', (view) => ctx.store.setCenterView(view))
+
   handle('ui.getHidden', () => ctx.store.hiddenSessionIds())
   handle('ui.setHidden', ({ sessionId, hidden }) => ctx.store.setHidden(sessionId, hidden))
 }

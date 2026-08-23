@@ -1,10 +1,13 @@
 // Wires the main-process services together. Created once at startup; owns lifecycle.
 import { realpathSync } from 'node:fs'
+import { homedir, tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { BrowserWindow } from 'electron'
 import type { ClaudeAvailability, Session } from '@shared/types'
 import type { IpcEvents } from '@shared/ipc'
 import { ClaudeCli, type ClaudeCliLike } from './claude/claude-cli'
+import { AnalyticsIndexer } from './analytics/analytics-indexer'
 import { ContextImporter } from './context/context-importer'
 import { FsActions } from './fs/fs-actions'
 import { FsService } from './fs/fs-service'
@@ -18,6 +21,10 @@ import { ProjectStore } from './store/project-store'
 
 export interface AppContextOptions {
   hydraFilePath: string
+  /** Feature 005: where the transcript index cache lives (userData). */
+  analyticsCachePath: string
+  /** Feature 005: transcripts root; default ~/.claude/projects (E2E points it at a fixture dir). */
+  claudeProjectsRoot?: string
   /** Test hook: fake PTY factory (E2E mode). */
   ptySpawn?: PtySpawn
   /** Test hook: force "claude not found" (HYDRA_FAKE_NO_CLAUDE=1). */
@@ -38,6 +45,8 @@ export class AppContext {
   watcher: SessionWatcher | null = null
   /** Feature 004: handoff summaries of other sessions (null until the CLI is available). */
   importer: ContextImporter | null = null
+  /** Feature 005: transcript index (created lazily on first analytics.open). */
+  private analytics: AnalyticsIndexer | null = null
   availability: ClaudeAvailability = {
     ok: false,
     reason: 'error',
@@ -241,7 +250,24 @@ export class AppContext {
     this.ptySessions.delete(ptyId)
   }
 
+  // ---- feature 005 ----
+  analyticsIndexer(): AnalyticsIndexer {
+    if (!this.analytics) {
+      const ix = new AnalyticsIndexer({
+        projectsRoot: this.opts.claudeProjectsRoot ?? join(homedir(), '.claude', 'projects'),
+        cachePath: this.opts.analyticsCachePath,
+        tmpdir: tmpdir()
+      })
+      ix.on('progress', (p) => this.broadcast('analytics.progress', p))
+      ix.on('sessions', (sessions) => this.broadcast('analytics.sessions', { sessions }))
+      ix.on('error', (msg) => console.error('[analytics]', msg))
+      this.analytics = ix
+    }
+    return this.analytics
+  }
+
   async dispose(): Promise<void> {
+    this.analytics?.close()
     this.importer?.dispose()
     this.fs.dispose()
     this.watcher?.stop()

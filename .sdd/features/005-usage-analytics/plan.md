@@ -87,7 +87,7 @@ Módulos nuevos: `src/main/analytics/{transcript-reducer.ts, analytics-indexer.t
 ## Risks
 
 1. **Formato del transcript cambia** (ya cambió entre versiones: `session_id` vs `sessionId`, `usage` anidado). Mitigación: reductor tolerante (campos opcionales), `skipped` contado, fixtures de versiones actuales; `version` del caché para reindexar.
-2. **Archivos muy grandes y muchas sesiones:** streaming + `setImmediate`; medir en la máquina de Juan (25 MB hydra-ai). Si > 30 s, procesar en un `worker_thread` (misma función pura) — previsto, no implementado.
+2. **Archivos muy grandes y muchas sesiones:** streaming + `setImmediate`. **Medido 2026-08-23 en la máquina de Juan: 72 MB / 66 archivos → 1,5 s el primer índice; con caché 7 ms; 0 líneas ignoradas.** El `worker_thread` queda descartado por ahora.
 3. **`fs.watch` recursivo sobre `~/.claude/projects`** genera ráfagas mientras Claude escribe: debounce 3 s + re-indexar solo los paths tocados; nunca más de un escaneo en vuelo.
 4. **Zona horaria:** buckets en hora local al indexar (ver trade-off).
 5. **Precios desactualizados:** defaults marcados con fecha en `pricing.ts`; "estimado" siempre visible; editables.

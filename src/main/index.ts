@@ -51,6 +51,8 @@ app.whenReady().then(async () => {
     const fakePty = createFakePtySpawn()
     ctx = new AppContext({
       hydraFilePath: join(userData, 'hydra.json'),
+      analyticsCachePath: join(userData, 'analytics-index.json'),
+      claudeProjectsRoot: process.env['HYDRA_E2E_CLAUDE_PROJECTS'] ?? join(userData, 'no-projects'),
       fakeCli,
       ptySpawn: fakePty.spawn,
       pollMs: 300
@@ -62,6 +64,7 @@ app.whenReady().then(async () => {
   } else {
     ctx = new AppContext({
       hydraFilePath: join(userData, 'hydra.json'),
+      analyticsCachePath: join(userData, 'analytics-index.json'),
       fakeNoClaude: process.env['HYDRA_FAKE_NO_CLAUDE'] === '1'
     })
   }
