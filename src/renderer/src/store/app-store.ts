@@ -5,6 +5,7 @@
 //  - at most one expanded pane; Esc collapses only when no terminal has focus
 import { createStore, useStore, type StoreApi } from 'zustand'
 import type { ClaudeAvailability, Project, Session } from '@shared/types'
+import type { CenterView } from '@shared/analytics/types'
 
 export interface NewSessionDialogState {
   projectId: string
@@ -26,6 +27,8 @@ export interface AppState {
   expandedSessionId: string | null
   newSessionDialog: NewSessionDialogState | null
   lastError: string | null
+  /** Feature 005: which view fills the central area. Switching away from sessions blurs every terminal. */
+  centerView: CenterView
 
   setAvailability(a: ClaudeAvailability): void
   setProjects(p: Project[]): void
@@ -43,6 +46,7 @@ export interface AppState {
   openNewSessionDialog(d: NewSessionDialogState): void
   closeNewSessionDialog(): void
   setError(msg: string | null): void
+  setCenterView(view: CenterView): void
 }
 
 export type AppStore = StoreApi<AppState>
@@ -59,6 +63,7 @@ export function createAppStore(): AppStore {
     expandedSessionId: null,
     newSessionDialog: null,
     lastError: null,
+    centerView: 'sessions',
 
     setAvailability: (availability) => set({ availability }),
     setProjects: (projects) => set({ projects }),
@@ -111,7 +116,13 @@ export function createAppStore(): AppStore {
       set((s) => ({ hiddenSessionIds: s.hiddenSessionIds.filter((id) => id !== sessionId) })),
     openNewSessionDialog: (newSessionDialog) => set({ newSessionDialog }),
     closeNewSessionDialog: () => set({ newSessionDialog: null }),
-    setError: (lastError) => set({ lastError })
+    setError: (lastError) => set({ lastError }),
+    setCenterView: (centerView) =>
+      set((s) => ({
+        centerView,
+        // Analytics is a non-terminal zone (Constitution 3): no pane keeps keyboard focus behind it.
+        focusedSessionId: centerView === 'sessions' ? s.focusedSessionId : null
+      }))
   }))
 }
 
