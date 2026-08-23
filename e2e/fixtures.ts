@@ -99,6 +99,8 @@ export interface FakeSessionSpec {
   output: number
   title?: string
   turns?: number
+  /** Optional user text (default 'pregunta N'); makes the session findable by Graph Know. */
+  text?: string
 }
 
 /** Write one minimal transcript per spec under `root` (mirrors ~/.claude/projects layout). */
@@ -126,7 +128,7 @@ export function seedTranscripts(root: string, specs: FakeSessionSpec[]): void {
           uuid: `u${i}`,
           parentUuid: null,
           timestamp: ts,
-          message: { role: 'user', content: `pregunta ${i}` }
+          message: { role: 'user', content: f.text ?? `pregunta ${i}` }
         })
       )
       lines.push(

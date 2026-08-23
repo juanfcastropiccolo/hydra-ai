@@ -227,7 +227,12 @@ function IndexStatusBar(): React.JSX.Element | null {
         <input
           type="checkbox"
           checked={status.autoCards}
-          onChange={(e) => void hydra.knowSetPrefs({ autoCards: e.target.checked })}
+          onChange={(e) =>
+            void hydra
+              .knowSetPrefs({ autoCards: e.target.checked })
+              .then(() => hydra.knowStatus())
+              .then((st) => knowStore.getState().setStatus(st))
+          }
           data-testid="know-autocards"
         />
         fichas automáticas

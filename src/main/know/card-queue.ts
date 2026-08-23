@@ -34,15 +34,18 @@ export class CardQueue extends EventEmitter<CardQueueEvents> {
   private running = false
   private inFlight: string | null = null
   private attempts = new Map<string, Attempt>()
-  /** Backfill guard: sessions that existed before the first explicit approval are not auto-generated. */
+  /**
+   * Backfill guard: sessions whose last activity predates the queue (i.e. this Hydra run) are
+   * "backlog" and wait for an explicit approval; sessions active after that are automatic.
+   */
   private backfillApproved = false
-  private readonly initialBacklog = new Set<string>()
+  private readonly createdAt: number
   lastError: string | null = null
   totalCostUsd = 0
 
   constructor(private readonly opts: CardQueueOptions) {
     super()
-    for (const p of safePending(opts.know)) this.initialBacklog.add(p.sessionId)
+    this.createdAt = opts.now?.() ?? Date.now()
     opts.know.on('changed', () => this.kick())
   }
 
@@ -54,7 +57,7 @@ export class CardQueue extends EventEmitter<CardQueueEvents> {
   private autoEligible(): PendingSession[] {
     if (!this.opts.autoCards()) return []
     return safePending(this.opts.know).filter(
-      (p) => (this.backfillApproved || !this.initialBacklog.has(p.sessionId)) && this.readyNow(p)
+      (p) => (this.backfillApproved || !this.isBacklog(p)) && this.readyNow(p)
     )
   }
 
@@ -67,9 +70,13 @@ export class CardQueue extends EventEmitter<CardQueueEvents> {
     return true
   }
 
-  /** Estimate for the UI confirmation (count + rough cost of the initial backlog). */
+  private isBacklog(p: PendingSession): boolean {
+    return p.lastTs < this.createdAt
+  }
+
+  /** Estimate for the UI confirmation (count + rough cost of the backlog). */
   backlogEstimate(): { count: number; estUsd: number } {
-    const pend = safePending(this.opts.know).filter((p) => this.initialBacklog.has(p.sessionId))
+    const pend = safePending(this.opts.know).filter((p) => this.isBacklog(p))
     return { count: pend.length, estUsd: pend.length * 0.03 }
   }
 

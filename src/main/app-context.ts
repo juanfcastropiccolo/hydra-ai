@@ -115,8 +115,10 @@ export class AppContext {
       this.watcher.start()
       this.importer = new ContextImporter({
         cli: () => cli,
-        // decorated: the block names the session the way the user sees it (alias, FR-11)
-        getSession: (id) => this.sessions().find((s) => s.sessionId === id),
+        // decorated: the block names the session the way the user sees it (alias, FR-11).
+        // Feature 006: a past (non-live) session found by Graph Know is a valid source too — the
+        // transcript is on disk and `claude -p --resume` reads it the same way.
+        getSession: (id) => this.sessions().find((s) => s.sessionId === id) ?? this.pastSession(id),
         getProject: (id) => this.store.getProject(id),
         prefs: () => this.store.importContext()
       })
@@ -316,6 +318,25 @@ export class AppContext {
       this.knowParts = { know, queue, mcp }
     }
     return this.knowParts
+  }
+
+  /** Session-like view of an indexed (possibly ended) session, for 004's importer. */
+  private pastSession(id: string): Session | undefined {
+    const meta = this.knowParts?.know.meta(id)
+    if (!meta) return undefined
+    const project = this.store.listProjects().find((p) => p.id === meta.projectKey)
+    return {
+      sessionId: id,
+      kind: 'background',
+      name: meta.title,
+      cwd: meta.cwd,
+      projectId: project?.id ?? null,
+      startedAt: 0,
+      state: 'ended',
+      lastStateAt: meta.lastTs,
+      source: 'poll',
+      origin: 'external'
+    }
   }
 
   knowStatus(): import('@shared/know/types').KnowStatus {

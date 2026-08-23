@@ -150,6 +150,7 @@ export function registerIpc(
   handle('know.setPrefs', (patch) => {
     const prefs = ctx.store.setKnow(patch)
     ctx.knowLayer().queue.kick()
+    ctx.broadcast('know.status', ctx.knowStatus())
     return prefs
   })
   handle('know.connectMcp', () => ctx.knowConnectMcp())

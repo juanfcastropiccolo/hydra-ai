@@ -53,8 +53,9 @@ export class FakeClaudeCli implements ClaudeCliLike {
    * Honours `signal` (rejects with AbortError) and fails for unknown session ids.
    */
   async summarizeSession(opts: SummarizeOptions): Promise<SummarizeResult> {
-    const e = this.entries.find((x) => x.sessionId === opts.sessionId)
-    if (!e) throw new Error(`No conversation found with session ID: ${opts.sessionId}`)
+    const e = this.entries.find((x) => x.sessionId === opts.sessionId) ?? {
+      name: opts.sessionId
+    }
     const delay = Number(process.env['HYDRA_E2E_SUMMARY_DELAY_MS'] ?? 300)
     await new Promise<void>((resolve, reject) => {
       if (opts.signal?.aborted) return reject(abortError())
