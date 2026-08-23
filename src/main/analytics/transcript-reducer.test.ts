@@ -126,6 +126,19 @@ describe('reduceTranscriptLine + finalizeSession', () => {
       { sessionId: 'd' }
     )
     expect(empty).toMatchObject({ title: 'd', cwd: '', firstTs: 0, lastTs: 0, userTurns: 0 })
+    const cmd = emptyState()
+    reduceTranscriptLine(
+      cmd,
+      JSON.stringify({
+        type: 'user',
+        timestamp: '2026-01-01T00:00:00Z',
+        message: {
+          role: 'user',
+          content: '<command-name>/voice</command-name> <command-args>hola</command-args>'
+        }
+      })
+    )
+    expect(finalizeSession(cmd, { sessionId: 'c' }).title).toBe('/voice hola')
     const st = emptyState()
     reduceTranscriptLine(
       st,

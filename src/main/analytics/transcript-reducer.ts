@@ -234,7 +234,11 @@ export function finalizeSession(
     assistantMsgs += s.assistantMsgs
     skipped += s.skippedLines
   }
-  const prompt = state.firstPrompt?.replace(/\s+/g, ' ') ?? ''
+  // Strip XML-ish wrappers (slash commands, system reminders) so fallback titles stay readable.
+  const prompt = (state.firstPrompt ?? '')
+    .replace(/<[^>]{1,60}>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
   const title =
     state.customTitle ??
     state.aiTitle ??
