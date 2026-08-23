@@ -33,7 +33,7 @@ describe('coalesceWatchEvents', () => {
       'src/nuevo',
       'src/nuevo/n.ts',
       'README.md'
-    ])
+    ])!
     expect(ev.all).toBe(false)
     expect(ev.dirs.sort()).toEqual(['/r', '/r/src', '/r/src/nuevo'])
   })
