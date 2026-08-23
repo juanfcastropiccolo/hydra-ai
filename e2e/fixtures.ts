@@ -13,10 +13,13 @@ export interface HydraFixture {
   page: Page
   userData: string
   projectDir: string
+  /** Extra env for the launched app (override per spec with test.use). */
+  launchEnv: Record<string, string>
 }
 
 /** Launches the built app in E2E mode with fake CLI/PTY and a temp user-data dir. */
 export const test = base.extend<HydraFixture>({
+  launchEnv: [{}, { option: true }],
   // eslint-disable-next-line no-empty-pattern
   userData: async ({}, use) => {
     const dir = mkdtempSync(join(tmpdir(), 'hydra-e2e-ud-'))
@@ -29,14 +32,15 @@ export const test = base.extend<HydraFixture>({
     await use(dir)
     rmSync(dir, { recursive: true, force: true })
   },
-  app: async ({ userData, projectDir }, use) => {
+  app: async ({ userData, projectDir, launchEnv }, use) => {
     const app = await electron.launch({
       args: [join(process.cwd(), 'out/main/index.js')],
       env: {
         ...process.env,
         HYDRA_E2E: '1',
         HYDRA_USER_DATA: userData,
-        HYDRA_E2E_PICK_FOLDER: projectDir
+        HYDRA_E2E_PICK_FOLDER: projectDir,
+        ...launchEnv
       }
     })
     await use(app)
