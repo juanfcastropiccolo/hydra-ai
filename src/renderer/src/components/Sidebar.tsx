@@ -16,8 +16,6 @@ const NAV = [
   { key: 'config', label: 'Config', enabled: false }
 ] as const
 
-const SIDEBAR_DEFAULT_W = 260
-
 export function Sidebar(): React.JSX.Element {
   const user = { initials: 'JF', name: 'Juan' }
   const filesView = useFileTree((s) => s.open)
@@ -49,7 +47,7 @@ export function Sidebar(): React.JSX.Element {
   return (
     <aside
       className={styles.sidebar}
-      style={{ width: filesView ? treeWidth : SIDEBAR_DEFAULT_W }}
+      style={{ width: treeWidth }}
       data-testid="sidebar"
       data-view={filesView ? 'files' : 'sessions'}
     >
@@ -93,13 +91,11 @@ export function Sidebar(): React.JSX.Element {
           </svg>
         </button>
       </div>
-      {filesView && (
-        <div
-          className={`${styles.resizer} ${resizing ? styles.resizerActive : ''}`}
-          onMouseDown={onResizeStart}
-          data-testid="sidebar-resizer"
-        />
-      )}
+      <div
+        className={`${styles.resizer} ${resizing ? styles.resizerActive : ''}`}
+        onMouseDown={onResizeStart}
+        data-testid="sidebar-resizer"
+      />
       <div className={styles.brand} data-testid="brand">
         <img className={styles.brandLogo} src={badge} alt="" />
         <img className={styles.brandWordmark} src={wordmark} alt="Hydra AI" />

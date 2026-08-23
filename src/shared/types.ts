@@ -66,7 +66,9 @@ export interface HydraFile {
 }
 
 export interface FileTreePrefs {
+  /** true = sidebar shows the Files view, false = Sessions view. */
   open: boolean
+  /** Sidebar width in px (shared by both views, user-resizable). */
   width: number
 }
 export const DEFAULT_FILE_TREE_PREFS: FileTreePrefs = { open: false, width: 300 }

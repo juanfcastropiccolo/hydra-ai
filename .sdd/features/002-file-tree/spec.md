@@ -23,7 +23,7 @@ Tengo un pane con foco. Aprieto el botón "Archivos" de la barra superior (o su 
 1. **FR-1:** La barra izquierda tiene una **solapa saliente** en su borde con dos vistas: **Sesiones** (la barra actual) y **Archivos** (el árbol). Elegir Archivos reemplaza el contenido de la barra por el árbol (la marca y el bloque de usuario se mantienen); ⌘⇧E alterna entre vistas. La vista activa persiste entre aperturas de la app. *(Ajuste 2026-08-23 pedido por Juan: originalmente era un panel a la derecha de la grilla.)*
 2. **FR-2:** El panel muestra el árbol del **proyecto del pane con foco**. Si ningún pane tiene foco, muestra el del **último pane que lo tuvo**; si nunca hubo foco, el del primer proyecto del sidebar. El encabezado del panel muestra el nombre y la ruta del proyecto que está mostrando.
 3. **FR-3:** Al cambiar el foco a un pane de **otro proyecto**, el panel cambia de árbol en menos de 1 segundo, conservando el estado de carpetas expandidas de cada proyecto por separado durante la sesión de la app.
-4. **FR-4:** En vista Archivos la barra es **redimensionable** arrastrando su borde (ancho mínimo 200 px; el ancho persiste; en vista Sesiones vuelve a su ancho fijo). Con un pane expandido, este ocupa toda el área central; la barra sigue visible.
+4. **FR-4:** La barra izquierda es **redimensionable** arrastrando su borde en cualquiera de las dos vistas (ancho mínimo 200 px; un único ancho persistido; cambiar de vista **no** modifica el ancho — ajuste 2026-08-23). Con un pane expandido, este ocupa toda el área central; la barra sigue visible.
 5. **FR-5:** Si el proyecto está marcado como carpeta inexistente, el panel lo indica y no intenta listar.
 
 ### Árbol
