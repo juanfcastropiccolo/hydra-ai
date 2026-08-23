@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
+import { NewSessionDialog } from './components/NewSessionDialog'
 import { Sidebar } from './components/Sidebar'
 import { initHydraClient } from './lib/hydra-client'
 import { useAppStore } from './store/app-store'
@@ -59,6 +60,7 @@ function App(): React.JSX.Element {
           )}
         </div>
       </section>
+      <NewSessionDialog />
     </div>
   )
 }

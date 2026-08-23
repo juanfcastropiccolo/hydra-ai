@@ -1,0 +1,54 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: grid;
+  place-content: center;
+  z-index: 50;
+}
+.dialog {
+  width: 460px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: grid;
+  gap: 12px;
+}
+.dialog h2 {
+  margin: 0;
+  font-size: 16px;
+}
+.field {
+  display: grid;
+  gap: 4px;
+}
+.label {
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+.path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: var(--bg-pane);
+  border-radius: 8px;
+  padding: 6px 8px;
+  word-break: break-all;
+  color: var(--fg-muted);
+}
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.primary {
+  background: var(--accent-dim);
+  border-color: var(--accent-dim);
+  color: #fff;
+  font-weight: 600;
+}
+.error {
+  color: var(--danger);
+  font-size: 12px;
+}
