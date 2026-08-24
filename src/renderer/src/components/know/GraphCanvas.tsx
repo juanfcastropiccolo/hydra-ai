@@ -1,6 +1,6 @@
 // Feature 006 FR-14: the visual graph. SVG with our own force layout, zoom/pan, click to select,
 // double-click to expand neighbours. Never a hairball: main caps what it sends (~120 nodes).
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState, type ReactNode } from 'react'
 import { useContainerWidth } from '../analytics/charts/hooks'
 import type { GraphData } from '../../store/know-slice'
 import { layout } from './force-layout'
@@ -13,7 +13,8 @@ export function GraphCanvas({
   selected,
   onSelect,
   onExpand,
-  height = 480
+  height = 480,
+  panel
 }: {
   graph: GraphData
   highlight: string[]
@@ -21,6 +22,8 @@ export function GraphCanvas({
   onSelect: (id: string | null) => void
   onExpand: (id: string) => void
   height?: number
+  /** Floating panel rendered next to the selected node (FR-14: details stay on the graph). */
+  panel?: ReactNode
 }): React.JSX.Element {
   const [ref, width] = useContainerWidth(800)
   // Deterministic layout (seeded by node ids): nodes keep familiar spots across expansions.
@@ -54,6 +57,20 @@ export function GraphCanvas({
   }
 
   const r = (w: number): number => 5 + Math.min(11, Math.log1p(w) * 2.4)
+  // Anchor for the floating panel: the selected node's screen position (view transform applied).
+  const anchor = useMemo(() => {
+    if (!selected) return null
+    const p = positions.get(selected)
+    if (!p) return null
+    const x = p.x * view.k + view.x
+    const y = p.y * view.k + view.y
+    const flip = x > width * 0.55
+    return {
+      left: flip ? undefined : Math.min(width - 320, x + 16),
+      right: flip ? Math.max(0, width - x + 16) : undefined,
+      top: Math.max(8, Math.min(height - 160, y - 20))
+    }
+  }, [selected, positions, view, width, height])
 
   return (
     <div ref={ref} className={styles.canvasWrap} data-testid="graph-canvas">
@@ -136,6 +153,17 @@ export function GraphCanvas({
           })}
         </g>
       </svg>
+      {panel && anchor && (
+        <div
+          className={styles.floatingPanel}
+          style={{ left: anchor.left, right: anchor.right, top: anchor.top }}
+          onMouseDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
+          data-testid="graph-panel"
+        >
+          {panel}
+        </div>
+      )}
       <div className={styles.canvasLegend}>
         {Object.entries(KIND_LABEL).map(([k, l]) => (
           <span key={k} className={styles.legendItem}>

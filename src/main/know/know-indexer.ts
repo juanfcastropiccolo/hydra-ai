@@ -128,6 +128,11 @@ export class KnowIndexer extends EventEmitter<KnowIndexerEvents> {
     return this.cardsFile.cards[sessionId]
   }
 
+  transcriptPath(sessionId: string): string | null {
+    this.searchIndex()
+    return this.paths.get(sessionId) ?? null
+  }
+
   searchIndex(): KnowSearchIndex {
     if (this.ix && !this.dirty) return this.ix
     const corpus: KnowCorpus = { sessions: new Map() }

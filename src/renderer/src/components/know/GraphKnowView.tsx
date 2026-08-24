@@ -7,6 +7,9 @@ import { runImport } from '../../lib/import-flow'
 import { useAppStore } from '../../store/app-store'
 import { knowStore, useKnow } from '../../store/know-slice'
 import { fmtDateTime, fmtUsd } from '../analytics/formatters'
+
+/** Mirrors main's CardQueue estimate (observed US$0.03–0.12 per card with haiku). */
+const EST_USD_PER_CARD = 0.06
 import { GraphCanvas } from './GraphCanvas'
 import { KIND_LABEL } from './node-kinds'
 import styles from './know.module.css'
@@ -166,18 +169,17 @@ export function GraphKnowView(): React.JSX.Element {
           ))}
         </div>
         <aside className={styles.panel} data-testid="know-panel">
-          {openSessionId ? (
+          {openSessionId && !selectedNode ? (
             <SessionPanel
               sessionId={openSessionId}
               card={openCard}
               liveIds={liveIds}
               onGoTo={goToPane}
             />
-          ) : selectedNode ? (
-            <NodePanel nodeId={selectedNode} onOpenSession={openSession} />
           ) : (
             <div className={styles.muted}>
-              Elegí un resultado o un nodo del grafo para ver el detalle.
+              Elegí un resultado para ver su ficha; en el grafo, clic en un nodo abre su detalle al
+              lado y doble clic lo expande.
             </div>
           )}
         </aside>
@@ -194,6 +196,38 @@ export function GraphKnowView(): React.JSX.Element {
               else knowStore.getState().openSession(null, null)
             }}
             onExpand={expandNode}
+            panel={
+              selectedNode ? (
+                <>
+                  <button
+                    className={styles.floatingClose}
+                    onClick={() => {
+                      knowStore.getState().selectNode(null)
+                      knowStore.getState().openSession(null, null)
+                    }}
+                    title="Cerrar"
+                    aria-label="Cerrar"
+                  >
+                    ✕
+                  </button>
+                  {selectedNode.startsWith('s:') ? (
+                    <SessionPanel
+                      sessionId={selectedNode.slice(2)}
+                      card={openSessionId === selectedNode.slice(2) ? openCard : null}
+                      liveIds={liveIds}
+                      onGoTo={goToPane}
+                      onExpand={() => expandNode(selectedNode)}
+                    />
+                  ) : (
+                    <NodePanel
+                      nodeId={selectedNode}
+                      onOpenSession={openSession}
+                      onExpand={() => expandNode(selectedNode)}
+                    />
+                  )}
+                </>
+              ) : null
+            }
           />
         </section>
       )}
@@ -240,11 +274,11 @@ function IndexStatusBar(): React.JSX.Element | null {
       {status.cardsPending > 0 && (
         <button
           className={styles.ghostBtn}
-          title={`Generar ${status.cardsPending} fichas pendientes (~${fmtUsd(status.cardsPending * 0.03)})`}
+          title={`Generar ${status.cardsPending} fichas pendientes (~${fmtUsd(status.cardsPending * EST_USD_PER_CARD)})`}
           onClick={() => {
             if (
               window.confirm(
-                `Generar ${status.cardsPending} fichas con el modelo económico (~${fmtUsd(status.cardsPending * 0.03)} estimado)?`
+                `Generar ${status.cardsPending} fichas con el modelo económico (~${fmtUsd(status.cardsPending * EST_USD_PER_CARD)} estimado)?`
               )
             )
               void hydra.knowGeneratePending()
@@ -274,8 +308,8 @@ function IndexStatusBar(): React.JSX.Element | null {
         {mcpLabel}
       </span>
       {status.lastError && (
-        <span className={styles.warnNote} title={status.lastError}>
-          ⚠ ficha con error
+        <span className={styles.errorText} title={status.lastError} data-testid="know-last-error">
+          ⚠ última ficha: {status.lastError}
         </span>
       )}
     </div>
@@ -286,17 +320,24 @@ function SessionPanel({
   sessionId,
   card,
   liveIds,
-  onGoTo
+  onGoTo,
+  onExpand
 }: {
   sessionId: string
   card: import('@shared/know/types').SessionCard | null
   liveIds: ReadonlySet<string>
   onGoTo: (id: string) => void
+  onExpand?: () => void
 }): React.JSX.Element {
   return (
     <div data-testid="know-card-panel">
       <div className={styles.panelTitle}>Ficha de sesión</div>
       <div className={styles.panelId}>{sessionId}</div>
+      {onExpand && (
+        <button className={styles.ghostBtn} onClick={onExpand} data-testid="know-expand">
+          Expandir vecinos
+        </button>
+      )}
       {liveIds.has(sessionId) && (
         <button className={styles.ghostBtn} onClick={() => onGoTo(sessionId)}>
           Ir al pane
@@ -319,6 +360,7 @@ function SessionPanel({
           <div className={styles.muted}>
             Generada {fmtDateTime(card.generatedAt)} · {card.model}
             {card.costUsd !== undefined && ` · ${fmtUsd(card.costUsd)}`}
+            {card.partial && ' · parcial (sesión muy larga: extracto reciente)'}
           </div>
         </>
       ) : (
@@ -352,10 +394,12 @@ function GenerateCard({ sessionId }: { sessionId: string }): React.JSX.Element {
 
 function NodePanel({
   nodeId,
-  onOpenSession
+  onOpenSession,
+  onExpand
 }: {
   nodeId: string
   onOpenSession: (id: string) => void
+  onExpand?: () => void
 }): React.JSX.Element {
   const graph = useKnow((s) => s.graph)
   const node = graph?.nodes.find((n) => n.id === nodeId)
@@ -375,6 +419,11 @@ function NodePanel({
     <div data-testid="know-node-panel">
       <div className={styles.panelTitle}>{KIND_LABEL[node.kind]}</div>
       <div className={styles.panelSummary}>{node.label}</div>
+      {onExpand && (
+        <button className={styles.ghostBtn} onClick={onExpand} data-testid="know-expand">
+          Expandir vecinos
+        </button>
+      )}
       <div className={styles.muted}>Conexiones visibles:</div>
       {neighbours.map((n) => (
         <button

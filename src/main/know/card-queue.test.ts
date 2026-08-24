@@ -151,3 +151,28 @@ describe('CardQueue', () => {
     rmSync(dir, { recursive: true, force: true })
   })
 })
+
+describe('CardQueue — huge sessions', () => {
+  it('"Prompt is too long" → retries from a recent extract without --resume and marks the card partial', async () => {
+    const { know, dir } = await setup()
+    const calls: RunPromptOptions[] = []
+    const cli = {
+      runPrompt: vi.fn(async (o: RunPromptOptions) => {
+        calls.push(o)
+        if (o.resumeSessionId)
+          throw new Error('No se pudo resumir la sesión (claude -p exit 1): Prompt is too long.')
+        const text = cardJson('Parcial')
+        return { text, raw: { ok: true, text, costUsd: 0.05 } }
+      })
+    } as unknown as ClaudeCliLike
+    const q = mkQueue(know, cli)
+    const sid = 'bbbbbbbb-0000-4000-8000-000000000002'
+    expect(await q.generateOne(sid)).toBe(true)
+    expect(calls).toHaveLength(2)
+    expect(calls[1]!.resumeSessionId).toBeUndefined()
+    expect(calls[1]!.prompt).toMatch(/extracto reciente/)
+    expect(calls[1]!.prompt).toMatch(/USUARIO: /)
+    expect(know.card(sid)?.partial).toBe(true)
+    rmSync(dir, { recursive: true, force: true })
+  })
+})

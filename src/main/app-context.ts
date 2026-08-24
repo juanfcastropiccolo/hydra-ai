@@ -28,6 +28,8 @@ export interface AppContextOptions {
   analyticsCachePath: string
   /** Feature 006: where session knowledge cards live (userData). */
   knowCardsPath: string
+  /** Feature 006: override the MCP port (E2E uses 0 = ephemeral so it never collides with a real Hydra). */
+  mcpPort?: number
   /** Feature 005: transcripts root; default ~/.claude/projects (E2E points it at a fixture dir). */
   claudeProjectsRoot?: string
   /** Test hook: fake PTY factory (E2E mode). */
@@ -310,7 +312,7 @@ export class AppContext {
           },
           version: process.env['npm_package_version'] ?? '0.5.0'
         },
-        this.store.know().port
+        this.opts.mcpPort ?? this.store.know().port
       )
       const emitStatus = (): void => this.broadcast('know.status', this.knowStatus())
       know.on('changed', emitStatus)
@@ -349,7 +351,7 @@ export class AppContext {
       generating: queue.generating(),
       estCostUsd: cards.reduce((n, c) => n + (c.costUsd ?? 0), 0),
       autoCards: this.store.know().autoCards,
-      mcp: { state: mcp.state, port: this.store.know().port, registered: this.mcpRegistered },
+      mcp: { state: mcp.state, port: mcp.port, registered: this.mcpRegistered },
       lastError: queue.lastError
     }
   }

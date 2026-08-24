@@ -5,6 +5,7 @@ import type { ClaudeCliLike } from '../claude/claude-cli'
 import type { KnowIndexer, PendingSession } from './know-indexer'
 import { buildCardPrompt } from './card-prompt'
 import { parseCard, toSessionCard } from './parse-card'
+import { recentExtract } from './transcript-extract'
 
 export interface CardQueueOptions {
   know: KnowIndexer
@@ -29,6 +30,12 @@ interface Attempt {
   count: number
   nextAt: number
 }
+
+/** Observed with haiku on real sessions: US$0.03–0.12 per card. */
+export const EST_USD_PER_CARD = 0.06
+
+const tooLong = (e: unknown): boolean =>
+  /too long|context window|exceeds/i.test((e as Error)?.message ?? '')
 
 export class CardQueue extends EventEmitter<CardQueueEvents> {
   private running = false
@@ -77,7 +84,7 @@ export class CardQueue extends EventEmitter<CardQueueEvents> {
   /** Estimate for the UI confirmation (count + rough cost of the backlog). */
   backlogEstimate(): { count: number; estUsd: number } {
     const pend = safePending(this.opts.know).filter((p) => this.isBacklog(p))
-    return { count: pend.length, estUsd: pend.length * 0.03 }
+    return { count: pend.length, estUsd: pend.length * EST_USD_PER_CARD }
   }
 
   /** User confirmed the backfill (or asked to generate everything now). */
@@ -115,13 +122,30 @@ export class CardQueue extends EventEmitter<CardQueueEvents> {
       const existing = this.opts.know
         .vigenteFacts(meta.projectKey)
         .filter((f) => !f.id.startsWith(`${sessionId}#`))
-      const r = await cli.runPrompt({
-        resumeSessionId: sessionId,
-        cwd: meta.cwd,
-        model,
-        prompt: buildCardPrompt(existing),
-        timeoutMs: 120_000
-      })
+      let partial = false
+      let r: Awaited<ReturnType<ClaudeCliLike['runPrompt']>>
+      try {
+        r = await cli.runPrompt({
+          resumeSessionId: sessionId,
+          cwd: meta.cwd,
+          model,
+          prompt: buildCardPrompt(existing),
+          timeoutMs: 120_000
+        })
+      } catch (e) {
+        if (!tooLong(e)) throw e
+        // Huge session: the whole conversation does not fit the model → card from a recent extract.
+        const path = this.opts.know.transcriptPath(sessionId)
+        const extract = path ? recentExtract(path) : ''
+        if (!extract) throw e
+        partial = true
+        r = await cli.runPrompt({
+          cwd: meta.cwd,
+          model,
+          prompt: `${buildCardPrompt(existing)}\n\nLa conversación es demasiado larga para leerla entera; este es un extracto reciente:\n\n${extract}`,
+          timeoutMs: 120_000
+        })
+      }
       let parsed = parseCard(r.text)
       if (!parsed) {
         const retry = await cli.runPrompt({
@@ -142,7 +166,8 @@ export class CardQueue extends EventEmitter<CardQueueEvents> {
         sourceLastTs: meta.lastTs,
         model,
         generatedAt: this.opts.now?.() ?? Date.now(),
-        ...(costUsd !== undefined ? { costUsd } : {})
+        ...(costUsd !== undefined ? { costUsd } : {}),
+        ...(partial ? { partial: true } : {})
       })
       this.opts.know.setCard(sessionId, card)
       if (parsed.supersededIds.length)

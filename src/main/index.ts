@@ -59,6 +59,7 @@ app.whenReady().then(async () => {
       hydraFilePath: join(userData, 'hydra.json'),
       analyticsCachePath: join(userData, 'analytics-index.json'),
       knowCardsPath: join(userData, 'know-cards.json'),
+      mcpPort: 0,
       claudeProjectsRoot: process.env['HYDRA_E2E_CLAUDE_PROJECTS'] ?? join(userData, 'no-projects'),
       fakeCli,
       ptySpawn: fakePty.spawn,

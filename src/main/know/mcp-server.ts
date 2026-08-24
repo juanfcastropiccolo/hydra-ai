@@ -1,6 +1,7 @@
 // Feature 006 FR-9/FR-11/FR-12: local MCP server (streamable HTTP, loopback only, read-only).
 // Stateless: one McpServer+transport per request, as the SDK recommends for HTTP without sessions.
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { z } from 'zod'
@@ -60,11 +61,19 @@ export function renderCard(
 export class KnowMcpServer {
   private http: Server | null = null
   state: McpState = 'off'
+  /** Actual bound port (differs from the requested one only when 0 = ephemeral, used by E2E). */
+  private boundPort: number
 
   constructor(
     private readonly deps: KnowMcpDeps,
-    private readonly port: number
-  ) {}
+    private readonly requestedPort: number
+  ) {
+    this.boundPort = requestedPort
+  }
+
+  get port(): number {
+    return this.boundPort
+  }
 
   private buildServer(): McpServer {
     const server = new McpServer({ name: 'hydra-know', version: this.deps.version })
@@ -127,10 +136,13 @@ export class KnowMcpServer {
       http.once('error', (e: NodeJS.ErrnoException) =>
         resolve(e.code === 'EADDRINUSE' ? 'port-taken' : 'off')
       )
-      http.listen(this.port, '127.0.0.1', () => resolve('serving'))
+      http.listen(this.requestedPort, '127.0.0.1', () => resolve('serving'))
     })
-    if (this.state === 'serving') this.http = http
-    else http.close()
+    if (this.state === 'serving') {
+      this.http = http
+      const addr = http.address() as AddressInfo | null
+      if (addr?.port) this.boundPort = addr.port
+    } else http.close()
     return this.state
   }
 
