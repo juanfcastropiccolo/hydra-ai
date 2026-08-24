@@ -15,6 +15,12 @@
     0 0 0 1px var(--accent) inset,
     0 0 12px rgba(74, 222, 128, 0.25);
 }
+/* Expanded pane: it is the only one on screen, so the focus glow is noise (Juan, 2026-08-24).
+   Focus itself (data-focused, keyboard) is untouched; only the paint changes. */
+.pane[data-expanded='true'].focused {
+  border-color: var(--border);
+  box-shadow: none;
+}
 .header {
   display: flex;
   align-items: center;
