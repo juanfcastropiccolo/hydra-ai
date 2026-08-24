@@ -20,6 +20,7 @@ import type {
   GitStatusResult,
   ImportContextPrefs,
   Project,
+  ProjectColor,
   Session
 } from './types'
 
@@ -29,6 +30,7 @@ export interface IpcInvoke {
   'projects.add': { args: [{ path: string; name?: string }]; result: Project }
   'projects.remove': { args: [{ id: string }]; result: void }
   'projects.rename': { args: [{ id: string; name: string }]; result: Project }
+  'projects.setColor': { args: [{ id: string; color: ProjectColor | null }]; result: Project }
   /** Opens the native folder picker; resolves null if the user cancelled. */
   'projects.pickFolder': { args: []; result: string | null }
 

@@ -29,6 +29,8 @@ export const hydra = {
   addProject: (path: string, name?: string) => window.hydra.invoke('projects.add', { path, name }),
   removeProject: (id: string) => window.hydra.invoke('projects.remove', { id }),
   renameProject: (id: string, name: string) => window.hydra.invoke('projects.rename', { id, name }),
+  setProjectColor: (id: string, color: import('@shared/types').ProjectColor | null) =>
+    window.hydra.invoke('projects.setColor', { id, color }),
   suggestSessionName: (projectId: string) =>
     window.hydra.invoke('sessions.suggestName', { projectId }),
   createSession: (projectId: string, name: string, cwd?: string) =>

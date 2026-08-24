@@ -11,7 +11,24 @@ export interface Project {
   addedAt: string
   /** True when the folder no longer exists on disk (edge case: moved/deleted). */
   missing?: boolean
+  /** Optional accent color (key of PROJECT_COLORS). */
+  color?: ProjectColor
 }
+
+/** Curated project accent palette (same validated hues as the charts, so the app stays coherent). */
+export const PROJECT_COLORS = {
+  green: '#4ade80',
+  blue: '#3987e5',
+  violet: '#9085e9',
+  orange: '#d95926',
+  magenta: '#d55181',
+  yellow: '#c98500',
+  aqua: '#199e70',
+  red: '#e66767'
+} as const
+export type ProjectColor = keyof typeof PROJECT_COLORS
+export const isProjectColor = (v: unknown): v is ProjectColor =>
+  typeof v === 'string' && v in PROJECT_COLORS
 
 /**
  * Traffic-light state derived from the Claude Code CLI.

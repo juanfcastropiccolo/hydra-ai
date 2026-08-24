@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Project, Session } from '@shared/types'
+import { PROJECT_COLORS, type Project, type ProjectColor, type Session } from '@shared/types'
 import { hydra } from '../lib/hydra-client'
 import { selectAttentionCount, useAppStore } from '../store/app-store'
 import side from './Sidebar.module.css'
@@ -94,8 +94,14 @@ function ProjectRow({
   return (
     <div className={styles.project} data-testid="project" data-project-id={project.id}>
       <div
-        className={`${styles.projectRow} ${project.missing ? styles.missing : ''}`}
+        className={`${styles.projectRow} ${project.missing ? styles.missing : ''} ${project.color ? styles.colored : ''}`}
+        style={
+          project.color
+            ? ({ '--project-color': PROJECT_COLORS[project.color] } as React.CSSProperties)
+            : undefined
+        }
         title={project.path}
+        data-color={project.color ?? ''}
       >
         <span
           className={styles.caret}
@@ -106,20 +112,45 @@ function ProjectRow({
           {collapsed ? '▸' : '▾'}
         </span>
         {editing ? (
-          <input
-            className={styles.nameInput}
-            value={draft}
-            autoFocus
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={() => void commitRename()}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') void commitRename()
-              if (e.key === 'Escape') {
-                setDraft(project.name)
-                setEditing(false)
-              }
-            }}
-          />
+          <>
+            <input
+              className={styles.nameInput}
+              value={draft}
+              autoFocus
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={(e) => {
+                // keep editing while the user is picking a color
+                if (e.relatedTarget instanceof HTMLElement && e.relatedTarget.dataset['swatch'])
+                  return
+                void commitRename()
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void commitRename()
+                if (e.key === 'Escape') {
+                  setDraft(project.name)
+                  setEditing(false)
+                }
+              }}
+              data-testid="project-name-input"
+            />
+            <span className={styles.swatches} role="group" aria-label="Color del proyecto">
+              {(Object.keys(PROJECT_COLORS) as ProjectColor[]).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={`${styles.swatch} ${project.color === c ? styles.swatchActive : ''}`}
+                  style={{ background: PROJECT_COLORS[c] }}
+                  title={c}
+                  data-swatch={c}
+                  data-testid={`project-color-${c}`}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() =>
+                    void hydra.setProjectColor(project.id, project.color === c ? null : c)
+                  }
+                />
+              ))}
+            </span>
+          </>
         ) : (
           <span
             className={styles.name}

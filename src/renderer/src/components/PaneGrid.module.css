@@ -19,6 +19,11 @@
   font-weight: 600;
   font-size: 12px;
 }
+.groupLabel[data-color]:not([data-color='']) {
+  color: var(--project-color);
+  background: color-mix(in srgb, var(--project-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--project-color) 45%, transparent);
+}
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

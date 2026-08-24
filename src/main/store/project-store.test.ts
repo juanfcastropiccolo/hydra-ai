@@ -230,3 +230,22 @@ describe('validateHydraFile', () => {
     expect(validateHydraFile([])).toBeNull()
   })
 })
+
+describe('project colors', () => {
+  it('sets, clears, validates and persists the accent color', () => {
+    const a = mk()
+    a.load()
+    const p = a.addProject({ path: '/p/color' })
+    expect(a.setProjectColor(p.id, 'violet').color).toBe('violet')
+    expect(mk().load().projects[0]?.color).toBe('violet')
+    expect(() => a.setProjectColor(p.id, 'pink' as never)).toThrow(/unknown color/)
+    expect(a.setProjectColor(p.id, null).color).toBeUndefined()
+    expect(
+      validateHydraFile({
+        version: 1,
+        projects: [{ id: 'x', name: 'X', path: '/x', color: 'nope' }],
+        ui: {}
+      })?.projects[0]?.color
+    ).toBeUndefined()
+  })
+})

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { Project, Session } from '@shared/types'
+import { PROJECT_COLORS, type Project, type Session } from '@shared/types'
 import { useAppStore } from '../store/app-store'
 import { ErrorBoundary } from './ErrorBoundary'
 import { Pane } from './Pane'
@@ -49,7 +49,15 @@ export function PaneGrid(): React.JSX.Element {
           className={expanded ? styles.groupExpanded : styles.group}
           data-testid="pane-group"
         >
-          <span className={expanded ? styles.hiddenLabel : styles.groupLabel}>
+          <span
+            className={expanded ? styles.hiddenLabel : styles.groupLabel}
+            style={
+              project?.color
+                ? ({ '--project-color': PROJECT_COLORS[project.color] } as React.CSSProperties)
+                : undefined
+            }
+            data-color={project?.color ?? ''}
+          >
             {project?.name ?? 'Sin proyecto'}
           </span>
           <div className={expanded ? styles.gridExpanded : styles.grid}>

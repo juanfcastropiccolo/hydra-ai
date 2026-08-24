@@ -53,6 +53,11 @@ export function registerIpc(
     ctx.watcher?.refreshProjectIndex()
     ctx.broadcast('projects.changed', { projects: ctx.store.listProjects() })
   })
+  handle('projects.setColor', ({ id, color }) => {
+    const p = ctx.store.setProjectColor(id, color)
+    ctx.broadcast('projects.changed', { projects: ctx.store.listProjects() })
+    return p
+  })
   handle('projects.rename', ({ id, name }) => {
     const p = ctx.store.renameProject(id, name)
     ctx.broadcast('projects.changed', { projects: ctx.store.listProjects() })

@@ -18,7 +18,9 @@ import {
   type FileTreePrefs,
   type HydraFile,
   type ImportContextPrefs,
-  type Project
+  isProjectColor,
+  type Project,
+  type ProjectColor
 } from '@shared/types'
 import {
   DEFAULT_ANALYTICS_PREFS,
@@ -52,7 +54,8 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       id: p.id,
       name: p.name,
       path: p.path,
-      addedAt: typeof p.addedAt === 'string' ? p.addedAt : ''
+      addedAt: typeof p.addedAt === 'string' ? p.addedAt : '',
+      ...(isProjectColor(p.color) ? { color: p.color } : {})
     })
   }
   const ui = isRecord(v.ui) ? v.ui : {}
@@ -230,6 +233,16 @@ export class ProjectStore {
     const before = this.data.projects.length
     this.data.projects = this.data.projects.filter((p) => p.id !== id)
     if (this.data.projects.length !== before) this.save()
+  }
+
+  setProjectColor(id: string, color: ProjectColor | null): Project {
+    const p = this.data.projects.find((x) => x.id === id)
+    if (!p) throw new Error(`project ${id} not found`)
+    if (color === null) delete p.color
+    else if (isProjectColor(color)) p.color = color
+    else throw new Error(`unknown color ${String(color)}`)
+    this.save()
+    return { ...p, missing: !this.exists(p.path) }
   }
 
   renameProject(id: string, name: string): Project {
