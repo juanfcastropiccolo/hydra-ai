@@ -72,6 +72,8 @@ export interface HydraFile {
     analytics: AnalyticsPrefs
     /** Feature 006: Graph Know preferences. */
     know: KnowPrefs
+    /** Window zoom level (Electron zoom steps; -1 ≈ 83%). Saved on close, restored on open. */
+    zoomLevel: number
   }
 }
 
@@ -123,7 +125,8 @@ export const EMPTY_HYDRA_FILE: HydraFile = {
     importContext: { model: 'haiku' },
     centerView: 'sessions',
     analytics: { range: '7d', pricing: {} },
-    know: { autoCards: true, port: 4855 }
+    know: { autoCards: true, port: 4855 },
+    zoomLevel: -1
   }
 }
 

@@ -37,7 +37,8 @@ describe('ProjectStore', () => {
         importContext: { model: 'haiku' },
         centerView: 'sessions',
         analytics: { range: '7d', pricing: {} },
-        know: { autoCards: true, port: 4855 }
+        know: { autoCards: true, port: 4855 },
+        zoomLevel: -1
       }
     })
     s.addProject({ path: '/Users/u/foo/' })
@@ -111,6 +112,9 @@ describe('ProjectStore', () => {
     const reloaded = mk().load().ui
     expect(reloaded.centerView).toBe('graph')
     expect(reloaded.know).toEqual({ autoCards: false, port: 5001 })
+    b.setZoomLevel(-0.5)
+    b.setZoomLevel(99) // ignored
+    expect(mk().load().ui.zoomLevel).toBe(-0.5)
     expect(reloaded.analytics.pricing['claude-x']?.output).toBe(5)
     b.setSessionName('S1', '')
     expect(b.sessionNames()).toEqual({})
@@ -188,7 +192,8 @@ describe('validateHydraFile', () => {
         importContext: { model: 'haiku' },
         centerView: 'sessions',
         analytics: { range: '7d', pricing: {} },
-        know: { autoCards: true, port: 4855 }
+        know: { autoCards: true, port: 4855 },
+        zoomLevel: -1
       }
     })
     expect(

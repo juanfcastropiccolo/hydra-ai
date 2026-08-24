@@ -9,7 +9,7 @@ import { createFakePtySpawn, FakeClaudeCli } from './testing/fakes'
 let mainWindow: BrowserWindow | null = null
 let ctx: AppContext | null = null
 
-function createWindow(): BrowserWindow {
+function createWindow(zoomLevel: number, onZoomSaved: (level: number) => void): BrowserWindow {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -26,7 +26,13 @@ function createWindow(): BrowserWindow {
       nodeIntegration: false
     }
   })
-  win.on('ready-to-show', () => win.show())
+  // Open maximized (Juan's request, 2026-08-23) and with the last zoom level (default one step down).
+  win.on('ready-to-show', () => {
+    win.maximize()
+    win.show()
+  })
+  win.webContents.on('did-finish-load', () => win.webContents.setZoomLevel(zoomLevel))
+  win.on('close', () => onZoomSaved(win.webContents.getZoomLevel()))
   win.webContents.setWindowOpenHandler((details) => {
     void shell.openExternal(details.url)
     return { action: 'deny' }
@@ -77,7 +83,7 @@ app.whenReady().then(async () => {
   })
   await ctx.init()
 
-  mainWindow = createWindow()
+  mainWindow = createWindow(ctx.store.zoomLevel(), (level) => ctx?.store.setZoomLevel(level))
   ctx.attachWindow(mainWindow)
   // Push initial availability once the renderer is listening.
   mainWindow.webContents.on('did-finish-load', () => {
@@ -88,7 +94,7 @@ app.whenReady().then(async () => {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0 && ctx) {
-      mainWindow = createWindow()
+      mainWindow = createWindow(ctx.store.zoomLevel(), (level) => ctx?.store.setZoomLevel(level))
       ctx.attachWindow(mainWindow)
     }
   })

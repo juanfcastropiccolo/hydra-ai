@@ -109,7 +109,13 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       importContext,
       centerView,
       analytics,
-      know
+      know,
+      zoomLevel:
+        typeof ui.zoomLevel === 'number' &&
+        Number.isFinite(ui.zoomLevel) &&
+        Math.abs(ui.zoomLevel) <= 5
+          ? ui.zoomLevel
+          : -1
     }
   }
 }
@@ -329,6 +335,15 @@ export class ProjectStore {
     this.data.ui.know = next
     this.save()
     return this.know()
+  }
+
+  zoomLevel(): number {
+    return this.data.ui.zoomLevel
+  }
+  setZoomLevel(level: number): void {
+    if (!Number.isFinite(level) || Math.abs(level) > 5) return
+    this.data.ui.zoomLevel = Math.round(level * 2) / 2
+    this.save()
   }
 
   paneOrder(): string[] {
