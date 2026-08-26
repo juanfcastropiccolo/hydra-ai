@@ -2,12 +2,12 @@
   "id": "006",
   "slug": "graph-know",
   "title": "Graph Know — conocimiento y recuperación de contexto",
-  "phase": "in_progress",
-  "progress_pct": 80,
+  "phase": "complete",
+  "progress_pct": 100,
   "depends_on": [
     "004",
     "005"
   ],
   "created": "2026-08-23",
-  "updated": "2026-08-23"
+  "updated": "2026-08-26"
 }

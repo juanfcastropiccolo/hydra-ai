@@ -1,7 +1,7 @@
 # Plan: Graph Know — conocimiento y recuperación de contexto
 
 Feature ID: 006
-Status: planned (aprobado 2026-08-23)
+Status: complete (2026-08-26, v1)
 Last updated: 2026-08-23
 Base: spec 006 + investigación 2026-08-23 (informe en el historial de la sesión: GraphRAG/LightRAG/MiniRAG/HippoRAG/LazyGraphRAG/Zep-Graphiti/Mem0/A-MEM; conclusión: a 50–500 sesiones gana un híbrido léxico+grafo liviano con hechos destilados, no GraphRAG pesado).
 

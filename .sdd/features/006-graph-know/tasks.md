@@ -1,7 +1,7 @@
 # Tasks: Graph Know — conocimiento y recuperación de contexto
 
 Feature ID: 006
-Status: in_progress (tasks 1–16 hechos 2026-08-23; falta QA manual y cierre)
+Status: complete (2026-08-26, v1)
 Last updated: 2026-08-23
 
 Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo task que el código. Ningún task se marca `[x]` con tests rojos. Los AC de 001/002/004/005 (unit + E2E) siguen verdes en cada task.
@@ -36,8 +36,8 @@ Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo ta
 ## Fase 5 — Tests y cierre
 
 - [x] **16.** E2E (`e2e/08-graph-know.spec.ts`): índice sembrado vía fixtures de transcripts (reusa el seeder de 07) + fichas sembradas en `know-index.json`; buscar → resultados correctos; grafo renderiza y expande; toggle y estado; Conectar llama al fake CLI; importar contexto escribe en el pane (writes del PTY falso) — done when: verde; 01–07 verdes.
-- [ ] **17.** QA manual `docs/qa-006.md`: AC-1 real desde una sesión de Claude fuera de Hydra; **set de 20–30 queries reales de Juan** con veredicto de calidad (el riesgo 1); backfill con costo; Hydra cerrada → error claro; look del grafo — done when: checklist completo por Juan; fallos → tasks de fix.
-- [ ] **18.** Cierre: README (sección Graph Know + nota `claude mcp remove hydra-know` al desinstalar), CLAUDE.md (módulos `know/`, reglas), `.sdd/README.md`, `status.json` → complete, bump 0.5.0 + tag `v0.5.0` — done when: hecho y pusheado.
+- [x] **17.** QA manual `docs/qa-006.md`: AC-1 real desde una sesión de Claude fuera de Hydra; **set de 20–30 queries reales de Juan** con veredicto de calidad (el riesgo 1); backfill con costo; Hydra cerrada → error claro; look del grafo — done when: checklist completo por Juan; fallos → tasks de fix.
+- [x] **18.** Cierre: README (sección Graph Know + nota `claude mcp remove hydra-know` al desinstalar), CLAUDE.md (módulos `know/`, reglas), `.sdd/README.md`, `status.json` → complete, bump 0.5.0 + tag `v0.5.0` — done when: hecho y pusheado.
 
 ## Traceability
 

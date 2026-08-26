@@ -1,7 +1,7 @@
 # Graph Know — conocimiento y recuperación de contexto del trabajo pasado
 
 Feature ID: 006
-Status: specified (aprobada 2026-08-23)
+Status: complete (2026-08-26, v1)
 Last updated: 2026-08-23
 Base: investigación 2026-08-23 (GraphRAG/LightRAG/MiniRAG/HippoRAG/Zep-Graphiti/Mem0; ver plan) y decisión de Juan: el grafo existe para **optimizar cómo Claude accede al contexto del trabajo pasado**, no como visor decorativo.
 
