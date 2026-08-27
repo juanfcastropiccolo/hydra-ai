@@ -1,0 +1,10 @@
+{
+  "id": "007",
+  "slug": "config",
+  "title": "Config — preferencias de Hydra",
+  "phase": "specified",
+  "progress_pct": 20,
+  "depends_on": ["001", "004", "005", "006"],
+  "created": "2026-08-26",
+  "updated": "2026-08-26"
+}

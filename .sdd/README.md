@@ -13,5 +13,4 @@ Proyecto gestionado con Spec-Driven Development. Ver `constitution.md` para los 
 
 - 002-fix — ⌘⇧E no alterna la vista en la `.app` empaquetada (sí en dev/E2E). Investigar captura de teclas en producción.
 - ~~003 — Chat box por pane~~ (descartada el 2026-08-23 por decisión de Juan; el número no se reutiliza).
-- 007 — Config (hereda: `ui.importContext.model`, `ui.know.*`, `ui.analytics.pricing`, `--max-budget-usd`).
 - 006b — Graph Know v2: embeddings locales (si el léxico falla por vocabulario), grafo con temas/hechos + mejor layout, supersede dedicado, tools MCP `get_file_history`/`recent_work`, ranking con recencia, detalle de sesión. (Identificado en QA 2026-08-24.)
