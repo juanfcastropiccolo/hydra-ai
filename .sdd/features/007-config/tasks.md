@@ -1,7 +1,7 @@
 # Tasks: Config — preferencias de Hydra
 
 Feature ID: 007
-Status: tasked (borrador — pendiente de aprobación)
+Status: tasked (aprobado 2026-08-26)
 Last updated: 2026-08-26
 
 Convenciones: un task ≈ un commit (Conventional Commits), tests en el mismo task que el código. Ningún task se marca `[x]` con tests rojos. Los AC de 001–006 (unit + E2E) siguen verdes en cada task.

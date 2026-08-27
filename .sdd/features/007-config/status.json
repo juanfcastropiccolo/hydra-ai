@@ -2,8 +2,8 @@
   "id": "007",
   "slug": "config",
   "title": "Config — preferencias de Hydra",
-  "phase": "planned",
-  "progress_pct": 40,
+  "phase": "tasked",
+  "progress_pct": 60,
   "depends_on": [
     "001",
     "004",
