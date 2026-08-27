@@ -1,7 +1,7 @@
 # Plan: Config — preferencias de Hydra
 
 Feature ID: 007
-Status: planned (borrador — pendiente de aprobación)
+Status: planned (aprobado 2026-08-26)
 Last updated: 2026-08-26
 
 ## Chosen stack
