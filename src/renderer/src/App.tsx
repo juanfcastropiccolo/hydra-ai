@@ -4,6 +4,8 @@ import { ClaudeUnavailable } from './components/ClaudeUnavailable'
 import { AnalyticsView } from './components/analytics/AnalyticsView'
 import { GraphKnowView } from './components/know/GraphKnowView'
 import { ConfigView } from './components/config/ConfigView'
+import { applyAccent } from './components/config/accent'
+import { usePrefs } from './store/prefs-slice'
 import { ImportContextDialog } from './components/ImportContextDialog'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -23,6 +25,11 @@ function App(): React.JSX.Element {
   const setError = useAppStore((s) => s.setError)
   const escape = useAppStore((s) => s.escape)
   const centerView = useAppStore((s) => s.centerView)
+  // feature 007: accent color → CSS vars (UI only)
+  const accent = usePrefs((p) => p.appearance.accent)
+  useEffect(() => {
+    applyAccent(accent, document.documentElement)
+  }, [accent])
   const openDialog = useAppStore((s) => s.openNewSessionDialog)
   const sidebarCollapsed = useFileTree((s) => s.collapsed)
 
@@ -108,7 +115,9 @@ function App(): React.JSX.Element {
               ? 'Analytics'
               : centerView === 'graph'
                 ? 'Graph Know'
-                : 'Sesiones'}
+                : centerView === 'config'
+                  ? 'Config'
+                  : 'Sesiones'}
           </span>
           <span className={styles.topbarSpacer} />
           <span className={styles.topbarTitle} data-testid="claude-status">

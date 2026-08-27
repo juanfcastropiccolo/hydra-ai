@@ -14,6 +14,7 @@ export default defineConfig({
       'src/renderer/src/components/file-tree/*.test.ts',
       'src/renderer/src/components/analytics/**/*.test.ts',
       'src/renderer/src/components/know/**/*.test.ts',
+      'src/renderer/src/components/config/**/*.test.ts',
       'test/**/*.test.ts'
     ],
     exclude: [

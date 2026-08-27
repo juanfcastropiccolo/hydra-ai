@@ -9,6 +9,7 @@ import '@xterm/xterm/css/xterm.css'
 import { useEffect, useRef } from 'react'
 import { hydra } from '../lib/hydra-client'
 import { appStore } from '../store/app-store'
+import { prefsStore, usePrefs } from '../store/prefs-slice'
 import styles from './XTermView.module.css'
 
 export interface XTermController {
@@ -36,6 +37,20 @@ export function XTermView({
 }: XTermViewProps): React.JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null)
   const termRef = useRef<Terminal | null>(null)
+  const fitRef = useRef<FitAddon | null>(null)
+  // Feature 007: font size changes apply live (no re-attach): xterm re-measures on option change.
+  const fontSize = usePrefs((p) => p.appearance.terminalFontSize)
+  useEffect(() => {
+    const term = termRef.current
+    if (!term || term.options.fontSize === fontSize) return
+    term.options.fontSize = fontSize
+    try {
+      fitRef.current?.fit()
+      hydra.resize(ptyId, term.cols, term.rows)
+    } catch {
+      /* not laid out */
+    }
+  }, [fontSize, ptyId])
   const onExitRef = useRef(onExit)
   useEffect(() => {
     onExitRef.current = onExit
@@ -46,7 +61,7 @@ export function XTermView({
     if (!host) return
     const term = new Terminal({
       cursorBlink: true,
-      fontSize: 13,
+      fontSize: prefsStore.getState().prefs.appearance.terminalFontSize,
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
       scrollback: 5000,
       allowProposedApi: true,
@@ -54,6 +69,7 @@ export function XTermView({
       theme: { background: '#121214' }
     })
     const fit = new FitAddon()
+    fitRef.current = fit
     term.loadAddon(fit)
     term.loadAddon(new WebLinksAddon())
     term.open(host)

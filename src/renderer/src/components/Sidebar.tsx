@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { FILE_TREE_MIN_WIDTH } from '@shared/types'
 import { hydra } from '../lib/hydra-client'
 import { useAppStore } from '../store/app-store'
+import { usePrefs } from '../store/prefs-slice'
 import { fileTreeStore, useFileTree } from '../store/file-tree-slice'
 import { ErrorBoundary } from './ErrorBoundary'
 import { FileTreePanel } from './file-tree/FileTreePanel'
@@ -18,7 +19,8 @@ const NAV = [
 ] as const
 
 export function Sidebar(): React.JSX.Element {
-  const user = { initials: 'JF', name: 'Juan' }
+  const profile = usePrefs((p) => p.profile)
+  const user = { initials: profile.initials || '?', name: profile.name || 'Usuario' }
   const filesView = useFileTree((s) => s.open)
   const treeWidth = useFileTree((s) => s.width)
   const collapsed = useFileTree((s) => s.collapsed)
