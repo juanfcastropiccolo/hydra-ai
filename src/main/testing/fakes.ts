@@ -3,6 +3,7 @@ import type { AgentEntry, ParseAgentsResult } from '../claude/agents-json'
 import type {
   ClaudeCliLike,
   RunPromptOptions,
+  SpawnBackgroundOptions,
   SummarizeOptions,
   SummarizeResult
 } from '../claude/claude-cli'
@@ -19,7 +20,10 @@ export class FakeClaudeCli implements ClaudeCliLike {
   async listSessions(): Promise<ParseAgentsResult> {
     return { entries: this.entries.map((e) => ({ ...e })), skipped: 0 }
   }
-  async spawnBackground(opts: { cwd: string; name: string }): Promise<{ bgId: string }> {
+  /** Feature 007 E2E: every spawn's options, so tests can assert model/effort/permission flags. */
+  readonly spawns: SpawnBackgroundOptions[] = []
+  async spawnBackground(opts: SpawnBackgroundOptions): Promise<{ bgId: string }> {
+    this.spawns.push({ ...opts })
     this.n++
     const bgId = `fake${String(this.n).padStart(4, '0')}`
     this.entries.push({

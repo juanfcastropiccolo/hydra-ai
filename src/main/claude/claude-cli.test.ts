@@ -189,3 +189,29 @@ describe('ClaudeCli.mcp* (unit, fake runner)', () => {
     await cli(runner).mcpRemove('hydra-know')
   })
 })
+
+describe('ClaudeCli.spawnBackground flags (007)', () => {
+  it('adds --model/--effort/--permission-mode only when set', async () => {
+    const runner = vi.fn<Runner>(async () => ({ stdout: SPAWN_OUT, stderr: '', code: 0 }))
+    await cli(runner).spawnBackground({
+      cwd: '/p',
+      name: 'x',
+      model: 'haiku',
+      effort: 'low',
+      permissionMode: 'plan'
+    })
+    expect(runner.mock.calls[0]![0]).toEqual([
+      '--bg',
+      '--name',
+      'x',
+      '--model',
+      'haiku',
+      '--effort',
+      'low',
+      '--permission-mode',
+      'plan'
+    ])
+    await cli(runner).spawnBackground({ cwd: '/p', name: 'y', model: '', effort: '' })
+    expect(runner.mock.calls[1]![0]).toEqual(['--bg', '--name', 'y'])
+  })
+})

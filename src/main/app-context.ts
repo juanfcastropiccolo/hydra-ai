@@ -11,7 +11,9 @@ import { AnalyticsIndexer } from './analytics/analytics-indexer'
 import { CardQueue } from './know/card-queue'
 import { KnowIndexer } from './know/know-indexer'
 import { KnowMcpServer, switchMcpPort } from './know/mcp-server'
+import { renderNamePattern } from '@shared/prefs'
 import { ContextImporter } from './context/context-importer'
+import { ErrorLog } from './error-log'
 import { FsActions } from './fs/fs-actions'
 import { FsService } from './fs/fs-service'
 import { GitService } from './git/git-service'
@@ -54,6 +56,9 @@ export class AppContext {
   importer: ContextImporter | null = null
   /** Feature 005: transcript index (created lazily on first analytics.open). */
   private analytics: AnalyticsIndexer | null = null
+  /** Feature 007: recent main-process errors for Config › Mantenimiento. */
+  readonly errors = new ErrorLog()
+  private lastLoggedCardError: string | null = null
   /** Feature 006: knowledge layer (lazy). */
   private knowParts: { know: KnowIndexer; queue: CardQueue; mcp: KnowMcpServer } | null = null
   private mcpRegistered = false
@@ -113,6 +118,7 @@ export class AppContext {
       this.watcher.on('changed', (sessions) =>
         this.broadcast('sessions.changed', { sessions: this.decorate(sessions) })
       )
+      this.watcher.on('pollError', (msg) => this.errors.push('sessions', msg))
       this.hooks.on('event', (ev) => this.watcher?.applyHook(ev))
       this.watcher.start()
       this.importer = new ContextImporter({
@@ -184,9 +190,11 @@ export class AppContext {
         .filter((s) => s.projectId === projectId)
         .map((s) => s.name)
     )
+    const pattern = this.store.prefs().sessions.namePattern
+    const date = new Date().toISOString().slice(0, 10)
     let n = taken.size + 1
-    while (taken.has(`${base}-${n}`)) n++
-    return `${base}-${n}`
+    while (taken.has(renderNamePattern(pattern, { project: base, n, date }))) n++
+    return renderNamePattern(pattern, { project: base, n, date })
   }
 
   async createSession(projectId: string, name: string, cwd?: string): Promise<Session> {
@@ -204,10 +212,14 @@ export class AppContext {
     }
     const trimmed = name.trim()
     if (!trimmed) throw new Error('El nombre de la sesión no puede estar vacío')
+    const sp = this.store.prefs().sessions
     const { bgId } = await cli.spawnBackground({
       cwd: sessionCwd,
       name: trimmed,
-      settingsJson: buildHookSettingsJson(this.hooks.port)
+      settingsJson: buildHookSettingsJson(this.hooks.port),
+      ...(sp.model ? { model: sp.model } : {}),
+      ...(sp.effort ? { effort: sp.effort } : {}),
+      ...(sp.permissionMode ? { permissionMode: sp.permissionMode } : {})
     })
     this.watcher?.markOwned(bgId)
     await this.watcher?.poll()
@@ -274,7 +286,7 @@ export class AppContext {
       ix.on('sessions', (sessions) =>
         this.broadcast('analytics.sessions', { sessions, now: this.analyticsNow() })
       )
-      ix.on('error', (msg) => console.error('[analytics]', msg))
+      ix.on('error', (msg) => this.errors.push('analytics', msg))
       this.analytics = ix
     }
     return this.analytics
@@ -351,7 +363,13 @@ export class AppContext {
       )
       const emitStatus = (): void => this.broadcast('know.status', this.knowStatus())
       know.on('changed', emitStatus)
-      queue.on('changed', emitStatus)
+      queue.on('changed', () => {
+        if (queue.lastError && queue.lastError !== this.lastLoggedCardError) {
+          this.lastLoggedCardError = queue.lastError
+          this.errors.push('fichas', queue.lastError)
+        }
+        emitStatus()
+      })
       this.knowParts = { know, queue, mcp }
     }
     return this.knowParts

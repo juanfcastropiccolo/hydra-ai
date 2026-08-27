@@ -111,6 +111,8 @@ export interface IpcInvoke {
   'prefs.get': { args: []; result: HydraPrefs }
   /** Field-level validation; invalid fields are ignored. Side effects (MCP port, card queue) run in main. */
   'prefs.set': { args: [PrefsPatch]; result: HydraPrefs }
+  /** Recent main-process errors, newest first (Config › Mantenimiento). */
+  'maint.errors': { args: []; result: Array<{ ts: number; source: string; message: string }> }
 
   // ---- feature 006: graph know ----
   /** Opens/refreshes the knowledge layer (piggybacks on the analytics index) and starts the MCP server. */

@@ -45,6 +45,11 @@ function createWindow(zoomLevel: number, onZoomSaved: (level: number) => void): 
   return win
 }
 
+process.on('uncaughtException', (e) => {
+  console.error('[main] uncaught', e)
+  ctx?.errors.push('main', e)
+})
+
 app.whenReady().then(async () => {
   electronApp.setAppUserModelId('ai.hydra.app')
   app.on('browser-window-created', (_, window) => optimizer.watchWindowShortcuts(window))

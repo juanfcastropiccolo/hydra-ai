@@ -47,11 +47,7 @@ export interface ClaudeCliLike {
   readonly binaryPath: string
   version(): Promise<string | undefined>
   listSessions(opts?: { all?: boolean; cwd?: string }): Promise<ParseAgentsResult>
-  spawnBackground(opts: {
-    cwd: string
-    name: string
-    settingsJson?: string
-  }): Promise<{ bgId: string }>
+  spawnBackground(opts: SpawnBackgroundOptions): Promise<{ bgId: string }>
   stop(bgId: string): Promise<void>
   remove(bgId: string): Promise<void>
   findByBgId(bgId: string): Promise<AgentEntry | undefined>
@@ -73,6 +69,16 @@ export interface RunPromptOptions {
   resumeSessionId?: string
   signal?: AbortSignal
   timeoutMs?: number
+}
+
+export interface SpawnBackgroundOptions {
+  cwd: string
+  name: string
+  settingsJson?: string
+  /** Feature 007: optional flags from ui.sessions ('' = omit). */
+  model?: string
+  effort?: string
+  permissionMode?: string
 }
 
 export interface SummarizeOptions {
@@ -165,13 +171,12 @@ export class ClaudeCli implements ClaudeCliLike {
    * `claude --bg --name <name> [--settings <json>]` in `cwd`, without an initial prompt.
    * Resolves with the short background id once the CLI confirms.
    */
-  async spawnBackground(opts: {
-    cwd: string
-    name: string
-    settingsJson?: string
-  }): Promise<{ bgId: string }> {
+  async spawnBackground(opts: SpawnBackgroundOptions): Promise<{ bgId: string }> {
     const args = ['--bg', '--name', opts.name]
     if (opts.settingsJson) args.push('--settings', opts.settingsJson)
+    if (opts.model) args.push('--model', opts.model)
+    if (opts.effort) args.push('--effort', opts.effort)
+    if (opts.permissionMode) args.push('--permission-mode', opts.permissionMode)
     const r = await this.runner(args, { cwd: opts.cwd, timeoutMs: this.timeoutMs })
     const parsed = parseBackgroundedLine(r.stdout)
     if (r.code !== 0 || !parsed) {

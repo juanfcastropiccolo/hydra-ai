@@ -114,10 +114,16 @@ export function registerIpc(
   handle('ui.setFileTree', (patch) => ctx.store.setFileTree(patch))
 
   // ---- feature 004: import context ----
-  handle('context.summarize', ({ importId, sourceSessionId }) => {
+  handle('context.summarize', async ({ importId, sourceSessionId }) => {
     if (!ctx.importer)
       throw new Error(ctx.availability.ok ? 'CLI not initialised' : ctx.availability.message)
-    return ctx.importer.summarize({ importId, sourceSessionId })
+    try {
+      return await ctx.importer.summarize({ importId, sourceSessionId })
+    } catch (e) {
+      if ((e as Error).name !== 'ImportCancelledError')
+        ctx.errors.push('importar contexto', e as Error)
+      throw e
+    }
   })
   handle('context.cancel', ({ importId }) => ctx.importer?.cancel(importId))
   handle('ui.getImportContext', () => ctx.store.importContext())
@@ -138,6 +144,7 @@ export function registerIpc(
   // ---- feature 007: unified prefs ----
   handle('prefs.get', () => ctx.store.prefs())
   handle('prefs.set', (patch) => ctx.setPrefs(patch))
+  handle('maint.errors', () => ctx.errors.list())
 
   // ---- feature 006: graph know ----
   handle('know.open', () => ctx.knowOpen())
