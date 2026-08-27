@@ -1,7 +1,7 @@
 // Wires the main-process services together. Created once at startup; owns lifecycle.
-import { realpathSync } from 'node:fs'
+import { realpathSync, rmSync } from 'node:fs'
 import { homedir, tmpdir, userInfo } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { BrowserWindow } from 'electron'
 import type { ClaudeAvailability, Session } from '@shared/types'
@@ -14,6 +14,7 @@ import { KnowMcpServer, switchMcpPort } from './know/mcp-server'
 import { renderNamePattern } from '@shared/prefs'
 import { ContextImporter } from './context/context-importer'
 import { ErrorLog } from './error-log'
+import { fileInfo, importHydraJson } from './maintenance'
 import { FsActions } from './fs/fs-actions'
 import { FsService } from './fs/fs-service'
 import { GitService } from './git/git-service'
@@ -32,6 +33,8 @@ export interface AppContextOptions {
   knowCardsPath: string
   /** Feature 006: override the MCP port (E2E uses 0 = ephemeral so it never collides with a real Hydra). */
   mcpPort?: number
+  /** Feature 007: app version shown in Config › Acerca de. */
+  appVersion?: string
   /** Feature 005: transcripts root; default ~/.claude/projects (E2E points it at a fixture dir). */
   claudeProjectsRoot?: string
   /** Test hook: fake PTY factory (E2E mode). */
@@ -290,6 +293,68 @@ export class AppContext {
       this.analytics = ix
     }
     return this.analytics
+  }
+
+  // ---- feature 007: maintenance ----
+  maintInfo(): {
+    cli: { path: string | null; version: string | null; ok: boolean; message?: string }
+    dataDir: string
+    files: Array<{ name: string; path: string; bytes: number }>
+    versions: { hydra: string; electron: string; node: string }
+  } {
+    const a = this.availability
+    return {
+      cli: a.ok
+        ? { path: a.binaryPath, version: a.version ?? null, ok: true }
+        : { path: null, version: null, ok: false, message: a.message },
+      dataDir: dirname(this.opts.hydraFilePath),
+      files: [this.opts.hydraFilePath, this.opts.analyticsCachePath, this.opts.knowCardsPath].map(
+        fileInfo
+      ),
+      versions: {
+        hydra: process.env['npm_package_version'] ?? this.opts.appVersion ?? '0.0.0',
+        electron: process.versions['electron'] ?? '?',
+        node: process.versions['node'] ?? '?'
+      }
+    }
+  }
+
+  /** Re-run the CLI detection (e.g. after installing/updating claude) without restarting Hydra. */
+  async redetectCli(): Promise<ClaudeAvailability> {
+    this.resolved = await resolveEnv()
+    this.availability = this.opts.fakeCli
+      ? { ok: true, binaryPath: this.opts.fakeCli.binaryPath }
+      : this.resolved.claude
+    if (this.availability.ok && !this.opts.fakeCli) {
+      this.cli = new ClaudeCli({ binaryPath: this.availability.binaryPath, env: this.resolved.env })
+      const version = await this.cli.version()
+      if (version) this.availability = { ...this.availability, version }
+    }
+    this.broadcast('claude.availability', this.availability)
+    return this.availability
+  }
+
+  clearCards(): void {
+    this.knowLayer().know.clearCards()
+  }
+
+  async clearAnalyticsCache(): Promise<void> {
+    try {
+      rmSync(this.opts.analyticsCachePath, { force: true })
+    } catch {
+      /* best effort */
+    }
+    await this.analyticsIndexer().reindex()
+  }
+
+  /** After a validated hydra.json replacement: reload and tell every consumer. */
+  importHydraJson(src: string): { backupPath: string; projects: number } {
+    const r = importHydraJson(src, this.opts.hydraFilePath)
+    this.store.load()
+    this.watcher?.refreshProjectIndex()
+    this.broadcast('projects.changed', { projects: this.store.listProjects() })
+    this.broadcast('prefs.changed', this.store.prefs())
+    return r
   }
 
   // ---- feature 007: unified prefs ----

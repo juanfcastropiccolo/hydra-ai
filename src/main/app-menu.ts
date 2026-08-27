@@ -5,12 +5,16 @@ import { app, Menu, type MenuItemConstructorOptions } from 'electron'
 export function installAppMenu(handlers: {
   toggleFileTree: () => void
   toggleSidebar: () => void
+  /** Feature 007: Preferencias… (⌘, is handled in the renderer too; this entry is discoverable). */
+  openConfig: () => void
 }): void {
   const template: MenuItemConstructorOptions[] = [
     {
       label: app.name,
       submenu: [
         { role: 'about' },
+        { type: 'separator' },
+        { label: 'Preferencias… (⌘,)', click: () => handlers.openConfig() },
         { type: 'separator' },
         { role: 'hide' },
         { role: 'hideOthers' },

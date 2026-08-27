@@ -14,7 +14,7 @@ const NAV = [
   { key: 'sessions', label: 'Sessions', enabled: true },
   { key: 'analytics', label: 'Analytics', enabled: true },
   { key: 'graph', label: 'Graph Know', enabled: true },
-  { key: 'config', label: 'Config', enabled: false }
+  { key: 'config', label: 'Config', enabled: true }
 ] as const
 
 export function Sidebar(): React.JSX.Element {
@@ -26,7 +26,7 @@ export function Sidebar(): React.JSX.Element {
   // Feature 005: which view fills the central area
   const centerView = useAppStore((s) => s.centerView)
   const setCenterView = useAppStore((s) => s.setCenterView)
-  const goTo = (view: 'sessions' | 'analytics' | 'graph'): void => {
+  const goTo = (view: 'sessions' | 'analytics' | 'graph' | 'config'): void => {
     setCenterView(view)
     void hydra.setCenterView(view)
   }
@@ -197,7 +197,9 @@ export function Sidebar(): React.JSX.Element {
                 className={`${styles.navBtn} ${n.key === centerView ? styles.navBtnActive : ''}`}
                 disabled={!n.enabled}
                 title={n.enabled ? n.label : `${n.label} — próximamente`}
-                onClick={() => n.enabled && goTo(n.key as 'sessions' | 'analytics' | 'graph')}
+                onClick={() =>
+                  n.enabled && goTo(n.key as 'sessions' | 'analytics' | 'graph' | 'config')
+                }
                 data-testid={`nav-${n.key}`}
                 aria-current={n.key === centerView ? 'page' : undefined}
               >

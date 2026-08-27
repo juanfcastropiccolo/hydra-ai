@@ -64,6 +64,7 @@ app.whenReady().then(async () => {
       hydraFilePath: join(userData, 'hydra.json'),
       analyticsCachePath: join(userData, 'analytics-index.json'),
       knowCardsPath: join(userData, 'know-cards.json'),
+      appVersion: app.getVersion(),
       mcpPort: 0,
       claudeProjectsRoot: process.env['HYDRA_E2E_CLAUDE_PROJECTS'] ?? join(userData, 'no-projects'),
       fakeCli,
@@ -79,13 +80,15 @@ app.whenReady().then(async () => {
       hydraFilePath: join(userData, 'hydra.json'),
       analyticsCachePath: join(userData, 'analytics-index.json'),
       knowCardsPath: join(userData, 'know-cards.json'),
+      appVersion: app.getVersion(),
       fakeNoClaude: process.env['HYDRA_FAKE_NO_CLAUDE'] === '1'
     })
   }
   registerIpc(ctx, () => mainWindow, e2eHooks)
   installAppMenu({
     toggleFileTree: () => ctx?.broadcast('ui.toggleFileTree', {}),
-    toggleSidebar: () => ctx?.broadcast('ui.toggleSidebar', {})
+    toggleSidebar: () => ctx?.broadcast('ui.toggleSidebar', {}),
+    openConfig: () => ctx?.broadcast('ui.openConfig', {})
   })
   await ctx.init()
 

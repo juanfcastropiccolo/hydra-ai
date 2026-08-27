@@ -3,6 +3,7 @@ import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
 import { AnalyticsView } from './components/analytics/AnalyticsView'
 import { GraphKnowView } from './components/know/GraphKnowView'
+import { ConfigView } from './components/config/ConfigView'
 import { ImportContextDialog } from './components/ImportContextDialog'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
@@ -13,7 +14,7 @@ import { fileTreeStore, useFileTree } from './store/file-tree-slice'
 import { importContextStore } from './store/import-context-slice'
 import { Sidebar } from './components/Sidebar'
 import { initHydraClient } from './lib/hydra-client'
-import { useAppStore } from './store/app-store'
+import { appStore, useAppStore } from './store/app-store'
 
 function App(): React.JSX.Element {
   const availability = useAppStore((s) => s.availability)
@@ -41,7 +42,13 @@ function App(): React.JSX.Element {
       const suggestedName = await hydra.suggestSessionName(projectId)
       openDialog({ projectId, suggestedName, cwd })
     })
+    // feature 007: Preferencias… from the app menu
+    const offConfig = hydra.onOpenConfig(() => {
+      appStore.getState().setCenterView('config')
+      void hydra.setCenterView('config')
+    })
     return () => {
+      offConfig()
       offToggle()
       offSidebar()
       offOpen()
@@ -75,6 +82,12 @@ function App(): React.JSX.Element {
         e.stopPropagation()
         fileTreeStore.getState().toggleCollapsed()
         void hydra.setFileTree({ collapsed: fileTreeStore.getState().collapsed })
+      } else if (!e.shiftKey && e.key === ',') {
+        // feature 007: ⌘, opens Config (standard macOS preferences shortcut)
+        e.preventDefault()
+        e.stopPropagation()
+        appStore.getState().setCenterView('config')
+        void hydra.setCenterView('config')
       }
     }
     window.addEventListener('keydown', onKey)
@@ -141,6 +154,16 @@ function App(): React.JSX.Element {
             >
               <ErrorBoundary label="analytics">
                 <AnalyticsView />
+              </ErrorBoundary>
+            </div>
+          )}
+          {centerView === 'config' && (
+            <div
+              className={`${styles.content} ${styles.contentAnalytics}`}
+              data-testid="config-view"
+            >
+              <ErrorBoundary label="config">
+                <ConfigView />
               </ErrorBoundary>
             </div>
           )}

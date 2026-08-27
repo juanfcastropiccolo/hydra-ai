@@ -128,6 +128,14 @@ export class KnowIndexer extends EventEmitter<KnowIndexerEvents> {
     return this.cardsFile.cards[sessionId]
   }
 
+  /** Feature 007: drop every card (the file is rewritten empty). */
+  clearCards(): void {
+    this.cardsFile = { version: this.cardsFile.version, cards: {} }
+    saveCards(this.opts.cardsPath, this.cardsFile)
+    this.dirty = true
+    this.emit('changed')
+  }
+
   transcriptPath(sessionId: string): string | null {
     this.searchIndex()
     return this.paths.get(sessionId) ?? null

@@ -1,7 +1,8 @@
 // Registers every channel of the typed IPC contract against the AppContext.
-import { dialog, ipcMain, type BrowserWindow } from 'electron'
+import { dialog, ipcMain, shell, type BrowserWindow } from 'electron'
 import type { InvokeArgs, InvokeChannel, InvokeResult, IpcSend, SendChannel } from '@shared/ipc'
 import type { AppContext } from './app-context'
+import { exportHydraJson } from './maintenance'
 
 function handle<C extends InvokeChannel>(
   channel: C,
@@ -145,6 +146,38 @@ export function registerIpc(
   handle('prefs.get', () => ctx.store.prefs())
   handle('prefs.set', (patch) => ctx.setPrefs(patch))
   handle('maint.errors', () => ctx.errors.list())
+  handle('maint.info', () => ctx.maintInfo())
+  handle('maint.redetectCli', () => ctx.redetectCli())
+  handle('maint.openDataDir', () => {
+    shell.showItemInFolder(ctx.store.filePath)
+  })
+  handle('maint.exportHydraJson', async () => {
+    const win = getWindow()
+    const opts = {
+      title: 'Exportar hydra.json',
+      defaultPath: `hydra-${new Date().toISOString().slice(0, 10)}.json`,
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    }
+    const r = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (r.canceled || !r.filePath) return null
+    exportHydraJson(ctx.store.filePath, r.filePath)
+    return r.filePath
+  })
+  handle('maint.importHydraJson', async () => {
+    const win = getWindow()
+    const opts = {
+      title: 'Importar hydra.json',
+      properties: ['openFile' as const],
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    }
+    const r = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    const src = r.filePaths[0]
+    if (r.canceled || !src) return null
+    return ctx.importHydraJson(src)
+  })
+  handle('maint.clearCards', () => ctx.clearCards())
+  handle('maint.clearAnalyticsCache', () => ctx.clearAnalyticsCache())
+  handle('maint.reindex', () => ctx.analyticsIndexer().reindex())
 
   // ---- feature 006: graph know ----
   handle('know.open', () => ctx.knowOpen())

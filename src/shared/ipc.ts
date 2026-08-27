@@ -113,6 +113,24 @@ export interface IpcInvoke {
   'prefs.set': { args: [PrefsPatch]; result: HydraPrefs }
   /** Recent main-process errors, newest first (Config › Mantenimiento). */
   'maint.errors': { args: []; result: Array<{ ts: number; source: string; message: string }> }
+  'maint.info': {
+    args: []
+    result: {
+      cli: { path: string | null; version: string | null; ok: boolean; message?: string }
+      dataDir: string
+      files: Array<{ name: string; path: string; bytes: number }>
+      versions: { hydra: string; electron: string; node: string }
+    }
+  }
+  'maint.redetectCli': { args: []; result: ClaudeAvailability }
+  'maint.openDataDir': { args: []; result: void }
+  /** Native save dialog; resolves null when cancelled. */
+  'maint.exportHydraJson': { args: []; result: string | null }
+  /** Native open dialog + validation + backup + reload; resolves null when cancelled. */
+  'maint.importHydraJson': { args: []; result: { backupPath: string; projects: number } | null }
+  'maint.clearCards': { args: []; result: void }
+  'maint.clearAnalyticsCache': { args: []; result: void }
+  'maint.reindex': { args: []; result: void }
 
   // ---- feature 006: graph know ----
   /** Opens/refreshes the knowledge layer (piggybacks on the analytics index) and starts the MCP server. */
