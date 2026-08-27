@@ -11,31 +11,33 @@ import {
 } from 'node:fs'
 import { basename, dirname } from 'node:path'
 import {
-  DEFAULT_FILE_TREE_PREFS,
-  DEFAULT_IMPORT_CONTEXT_PREFS,
-  EMPTY_HYDRA_FILE,
-  FILE_TREE_MIN_WIDTH,
+  isProjectColor,
   type FileTreePrefs,
   type HydraFile,
   type ImportContextPrefs,
-  isProjectColor,
   type Project,
   type ProjectColor
 } from '@shared/types'
+import type { AnalyticsPrefs, CenterView } from '@shared/analytics/types'
+import type { KnowPrefs } from '@shared/know/types'
 import {
-  DEFAULT_ANALYTICS_PREFS,
-  type AnalyticsPrefs,
-  type AnalyticsRange,
-  type CenterView,
-  type ModelPricing
-} from '@shared/analytics/types'
-import { DEFAULT_KNOW_PREFS, type KnowPrefs } from '@shared/know/types'
+  defaultPrefs,
+  emptyHydraFile,
+  FILE_TREE_MIN_WIDTH,
+  validatePrefs,
+  validPricing,
+  validRange,
+  type HydraPrefs,
+  type PrefsPatch
+} from '@shared/prefs'
 
 export interface ProjectStoreDeps {
   filePath: string
   exists?: (p: string) => boolean
   now?: () => string
   uuid?: () => string
+  /** OS user name, used to seed the profile the first time (007). */
+  defaultUserName?: string
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -43,7 +45,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 /** Pure: validate/coerce an unknown JSON value into a HydraFile, or null if unusable. */
-export function validateHydraFile(v: unknown): HydraFile | null {
+export function validateHydraFile(v: unknown, userName = ''): HydraFile | null {
   if (!isRecord(v) || v.version !== 1 || !Array.isArray(v.projects)) return null
   const projects: Project[] = []
   for (const p of v.projects) {
@@ -58,99 +60,11 @@ export function validateHydraFile(v: unknown): HydraFile | null {
       ...(isProjectColor(p.color) ? { color: p.color } : {})
     })
   }
-  const ui = isRecord(v.ui) ? v.ui : {}
-  const strs = (x: unknown): string[] =>
-    Array.isArray(x) ? x.filter((s): s is string => typeof s === 'string') : []
-  const names: Record<string, string> = {}
-  if (isRecord(ui.sessionNames)) {
-    for (const [k, val] of Object.entries(ui.sessionNames)) {
-      if (typeof val === 'string' && val.trim()) names[k] = val
-    }
-  }
-  const ft = isRecord(ui.fileTree) ? ui.fileTree : {}
-  const fileTree: FileTreePrefs = {
-    open: typeof ft.open === 'boolean' ? ft.open : DEFAULT_FILE_TREE_PREFS.open,
-    width:
-      typeof ft.width === 'number' && Number.isFinite(ft.width) && ft.width >= FILE_TREE_MIN_WIDTH
-        ? Math.round(ft.width)
-        : DEFAULT_FILE_TREE_PREFS.width,
-    collapsed: typeof ft.collapsed === 'boolean' ? ft.collapsed : DEFAULT_FILE_TREE_PREFS.collapsed
-  }
-  const ic = isRecord(ui.importContext) ? ui.importContext : {}
-  const importContext: ImportContextPrefs = {
-    model:
-      typeof ic.model === 'string' && ic.model.trim()
-        ? ic.model.trim()
-        : DEFAULT_IMPORT_CONTEXT_PREFS.model
-  }
-  const centerView: CenterView =
-    ui.centerView === 'analytics' || ui.centerView === 'graph' ? ui.centerView : 'sessions'
-  const an = isRecord(ui.analytics) ? ui.analytics : {}
-  const analytics: AnalyticsPrefs = {
-    range: validRange(an.range) ?? DEFAULT_ANALYTICS_PREFS.range,
-    pricing: validPricing(an.pricing)
-  }
-  const kn = isRecord(ui.know) ? ui.know : {}
-  const know: KnowPrefs = {
-    autoCards: typeof kn.autoCards === 'boolean' ? kn.autoCards : DEFAULT_KNOW_PREFS.autoCards,
-    port:
-      typeof kn.port === 'number' &&
-      Number.isInteger(kn.port) &&
-      kn.port >= 1024 &&
-      kn.port <= 65535
-        ? kn.port
-        : DEFAULT_KNOW_PREFS.port
-  }
-  return {
-    version: 1,
-    projects,
-    ui: {
-      hiddenSessionIds: strs(ui.hiddenSessionIds),
-      paneOrder: strs(ui.paneOrder),
-      sessionNames: names,
-      fileTree,
-      importContext,
-      centerView,
-      analytics,
-      know,
-      zoomLevel:
-        typeof ui.zoomLevel === 'number' &&
-        Number.isFinite(ui.zoomLevel) &&
-        Math.abs(ui.zoomLevel) <= 5
-          ? ui.zoomLevel
-          : -1
-    }
-  }
-}
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/
-export function validRange(v: unknown): AnalyticsRange | null {
-  if (v === 'today' || v === '7d' || v === '30d' || v === 'all') return v
-  if (isRecord(v) && typeof v.from === 'string' && typeof v.to === 'string') {
-    if (DATE_RE.test(v.from) && DATE_RE.test(v.to) && v.from <= v.to)
-      return { from: v.from, to: v.to }
-  }
-  return null
-}
-const nonNeg = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x) && x >= 0
-export function validPricing(v: unknown): Record<string, ModelPricing> {
-  const out: Record<string, ModelPricing> = {}
-  if (!isRecord(v)) return out
-  for (const [model, p] of Object.entries(v)) {
-    if (!model.trim() || !isRecord(p)) continue
-    if (nonNeg(p.input) && nonNeg(p.output) && nonNeg(p.cacheWrite) && nonNeg(p.cacheRead))
-      out[model] = {
-        input: p.input,
-        output: p.output,
-        cacheWrite: p.cacheWrite,
-        cacheRead: p.cacheRead
-      }
-  }
-  return out
+  return { version: 1, projects, ui: validatePrefs(v.ui, defaultPrefs(userName)) }
 }
 
 export class ProjectStore {
-  private data: HydraFile = structuredClone(EMPTY_HYDRA_FILE)
+  private data: HydraFile = emptyHydraFile()
   private readonly exists: (p: string) => boolean
   private readonly now: () => string
   private readonly uuid: () => string
@@ -170,13 +84,13 @@ export class ProjectStore {
   load(): HydraFile {
     const p = this.deps.filePath
     if (!existsSync(p)) {
-      this.data = structuredClone(EMPTY_HYDRA_FILE)
+      this.data = { version: 1, projects: [], ui: defaultPrefs(this.deps.defaultUserName ?? '') }
       return this.snapshot()
     }
     let raw = ''
     try {
       raw = readFileSync(p, 'utf8')
-      const parsed = validateHydraFile(JSON.parse(raw))
+      const parsed = validateHydraFile(JSON.parse(raw), this.deps.defaultUserName ?? '')
       if (!parsed) throw new Error('schema mismatch')
       this.data = parsed
       this.loadError = null
@@ -188,7 +102,7 @@ export class ProjectStore {
         /* best effort */
       }
       this.loadError = `hydra.json unreadable (${(e as Error).message}); backed up to ${basename(backup)} and started empty`
-      this.data = structuredClone(EMPTY_HYDRA_FILE)
+      this.data = emptyHydraFile(this.deps.defaultUserName ?? '')
     }
     return this.snapshot()
   }
@@ -357,6 +271,17 @@ export class ProjectStore {
     if (!Number.isFinite(level) || Math.abs(level) > 5) return
     this.data.ui.zoomLevel = Math.round(level * 2) / 2
     this.save()
+  }
+
+  // ---- feature 007: unified prefs ----
+  prefs(): HydraPrefs {
+    return structuredClone(this.data.ui)
+  }
+  /** Validates each patched field against the current value (bad fields are ignored, not reset). */
+  setPrefs(patch: PrefsPatch): HydraPrefs {
+    this.data.ui = validatePrefs(patch, this.data.ui)
+    this.save()
+    return this.prefs()
   }
 
   paneOrder(): string[] {

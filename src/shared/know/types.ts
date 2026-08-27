@@ -83,5 +83,7 @@ export interface KnowStatus {
 export interface KnowPrefs {
   autoCards: boolean
   port: number
+  /** Optional cap passed to `claude -p --max-budget-usd` when generating a card (007). */
+  maxBudgetUsd?: number
 }
 export const DEFAULT_KNOW_PREFS: KnowPrefs = { autoCards: true, port: 4855 }

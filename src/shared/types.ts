@@ -1,6 +1,5 @@
 // Domain types shared by main and renderer. Keep this file free of Node/DOM imports.
-import type { AnalyticsPrefs, CenterView } from './analytics/types'
-import type { KnowPrefs } from './know/types'
+import type { HydraPrefs } from './prefs'
 
 /** A folder the user registered in the sidebar. Persisted in hydra.json. */
 export interface Project {
@@ -74,24 +73,8 @@ export interface Pane {
 export interface HydraFile {
   version: 1
   projects: Project[]
-  ui: {
-    hiddenSessionIds: string[]
-    paneOrder: string[]
-    /** Display-name overrides chosen by the user (the CLI has no rename for bg sessions). */
-    sessionNames: Record<string, string>
-    /** Feature 002: file tree panel preferences. */
-    fileTree: FileTreePrefs
-    /** Feature 004: import-context preferences. */
-    importContext: ImportContextPrefs
-    /** Feature 005: which view fills the central area. */
-    centerView: CenterView
-    /** Feature 005: analytics dashboard preferences. */
-    analytics: AnalyticsPrefs
-    /** Feature 006: Graph Know preferences. */
-    know: KnowPrefs
-    /** Window zoom level (Electron zoom steps; -1 ≈ 83%). Saved on close, restored on open. */
-    zoomLevel: number
-  }
+  /** Every user preference (feature 007 centralises them); see shared/prefs.ts. */
+  ui: HydraPrefs
 }
 
 /** Feature 004: how the handoff summary of another session is generated. */
@@ -99,7 +82,6 @@ export interface ImportContextPrefs {
   /** Model alias or full name passed verbatim to `claude -p --model`. */
   model: string
 }
-export const DEFAULT_IMPORT_CONTEXT_PREFS: ImportContextPrefs = { model: 'haiku' }
 
 export interface FileTreePrefs {
   /** true = sidebar shows the Files view, false = Sessions view. */
@@ -129,22 +111,6 @@ export interface GitStatusResult {
   root: string | null
   /** Keyed by path relative to `root`, '/'-separated. Directories end with '/'. */
   statuses: Record<string, GitStatus>
-}
-
-export const EMPTY_HYDRA_FILE: HydraFile = {
-  version: 1,
-  projects: [],
-  ui: {
-    hiddenSessionIds: [],
-    paneOrder: [],
-    sessionNames: {},
-    fileTree: { open: false, width: 300, collapsed: false },
-    importContext: { model: 'haiku' },
-    centerView: 'sessions',
-    analytics: { range: '7d', pricing: {} },
-    know: { autoCards: true, port: 4855 },
-    zoomLevel: -1
-  }
 }
 
 /** Result of locating the Claude Code CLI at startup. */

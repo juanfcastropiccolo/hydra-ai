@@ -38,7 +38,16 @@ describe('ProjectStore', () => {
         centerView: 'sessions',
         analytics: { range: '7d', pricing: {} },
         know: { autoCards: true, port: 4855 },
-        zoomLevel: -1
+        zoomLevel: -1,
+        profile: { name: '', initials: '?' },
+        appearance: { terminalFontSize: 13, accent: 'green' },
+        sessions: {
+          model: '',
+          effort: '',
+          permissionMode: '',
+          namePattern: '{project}-{n}',
+          confirmStopWorking: true
+        }
       }
     })
     s.addProject({ path: '/Users/u/foo/' })
@@ -193,7 +202,16 @@ describe('validateHydraFile', () => {
         centerView: 'sessions',
         analytics: { range: '7d', pricing: {} },
         know: { autoCards: true, port: 4855 },
-        zoomLevel: -1
+        zoomLevel: -1,
+        profile: { name: '', initials: '?' },
+        appearance: { terminalFontSize: 13, accent: 'green' },
+        sessions: {
+          model: '',
+          effort: '',
+          permissionMode: '',
+          namePattern: '{project}-{n}',
+          confirmStopWorking: true
+        }
       }
     })
     expect(
@@ -247,5 +265,34 @@ describe('project colors', () => {
         ui: {}
       })?.projects[0]?.color
     ).toBeUndefined()
+  })
+})
+
+describe('unified prefs (007)', () => {
+  it('seeds the profile from the OS user name and validates patches field by field', () => {
+    const s = new ProjectStore({ filePath: file, defaultUserName: 'juan.castro' })
+    s.load()
+    expect(s.prefs().profile).toEqual({ name: 'Juan Castro', initials: 'JC' })
+    const next = s.setPrefs({
+      appearance: { terminalFontSize: 16, accent: 'nope' as never },
+      sessions: {
+        model: 'haiku',
+        effort: 'low',
+        permissionMode: 'weird' as never,
+        namePattern: 'sin-n'
+      },
+      know: { autoCards: false, port: 80, maxBudgetUsd: 0.5 },
+      profile: { initials: '' }
+    })
+    expect(next.appearance).toEqual({ terminalFontSize: 16, accent: 'green' }) // bad accent ignored
+    expect(next.sessions).toMatchObject({
+      model: 'haiku',
+      effort: 'low',
+      permissionMode: '',
+      namePattern: '{project}-{n}'
+    })
+    expect(next.know).toEqual({ autoCards: false, port: 4855, maxBudgetUsd: 0.5 }) // bad port ignored
+    expect(next.profile).toEqual({ name: 'Juan Castro', initials: 'JC' }) // empty initials → derived
+    expect(new ProjectStore({ filePath: file }).load().ui.sessions.effort).toBe('low') // persisted
   })
 })

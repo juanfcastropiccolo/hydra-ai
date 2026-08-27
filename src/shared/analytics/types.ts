@@ -57,7 +57,7 @@ export interface AnalyticsPrefs {
 }
 export const DEFAULT_ANALYTICS_PREFS: AnalyticsPrefs = { range: '7d', pricing: {} }
 
-export type CenterView = 'sessions' | 'analytics' | 'graph'
+export type CenterView = 'sessions' | 'analytics' | 'graph' | 'config'
 
 export interface AnalyticsProgress {
   phase: 'cache' | 'scan' | 'watch'
