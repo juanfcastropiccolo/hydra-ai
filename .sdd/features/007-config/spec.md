@@ -1,7 +1,7 @@
 # Config — preferencias de Hydra
 
 Feature ID: 007
-Status: specified (borrador — pendiente de aprobación)
+Status: specified (aprobada 2026-08-26)
 Last updated: 2026-08-26
 
 ## Problem
@@ -81,5 +81,5 @@ Pulso **Config** en la barra lateral (o ⌘,) y el área central muestra una pan
 ## Open questions
 
 - [x] Alcance: las 4 áreas, look tipo Discord (Juan, 2026-08-26).
-- [ ] [NEEDS CLARIFICATION: ¿el **acento** debe cambiar también los colores de los gráficos de Analytics (categórica validada) o solo la UI (foco, botones, logo)? Propuesta: solo la UI; los gráficos mantienen su paleta validada.]
-- [ ] [NEEDS CLARIFICATION: ¿"Importar hydra.json" debe también traer los **proyectos** o solo preferencias? Propuesta: todo el archivo (es un backup/restore), con confirmación.]
+- [x] **Acento:** solo la UI (foco, botones, logo); los gráficos mantienen su paleta validada (Juan, 2026-08-26).
+- [x] **Importar hydra.json:** todo el archivo (backup/restore), con confirmación y `.bak` (Juan, 2026-08-26).
