@@ -65,7 +65,7 @@ export class KnowMcpServer {
   private boundPort: number
 
   constructor(
-    private readonly deps: KnowMcpDeps,
+    readonly deps: KnowMcpDeps,
     private readonly requestedPort: number
   ) {
     this.boundPort = requestedPort
@@ -184,4 +184,19 @@ export class KnowMcpServer {
   get url(): string {
     return `http://127.0.0.1:${this.port}/mcp`
   }
+}
+
+/**
+ * Feature 007 FR-13: move a running server to `port`. Returns the new server when it bound, or
+ * null when the port is taken — in that case `current` is started again on its previous port.
+ */
+export async function switchMcpPort(
+  current: KnowMcpServer,
+  port: number
+): Promise<KnowMcpServer | null> {
+  current.stop()
+  const next = new KnowMcpServer(current.deps, port)
+  if ((await next.start()) === 'serving') return next
+  await current.start()
+  return null
 }

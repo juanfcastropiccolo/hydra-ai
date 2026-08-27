@@ -1,7 +1,7 @@
 // Integration (006): the MCP server answers the streamable-HTTP JSON-RPC flow end to end.
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { KnowSearchHit } from '@shared/know/types'
-import { KnowMcpServer, renderHits } from './mcp-server'
+import { KnowMcpServer, renderHits, switchMcpPort } from './mcp-server'
 
 const hit = (over: Partial<KnowSearchHit> = {}): KnowSearchHit => ({
   sessionId: 'aaaa-1',
@@ -136,5 +136,23 @@ describe('KnowMcpServer (integration)', () => {
   it('renderHits stays compact and lists replaced facts', () => {
     const text = renderHits([hit({ replaced: [{ id: 'x', text: 'antes cookies' }] })])
     expect(text).toContain('[reemplazado] antes cookies')
+  })
+})
+
+describe('switchMcpPort (007)', () => {
+  it('moves to a free port; a taken port keeps the old server alive on its port', async () => {
+    const deps = { search: () => [], sessionContext: () => null, version: 'x' }
+    const a = new KnowMcpServer(deps, 0)
+    expect(await a.start()).toBe('serving')
+    const oldPort = a.port
+    const moved = await switchMcpPort(a, 0)
+    expect(moved).not.toBeNull()
+    expect(moved!.port).not.toBe(oldPort)
+    expect(moved!.state).toBe('serving')
+    // now try to move onto the port the main test server holds (PORT) → taken
+    const back = await switchMcpPort(moved!, PORT)
+    expect(back).toBeNull()
+    expect(moved!.state).toBe('serving') // restarted on its previous port
+    moved!.stop()
   })
 })

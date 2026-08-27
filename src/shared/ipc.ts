@@ -1,5 +1,6 @@
 // Typed IPC contract between main and renderer. Both sides import from here;
 // nothing crosses the bridge that is not described in these two maps.
+import type { HydraPrefs, PrefsPatch } from './prefs'
 import type {
   KnowPrefs,
   KnowSearchHit,
@@ -106,6 +107,11 @@ export interface IpcInvoke {
   'ui.getCenterView': { args: []; result: CenterView }
   'ui.setCenterView': { args: [CenterView]; result: CenterView }
 
+  // ---- feature 007: unified preferences ----
+  'prefs.get': { args: []; result: HydraPrefs }
+  /** Field-level validation; invalid fields are ignored. Side effects (MCP port, card queue) run in main. */
+  'prefs.set': { args: [PrefsPatch]; result: HydraPrefs }
+
   // ---- feature 006: graph know ----
   /** Opens/refreshes the knowledge layer (piggybacks on the analytics index) and starts the MCP server. */
   'know.open': { args: []; result: KnowStatus }
@@ -175,6 +181,9 @@ export interface IpcEvents {
   'analytics.sessions': { sessions: SessionSummary[]; now: number }
   // ---- feature 006 ----
   'know.status': KnowStatus
+  // ---- feature 007 ----
+  'prefs.changed': HydraPrefs
+  'ui.openConfig': Record<string, never>
 }
 
 export type InvokeChannel = keyof IpcInvoke

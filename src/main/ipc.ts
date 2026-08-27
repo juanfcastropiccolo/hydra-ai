@@ -135,6 +135,10 @@ export function registerIpc(
   handle('ui.getCenterView', () => ctx.store.centerView())
   handle('ui.setCenterView', (view) => ctx.store.setCenterView(view))
 
+  // ---- feature 007: unified prefs ----
+  handle('prefs.get', () => ctx.store.prefs())
+  handle('prefs.set', (patch) => ctx.setPrefs(patch))
+
   // ---- feature 006: graph know ----
   handle('know.open', () => ctx.knowOpen())
   handle('know.close', () => {

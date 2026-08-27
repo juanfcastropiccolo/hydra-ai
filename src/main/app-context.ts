@@ -1,6 +1,6 @@
 // Wires the main-process services together. Created once at startup; owns lifecycle.
 import { realpathSync } from 'node:fs'
-import { homedir, tmpdir } from 'node:os'
+import { homedir, tmpdir, userInfo } from 'node:os'
 import { join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import type { BrowserWindow } from 'electron'
@@ -10,7 +10,7 @@ import { ClaudeCli, type ClaudeCliLike } from './claude/claude-cli'
 import { AnalyticsIndexer } from './analytics/analytics-indexer'
 import { CardQueue } from './know/card-queue'
 import { KnowIndexer } from './know/know-indexer'
-import { KnowMcpServer } from './know/mcp-server'
+import { KnowMcpServer, switchMcpPort } from './know/mcp-server'
 import { ContextImporter } from './context/context-importer'
 import { FsActions } from './fs/fs-actions'
 import { FsService } from './fs/fs-service'
@@ -69,7 +69,7 @@ export class AppContext {
   readonly ptySessions = new Map<string, string>()
 
   constructor(private readonly opts: AppContextOptions) {
-    this.store = new ProjectStore({ filePath: opts.hydraFilePath })
+    this.store = new ProjectStore({ filePath: opts.hydraFilePath, defaultUserName: safeUserName() })
     this.pty = new PtyManager(opts.ptySpawn ?? nodePtySpawn())
   }
 
@@ -280,6 +280,41 @@ export class AppContext {
     return this.analytics
   }
 
+  // ---- feature 007: unified prefs ----
+  async setPrefs(
+    patch: import('@shared/prefs').PrefsPatch
+  ): Promise<import('@shared/prefs').HydraPrefs> {
+    const before = this.store.prefs()
+    const next = this.store.setPrefs(patch)
+    if (
+      next.know.autoCards !== before.know.autoCards ||
+      next.know.maxBudgetUsd !== before.know.maxBudgetUsd
+    )
+      this.knowParts?.queue.kick()
+    if (next.know.port !== before.know.port && this.knowParts) {
+      const ok = await this.restartMcp(next.know.port)
+      if (!ok) {
+        this.store.setPrefs({ know: { port: before.know.port } })
+        this.broadcast('prefs.changed', this.store.prefs())
+        throw new Error(`El puerto ${next.know.port} está ocupado; se mantiene ${before.know.port}`)
+      }
+    }
+    this.broadcast('prefs.changed', this.store.prefs())
+    return this.store.prefs()
+  }
+
+  /** Feature 007 FR-13: move the MCP server to `port`; re-register if it was registered. False if the port is taken. */
+  async restartMcp(port: number): Promise<boolean> {
+    const parts = this.knowLayer()
+    const wasRegistered = this.mcpRegistered
+    const next = await switchMcpPort(parts.mcp, port)
+    if (!next) return false
+    parts.mcp = next
+    if (wasRegistered && this.cli) await this.cli.mcpAdd('hydra-know', next.url)
+    this.broadcast('know.status', this.knowStatus())
+    return true
+  }
+
   // ---- feature 006 ----
   knowLayer(): { know: KnowIndexer; queue: CardQueue; mcp: KnowMcpServer } {
     if (!this.knowParts) {
@@ -400,5 +435,13 @@ export class AppContext {
     this.watcher?.stop()
     this.pty.disposeAll() // clients only; sessions keep running (FR-10)
     await this.hooks.stop()
+  }
+}
+
+function safeUserName(): string {
+  try {
+    return userInfo().username
+  } catch {
+    return ''
   }
 }

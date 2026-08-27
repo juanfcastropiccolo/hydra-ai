@@ -1,5 +1,6 @@
 // Bridges window.hydra (preload) with the zustand store. Call initHydraClient() once at boot.
 import { appStore } from '../store/app-store'
+import { prefsStore } from '../store/prefs-slice'
 
 let started = false
 
@@ -10,8 +11,10 @@ export function initHydraClient(): () => void {
   const offs = [
     window.hydra.on('claude.availability', (a) => appStore.getState().setAvailability(a)),
     window.hydra.on('projects.changed', (e) => appStore.getState().setProjects(e.projects)),
-    window.hydra.on('sessions.changed', (e) => appStore.getState().setSessions(e.sessions))
+    window.hydra.on('sessions.changed', (e) => appStore.getState().setSessions(e.sessions)),
+    window.hydra.on('prefs.changed', (p) => prefsStore.getState().setPrefs(p))
   ]
+  void window.hydra.invoke('prefs.get').then((p) => prefsStore.getState().setPrefs(p))
   void window.hydra.invoke('claude.availability').then(st.setAvailability)
   void window.hydra.invoke('projects.list').then(st.setProjects)
   void window.hydra.invoke('sessions.list').then(st.setSessions)
@@ -78,6 +81,10 @@ export const hydra = {
   onAnalyticsSessions: (
     cb: (e: { sessions: import('@shared/analytics/types').SessionSummary[]; now: number }) => void
   ) => window.hydra.on('analytics.sessions', cb),
+  // feature 007
+  getPrefs: () => window.hydra.invoke('prefs.get'),
+  setPrefs: (patch: import('@shared/prefs').PrefsPatch) => window.hydra.invoke('prefs.set', patch),
+  onOpenConfig: (cb: () => void) => window.hydra.on('ui.openConfig', cb),
   // feature 006
   knowOpen: () => window.hydra.invoke('know.open'),
   knowStatus: () => window.hydra.invoke('know.status'),
