@@ -144,6 +144,7 @@ export function XTermView({
     <div
       ref={hostRef}
       className={styles.host}
+      data-font-size={fontSize}
       data-testid="xterm-host"
       data-session-id={sessionId}
       onMouseDown={() => termRef.current?.focus()}

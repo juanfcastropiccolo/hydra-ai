@@ -72,6 +72,7 @@ app.whenReady().then(async () => {
       pollMs: 300
     })
     e2eHooks = {
+      spawns: () => fakeCli.spawns.map((o) => ({ ...o })),
       ptyRecords: () => [...fakePty.records.entries()].map(([pid, r]) => ({ pid, ...r })),
       setStatus: (bgId, status, waitingFor) => fakeCli.setStatus(bgId, status, waitingFor)
     }

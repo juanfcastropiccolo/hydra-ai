@@ -171,6 +171,17 @@ export interface IpcInvoke {
       killed: boolean
     }>
   }
+  /** E2E only: options every fake `claude --bg` spawn received (feature 007 flags). */
+  'e2e.spawns': {
+    args: []
+    result: Array<{
+      cwd: string
+      name: string
+      model?: string
+      effort?: string
+      permissionMode?: string
+    }>
+  }
   /** E2E only: flip a fake session's status so the traffic light changes. */
   'e2e.setStatus': { args: [{ bgId: string; status: string; waitingFor?: string }]; result: void }
 }

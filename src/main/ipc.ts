@@ -15,6 +15,13 @@ function on<C extends SendChannel>(channel: C, fn: (payload: IpcSend[C]) => void
 }
 
 export interface E2EHooks {
+  spawns: () => Array<{
+    cwd: string
+    name: string
+    model?: string
+    effort?: string
+    permissionMode?: string
+  }>
   ptyRecords: () => Array<{
     pid: number
     args: string[]
@@ -33,6 +40,10 @@ export function registerIpc(
   handle('e2e.ptyRecords', () => {
     if (!e2e) throw new Error('E2E hooks not enabled')
     return e2e.ptyRecords()
+  })
+  handle('e2e.spawns', () => {
+    if (!e2e) throw new Error('E2E only')
+    return e2e.spawns()
   })
   handle('e2e.setStatus', ({ bgId, status, waitingFor }) => {
     if (!e2e) throw new Error('E2E hooks not enabled')
