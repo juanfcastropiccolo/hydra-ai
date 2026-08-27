@@ -122,8 +122,6 @@ export function registerIpc(
     )
   )
   handle('git.status', ({ dir }) => ctx.git.status(dir))
-  handle('ui.getFileTree', () => ctx.store.fileTree())
-  handle('ui.setFileTree', (patch) => ctx.store.setFileTree(patch))
 
   // ---- feature 004: import context ----
   handle('context.summarize', async ({ importId, sourceSessionId }) => {
@@ -138,8 +136,6 @@ export function registerIpc(
     }
   })
   handle('context.cancel', ({ importId }) => ctx.importer?.cancel(importId))
-  handle('ui.getImportContext', () => ctx.store.importContext())
-  handle('ui.setImportContext', (patch) => ctx.store.setImportContext(patch))
 
   // ---- feature 005: analytics ----
   handle('analytics.open', async () => ({
@@ -148,10 +144,6 @@ export function registerIpc(
   }))
   handle('analytics.close', () => ctx.analyticsIndexer().close())
   handle('analytics.reindex', () => ctx.analyticsIndexer().reindex())
-  handle('ui.getAnalytics', () => ctx.store.analytics())
-  handle('ui.setAnalytics', (patch) => ctx.store.setAnalytics(patch))
-  handle('ui.getCenterView', () => ctx.store.centerView())
-  handle('ui.setCenterView', (view) => ctx.store.setCenterView(view))
 
   // ---- feature 007: unified prefs ----
   handle('prefs.get', () => ctx.store.prefs())
@@ -206,13 +198,6 @@ export function registerIpc(
     ctx.knowLayer().queue.approveBackfill()
   })
   handle('know.generateOne', ({ sessionId }) => ctx.knowLayer().queue.generateOne(sessionId))
-  handle('know.getPrefs', () => ctx.store.know())
-  handle('know.setPrefs', (patch) => {
-    const prefs = ctx.store.setKnow(patch)
-    ctx.knowLayer().queue.kick()
-    ctx.broadcast('know.status', ctx.knowStatus())
-    return prefs
-  })
   handle('know.connectMcp', () => ctx.knowConnectMcp())
   handle('know.disconnectMcp', () => ctx.knowDisconnectMcp())
   handle('know.graph', (opts) => ctx.knowLayer().know.graphSlice(opts))

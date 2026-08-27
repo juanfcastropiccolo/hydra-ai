@@ -1,25 +1,12 @@
 // Typed IPC contract between main and renderer. Both sides import from here;
 // nothing crosses the bridge that is not described in these two maps.
 import type { HydraPrefs, PrefsPatch } from './prefs'
-import type {
-  KnowPrefs,
-  KnowSearchHit,
-  KnowSearchQuery,
-  KnowStatus,
-  SessionCard
-} from './know/types'
-import type {
-  AnalyticsPrefs,
-  AnalyticsProgress,
-  CenterView,
-  SessionSummary
-} from './analytics/types'
+import type { KnowSearchHit, KnowSearchQuery, KnowStatus, SessionCard } from './know/types'
+import type { AnalyticsProgress, SessionSummary } from './analytics/types'
 import type {
   ClaudeAvailability,
-  FileTreePrefs,
   FsEntry,
   GitStatusResult,
-  ImportContextPrefs,
   Project,
   ProjectColor,
   Session
@@ -71,8 +58,6 @@ export interface IpcInvoke {
     result: void
   }
   'git.status': { args: [{ dir: string }]; result: GitStatusResult }
-  'ui.getFileTree': { args: []; result: FileTreePrefs }
-  'ui.setFileTree': { args: [Partial<FileTreePrefs>]; result: FileTreePrefs }
 
   // ---- feature 004: import context ----
   /**
@@ -85,8 +70,6 @@ export interface IpcInvoke {
     result: { text: string; truncated: boolean; model: string; durationMs: number }
   }
   'context.cancel': { args: [{ importId: string }]; result: void }
-  'ui.getImportContext': { args: []; result: ImportContextPrefs }
-  'ui.setImportContext': { args: [Partial<ImportContextPrefs>]; result: ImportContextPrefs }
 
   // ---- feature 005: analytics ----
   /**
@@ -102,10 +85,6 @@ export interface IpcInvoke {
   'analytics.close': { args: []; result: void }
   /** Drop the cache and rebuild (progress/sessions events as in open). */
   'analytics.reindex': { args: []; result: void }
-  'ui.getAnalytics': { args: []; result: AnalyticsPrefs }
-  'ui.setAnalytics': { args: [Partial<AnalyticsPrefs>]; result: AnalyticsPrefs }
-  'ui.getCenterView': { args: []; result: CenterView }
-  'ui.setCenterView': { args: [CenterView]; result: CenterView }
 
   // ---- feature 007: unified preferences ----
   'prefs.get': { args: []; result: HydraPrefs }
@@ -142,8 +121,6 @@ export interface IpcInvoke {
   /** Approve the initial backfill (or force-generate everything pending). */
   'know.generatePending': { args: []; result: void }
   'know.generateOne': { args: [{ sessionId: string }]; result: boolean }
-  'know.setPrefs': { args: [Partial<KnowPrefs>]; result: KnowPrefs }
-  'know.getPrefs': { args: []; result: KnowPrefs }
   'know.connectMcp': { args: []; result: KnowStatus }
   'know.disconnectMcp': { args: []; result: KnowStatus }
   /** Graph slice for the visual canvas: top nodes + edges, or the neighbourhood of `expand`. */

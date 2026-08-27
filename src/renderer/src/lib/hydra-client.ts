@@ -14,12 +14,14 @@ export function initHydraClient(): () => void {
     window.hydra.on('sessions.changed', (e) => appStore.getState().setSessions(e.sessions)),
     window.hydra.on('prefs.changed', (p) => prefsStore.getState().setPrefs(p))
   ]
-  void window.hydra.invoke('prefs.get').then((p) => prefsStore.getState().setPrefs(p))
+  void window.hydra.invoke('prefs.get').then((p) => {
+    prefsStore.getState().setPrefs(p)
+    appStore.getState().setCenterView(p.centerView)
+  })
   void window.hydra.invoke('claude.availability').then(st.setAvailability)
   void window.hydra.invoke('projects.list').then(st.setProjects)
   void window.hydra.invoke('sessions.list').then(st.setSessions)
   void window.hydra.invoke('ui.getHidden').then(st.setHidden)
-  void window.hydra.invoke('ui.getCenterView').then((v) => appStore.getState().setCenterView(v))
   return () => {
     offs.forEach((off) => off())
     started = false
@@ -63,19 +65,20 @@ export const hydra = {
   fsContextMenu: (req: { path: string; root: string; projectId: string; isDir: boolean }) =>
     window.hydra.invoke('fs.contextMenu', req),
   gitStatus: (dir: string) => window.hydra.invoke('git.status', { dir }),
-  getFileTree: () => window.hydra.invoke('ui.getFileTree'),
+  // legacy names kept for callers; everything goes through prefs.* (007)
+  getFileTree: () => window.hydra.invoke('prefs.get').then((p) => p.fileTree),
   setFileTree: (patch: { open?: boolean; width?: number; collapsed?: boolean }) =>
-    window.hydra.invoke('ui.setFileTree', patch),
+    window.hydra.invoke('prefs.set', { fileTree: patch }).then((p) => p.fileTree),
   onToggleSidebar: (cb: () => void) => window.hydra.on('ui.toggleSidebar', cb),
   // feature 005
   analyticsOpen: () => window.hydra.invoke('analytics.open'),
   analyticsClose: () => window.hydra.invoke('analytics.close'),
   analyticsReindex: () => window.hydra.invoke('analytics.reindex'),
-  getAnalytics: () => window.hydra.invoke('ui.getAnalytics'),
+  getAnalytics: () => window.hydra.invoke('prefs.get').then((p) => p.analytics),
   setAnalytics: (patch: Partial<import('@shared/analytics/types').AnalyticsPrefs>) =>
-    window.hydra.invoke('ui.setAnalytics', patch),
+    window.hydra.invoke('prefs.set', { analytics: patch }).then((p) => p.analytics),
   setCenterView: (view: import('@shared/analytics/types').CenterView) =>
-    window.hydra.invoke('ui.setCenterView', view),
+    window.hydra.invoke('prefs.set', { centerView: view }).then((p) => p.centerView),
   onAnalyticsProgress: (cb: (p: import('@shared/analytics/types').AnalyticsProgress) => void) =>
     window.hydra.on('analytics.progress', cb),
   onAnalyticsSessions: (
@@ -102,9 +105,9 @@ export const hydra = {
   knowCard: (sessionId: string) => window.hydra.invoke('know.card', { sessionId }),
   knowGeneratePending: () => window.hydra.invoke('know.generatePending'),
   knowGenerateOne: (sessionId: string) => window.hydra.invoke('know.generateOne', { sessionId }),
-  knowGetPrefs: () => window.hydra.invoke('know.getPrefs'),
+  knowGetPrefs: () => window.hydra.invoke('prefs.get').then((p) => p.know),
   knowSetPrefs: (patch: Partial<import('@shared/know/types').KnowPrefs>) =>
-    window.hydra.invoke('know.setPrefs', patch),
+    window.hydra.invoke('prefs.set', { know: patch }).then((p) => p.know),
   knowConnectMcp: () => window.hydra.invoke('know.connectMcp'),
   knowDisconnectMcp: () => window.hydra.invoke('know.disconnectMcp'),
   knowGraph: (opts: { expand?: string[]; limit?: number }) =>
@@ -115,9 +118,9 @@ export const hydra = {
   summarizeContext: (importId: string, sourceSessionId: string) =>
     window.hydra.invoke('context.summarize', { importId, sourceSessionId }),
   cancelImport: (importId: string) => window.hydra.invoke('context.cancel', { importId }),
-  getImportContext: () => window.hydra.invoke('ui.getImportContext'),
+  getImportContext: () => window.hydra.invoke('prefs.get').then((p) => p.importContext),
   setImportContext: (patch: { model?: string }) =>
-    window.hydra.invoke('ui.setImportContext', patch),
+    window.hydra.invoke('prefs.set', { importContext: patch }).then((p) => p.importContext),
   onFsChanged: (cb: (e: { root: string; dirs: string[]; all: boolean }) => void) =>
     window.hydra.on('fs.changed', cb),
   onGitChanged: (

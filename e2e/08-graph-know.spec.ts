@@ -134,7 +134,7 @@ async function run(page: import('@playwright/test').Page): Promise<void> {
   await expect(page.getByTestId('know-mcp-state')).toContainText('sin conectar')
   await page.getByTestId('know-autocards').uncheck()
   await expect
-    .poll(() => page.evaluate(() => window.hydra.invoke('know.getPrefs').then((p) => p.autoCards)))
+    .poll(() => page.evaluate(() => window.hydra.invoke('prefs.get').then((p) => p.know.autoCards)))
     .toBe(false)
 
   // AC-3 (UI): generate one card through the fake CLI
