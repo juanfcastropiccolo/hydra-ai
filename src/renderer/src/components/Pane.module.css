@@ -17,7 +17,7 @@
 }
 /* Expanded pane: it is the only one on screen, so the focus glow is noise (Juan, 2026-08-24).
    Focus itself (data-focused, keyboard) is untouched; only the paint changes. */
-.pane[data-expanded='true'].focused {
+.pane[data-expanded='true']:not([data-split='true']).focused {
   border-color: var(--border);
   box-shadow: none;
 }
@@ -26,6 +26,14 @@
 .pane[data-expanded='true'] {
   border: 0;
   border-radius: 0;
+}
+/* Feature 008: in a split there are two terminals, so the border (and the focus glow) is back. */
+.pane[data-split='true'] {
+  border: 2px solid var(--border);
+  border-radius: 0;
+}
+.pane[data-split='true'].focused {
+  border-color: var(--accent);
 }
 .header {
   display: flex;
@@ -66,6 +74,65 @@
   padding: 2px 7px;
   font-size: 12px;
   line-height: 1.2;
+}
+.iconBtnActive {
+  color: var(--accent);
+  border-color: var(--accent-dim);
+}
+
+/* Feature 008: ◫ menu (which session goes on the right). Lives in the topbar via the portal. */
+.menuWrap {
+  position: relative;
+  display: inline-flex;
+}
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 240px;
+  max-height: 60vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+}
+.menuItem:hover {
+  background: var(--bg-pane);
+}
+.menuName {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.menuMeta,
+.menuEmpty {
+  color: var(--fg-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.menuEmpty {
+  padding: 6px 8px;
 }
 .body {
   position: relative;

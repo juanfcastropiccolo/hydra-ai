@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
 import { AnalyticsView } from './components/analytics/AnalyticsView'
@@ -37,8 +37,22 @@ function App(): React.JSX.Element {
           !s.hiddenSessionIds.includes(x.sessionId)
       )
   )
-  // Published through TopbarSlotContext so the expanded Pane can portal its header here.
-  const [topbarSlot, setTopbarSlot] = useState<HTMLElement | null>(null)
+  // Feature 008: B is shown next to A (split view) → the topbar splits in two halves.
+  const paneSplit = useAppStore(
+    (s) =>
+      s.expandedSessionId !== null &&
+      s.splitSessionId !== null &&
+      s.sessions.some(
+        (x) =>
+          x.sessionId === s.splitSessionId &&
+          Boolean(x.bgId) &&
+          !s.hiddenSessionIds.includes(x.sessionId)
+      )
+  )
+  // Published through TopbarSlotContext so the expanded/split Panes can portal their headers here.
+  const [slotA, setSlotA] = useState<HTMLElement | null>(null)
+  const [slotB, setSlotB] = useState<HTMLElement | null>(null)
+  const topbarSlots = useMemo(() => ({ a: slotA, b: slotB }), [slotA, slotB])
   // feature 007: accent color → CSS vars (UI only)
   const accent = usePrefs((p) => p.appearance.accent)
   useEffect(() => {
@@ -125,7 +139,16 @@ function App(): React.JSX.Element {
       <section className={styles.main}>
         <header className={styles.topbar}>
           {paneExpanded && centerView === 'sessions' ? (
-            <div className={styles.topbarPane} ref={setTopbarSlot} data-testid="topbar-pane" />
+            <>
+              <div className={styles.topbarPane} ref={setSlotA} data-testid="topbar-pane" />
+              {paneSplit && (
+                <div
+                  className={`${styles.topbarPane} ${styles.topbarPaneB}`}
+                  ref={setSlotB}
+                  data-testid="topbar-pane-b"
+                />
+              )}
+            </>
           ) : (
             <>
               <span className={styles.topbarTitle} data-testid="topbar-title">
@@ -172,7 +195,7 @@ function App(): React.JSX.Element {
               </div>
             ) : (
               <ErrorBoundary label="la grilla">
-                <TopbarSlotContext.Provider value={topbarSlot}>
+                <TopbarSlotContext.Provider value={topbarSlots}>
                   <PaneGrid />
                 </TopbarSlotContext.Provider>
               </ErrorBoundary>

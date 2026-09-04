@@ -15,12 +15,15 @@ export function PaneGrid(): React.JSX.Element {
   const sessions = useAppStore((s) => s.sessions)
   const hidden = useAppStore((s) => s.hiddenSessionIds)
   const expandedId = useAppStore((s) => s.expandedSessionId)
+  const splitId = useAppStore((s) => s.splitSessionId)
   const visible = useMemo(
     () => sessions.filter((x) => x.bgId && !hidden.includes(x.sessionId)),
     [sessions, hidden]
   )
   const groups = useMemo(() => groupByProject(visible, projects), [visible, projects])
   const expanded = expandedId !== null && visible.some((s) => s.sessionId === expandedId)
+  // Feature 008: a second pane (B) next to the expanded one (A), each half the width.
+  const split = expanded && splitId !== null && visible.some((s) => s.sessionId === splitId)
 
   if (visible.length === 0) {
     return (
@@ -42,6 +45,7 @@ export function PaneGrid(): React.JSX.Element {
       className={expanded ? styles.expandedWrap : styles.wrap}
       data-testid="pane-grid"
       data-expanded={expanded ? 'true' : 'false'}
+      data-split={split ? 'true' : 'false'}
     >
       {groups.map(({ project, sessions }) => (
         <div
@@ -68,8 +72,12 @@ export function PaneGrid(): React.JSX.Element {
                   !expanded
                     ? styles.cell
                     : s.sessionId === expandedId
-                      ? styles.expandedPane
-                      : styles.hiddenPane
+                      ? split
+                        ? styles.splitPaneA
+                        : styles.expandedPane
+                      : split && s.sessionId === splitId
+                        ? styles.splitPaneB
+                        : styles.hiddenPane
                 }
               >
                 <ErrorBoundary label={`pane ${s.name}`}>

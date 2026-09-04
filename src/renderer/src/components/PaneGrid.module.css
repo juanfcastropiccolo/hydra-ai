@@ -62,6 +62,26 @@
   flex: 1;
   min-width: 0;
 }
+/* Feature 008: split view — A on the left half, B on the right half, full height. */
+.splitPaneA,
+.splitPaneB {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  display: flex;
+}
+.splitPaneA {
+  left: 0;
+}
+.splitPaneB {
+  left: 50%;
+}
+.splitPaneA > *,
+.splitPaneB > * {
+  flex: 1;
+  min-width: 0;
+}
 .hiddenPane {
   position: absolute;
   width: 0;

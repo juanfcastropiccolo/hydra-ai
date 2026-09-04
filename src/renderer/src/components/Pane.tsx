@@ -1,4 +1,4 @@
-import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@shared/types'
 import { droppedPathText } from '@shared/paths'
@@ -19,6 +19,16 @@ export const PASTE_EXPAND_DELAY_MS = 350
 export function Pane({ session }: { session: Session }): React.JSX.Element {
   const focused = useAppStore((s) => s.focusedSessionId === session.sessionId)
   const expanded = useAppStore((s) => s.expandedSessionId === session.sessionId)
+  // Feature 008: 'a' = expanded pane (left in a split), 'b' = the pane shown to its right.
+  const role = useAppStore((s) =>
+    s.expandedSessionId === session.sessionId
+      ? 'a'
+      : s.expandedSessionId !== null && s.splitSessionId === session.sessionId
+        ? 'b'
+        : null
+  )
+  const inSplit = useAppStore((s) => s.expandedSessionId !== null && s.splitSessionId !== null)
+  const setSplit = useAppStore((s) => s.setSplit)
   const ptyId = useAppStore((s) => s.ptyIds[session.sessionId])
   const setPtyId = useAppStore((s) => s.setPtyId)
   const toggleExpand = useAppStore((s) => s.toggleExpand)
@@ -40,8 +50,39 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
   // Expanded: the header moves into the app topbar (portal) so the terminal fills the whole area.
   // A portal keeps the React tree intact: dblclick/mousedown on it still bubble to <section>,
   // and XTermView (in .body) is never remounted.
-  const topbarSlot = useContext(TopbarSlotContext)
-  const headerSlot = expanded ? topbarSlot : null
+  const topbarSlots = useContext(TopbarSlotContext)
+  const headerSlot = role === 'a' ? topbarSlots.a : role === 'b' ? topbarSlots.b : null
+  // Feature 008: ◫ menu — the other visible sessions that can take side B.
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const allSessions = useAppStore((s) => s.sessions)
+  const hiddenIds = useAppStore((s) => s.hiddenSessionIds)
+  const projects = useAppStore((s) => s.projects)
+  const splitId = useAppStore((s) => s.splitSessionId)
+  const candidates = useMemo(
+    () =>
+      pickerOpen
+        ? allSessions
+            .filter(
+              (x) =>
+                x.bgId &&
+                !hiddenIds.includes(x.sessionId) &&
+                x.sessionId !== session.sessionId &&
+                x.sessionId !== splitId
+            )
+            .map((x) => ({
+              id: x.sessionId,
+              name: x.name,
+              project: projects.find((p) => p.id === x.projectId)?.name ?? null
+            }))
+        : [],
+    [pickerOpen, allSessions, hiddenIds, projects, session.sessionId, splitId]
+  )
+  useEffect(() => {
+    if (!pickerOpen) return
+    const close = (): void => setPickerOpen(false)
+    document.addEventListener('mousedown', close)
+    return () => document.removeEventListener('mousedown', close)
+  }, [pickerOpen])
   const ended = session.state === 'ended' || exitCode !== null
   const attachable = Boolean(session.bgId)
 
@@ -267,16 +308,70 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
       >
         ⇩
       </button>
+      {role === 'a' && (
+        <span
+          className={styles.menuWrap}
+          onMouseDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className={`${styles.iconBtn} ${inSplit ? styles.iconBtnActive : ''}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              setPickerOpen((v) => !v)
+            }}
+            title={inSplit ? 'Cambiar la sesión de la derecha' : 'Ver junto a otra sesión'}
+            data-testid="pane-split"
+          >
+            ◫
+          </button>
+          {pickerOpen && (
+            <div className={styles.menu} role="menu" data-testid="split-menu">
+              {candidates.length === 0 && (
+                <span className={styles.menuEmpty}>No hay otras sesiones visibles</span>
+              )}
+              {candidates.map((c) => (
+                <button
+                  key={c.id}
+                  role="menuitem"
+                  className={styles.menuItem}
+                  data-session-id={c.id}
+                  onClick={() => {
+                    setPickerOpen(false)
+                    setSplit(c.id)
+                  }}
+                >
+                  <span className={styles.menuName}>{c.name}</span>
+                  {c.project && <span className={styles.menuMeta}>{c.project}</span>}
+                </button>
+              ))}
+            </div>
+          )}
+        </span>
+      )}
+      {role === 'b' && (
+        <button
+          className={`${styles.iconBtn} ${styles.iconBtnActive}`}
+          onClick={(e) => {
+            e.stopPropagation()
+            setSplit(null)
+          }}
+          title="Quitar de la vista dividida"
+          data-testid="pane-split"
+        >
+          ◫
+        </button>
+      )}
       <button
         className={styles.iconBtn}
         onClick={(e) => {
           e.stopPropagation()
           toggleExpand(session.sessionId)
         }}
-        title={expanded ? 'Contraer' : 'Expandir'}
+        title={expanded || role === 'b' ? 'Contraer' : 'Expandir'}
         data-testid="pane-expand"
       >
-        {expanded ? '⤡' : '⤢'}
+        {expanded || role === 'b' ? '⤡' : '⤢'}
       </button>
       <button
         className={styles.iconBtn}
@@ -305,6 +400,7 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
       data-session-id={session.sessionId}
       data-focused={focused}
       data-expanded={expanded}
+      data-split={role !== null && inSplit}
       onMouseDown={() => controller.current?.focus()}
       onDoubleClick={onDoubleClick}
       onDragOver={onDragOver}

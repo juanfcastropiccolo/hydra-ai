@@ -1,7 +1,13 @@
 import { createContext } from 'react'
 
 /**
- * The topbar element that hosts the expanded pane's header (App renders it while a pane is
- * expanded and publishes it here via a callback ref). Pane portals its header into it.
+ * Topbar elements that host the headers of the expanded pane (`a`) and, in split view (008),
+ * of the pane on the right (`b`). App renders them while a pane is expanded and publishes them
+ * here via callback refs; Pane portals its header into the slot of its role.
  */
-export const TopbarSlotContext = createContext<HTMLElement | null>(null)
+export interface TopbarSlots {
+  a: HTMLElement | null
+  b: HTMLElement | null
+}
+
+export const TopbarSlotContext = createContext<TopbarSlots>({ a: null, b: null })

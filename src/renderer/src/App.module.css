@@ -27,10 +27,15 @@
 }
 /* Hosts the expanded pane's header (portal from Pane): name on the left, actions on the right. */
 .topbarPane {
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   align-items: center;
+}
+/* Feature 008: right half of the topbar (header of pane B). */
+.topbarPaneB {
+  border-left: 1px solid var(--border);
+  padding-left: 10px;
 }
 .contentRow {
   flex: 1;
