@@ -3,6 +3,8 @@
 //  - at most one focused pane; focus only changes through explicit focus()/blur() calls that the
 //    XTerm component fires from the terminal's own focus/blur events (never the other way round)
 //  - at most one expanded pane; Esc collapses only when no terminal has focus
+//  - feature 008: a split (second pane, side B) only exists while a pane is expanded (side A),
+//    never with the same session on both sides; losing A promotes B, losing B ends the split
 import { createStore, useStore, type StoreApi } from 'zustand'
 import type { ClaudeAvailability, Project, Session } from '@shared/types'
 import type { CenterView } from '@shared/analytics/types'
@@ -25,6 +27,8 @@ export interface AppState {
   /** Last pane that had focus (survives blur) — used by the file tree to hand focus back (Esc) and to follow projects. */
   lastFocusedSessionId: string | null
   expandedSessionId: string | null
+  /** Feature 008: the pane shown to the right of the expanded one (split view), or null. */
+  splitSessionId: string | null
   newSessionDialog: NewSessionDialogState | null
   lastError: string | null
   /** Feature 005: which view fills the central area. Switching away from sessions blurs every terminal. */
@@ -39,6 +43,8 @@ export interface AppState {
   blur(sessionId: string): void
   toggleExpand(sessionId: string): void
   collapse(): void
+  /** Feature 008: show `sessionId` next to the expanded pane (null ends the split). */
+  setSplit(sessionId: string | null): void
   /** Global Esc: collapse only if no terminal holds the focus (FR-16). Returns true if it acted. */
   escape(): boolean
   hide(sessionId: string): void
@@ -61,6 +67,7 @@ export function createAppStore(): AppStore {
     focusedSessionId: null,
     lastFocusedSessionId: null,
     expandedSessionId: null,
+    splitSessionId: null,
     newSessionDialog: null,
     lastError: null,
     centerView: 'sessions',
@@ -69,13 +76,12 @@ export function createAppStore(): AppStore {
     setProjects: (projects) => set({ projects }),
     setSessions: (sessions) => {
       const ids = new Set(sessions.map((s) => s.sessionId))
-      const { focusedSessionId, expandedSessionId } = get()
+      const { focusedSessionId, expandedSessionId, splitSessionId } = get()
       set({
         sessions,
         // A session that vanished entirely can no longer be focused/expanded.
         focusedSessionId: focusedSessionId && ids.has(focusedSessionId) ? focusedSessionId : null,
-        expandedSessionId:
-          expandedSessionId && ids.has(expandedSessionId) ? expandedSessionId : null
+        ...withoutPane(expandedSessionId, splitSessionId, (id) => !ids.has(id))
       })
     },
     setHidden: (hiddenSessionIds) => set({ hiddenSessionIds }),
@@ -90,8 +96,19 @@ export function createAppStore(): AppStore {
     blur: (sessionId) =>
       set((s) => (s.focusedSessionId === sessionId ? { focusedSessionId: null } : {})),
     toggleExpand: (sessionId) =>
-      set((s) => ({ expandedSessionId: s.expandedSessionId === sessionId ? null : sessionId })),
-    collapse: () => set({ expandedSessionId: null }),
+      set((s) =>
+        // From a split (dblclick / ⤡ on either side) the way out is always the grid.
+        s.splitSessionId !== null || s.expandedSessionId === sessionId
+          ? { expandedSessionId: null, splitSessionId: null }
+          : { expandedSessionId: sessionId }
+      ),
+    collapse: () => set({ expandedSessionId: null, splitSessionId: null }),
+    setSplit: (sessionId) =>
+      set((s) => {
+        if (sessionId === null) return { splitSessionId: null }
+        if (s.expandedSessionId === null || s.expandedSessionId === sessionId) return {}
+        return { splitSessionId: sessionId }
+      }),
     escape: () => {
       const { focusedSessionId, expandedSessionId, newSessionDialog } = get()
       if (newSessionDialog) {
@@ -99,7 +116,7 @@ export function createAppStore(): AppStore {
         return true
       }
       if (expandedSessionId && focusedSessionId === null) {
-        set({ expandedSessionId: null })
+        set({ expandedSessionId: null, splitSessionId: null })
         return true
       }
       return false
@@ -110,7 +127,7 @@ export function createAppStore(): AppStore {
           ? s.hiddenSessionIds
           : [...s.hiddenSessionIds, sessionId],
         focusedSessionId: s.focusedSessionId === sessionId ? null : s.focusedSessionId,
-        expandedSessionId: s.expandedSessionId === sessionId ? null : s.expandedSessionId
+        ...withoutPane(s.expandedSessionId, s.splitSessionId, (id) => id === sessionId)
       })),
     show: (sessionId) =>
       set((s) => ({ hiddenSessionIds: s.hiddenSessionIds.filter((id) => id !== sessionId) })),
@@ -124,6 +141,18 @@ export function createAppStore(): AppStore {
         focusedSessionId: centerView === 'sessions' ? s.focusedSessionId : null
       }))
   }))
+}
+
+/** Expanded (A) / split (B) after the panes matching `gone` leave: losing B ends the split, losing A promotes B. */
+function withoutPane(
+  expandedSessionId: string | null,
+  splitSessionId: string | null,
+  gone: (id: string) => boolean
+): Pick<AppState, 'expandedSessionId' | 'splitSessionId'> {
+  const split = splitSessionId !== null && !gone(splitSessionId) ? splitSessionId : null
+  if (expandedSessionId !== null && !gone(expandedSessionId))
+    return { expandedSessionId, splitSessionId: split }
+  return { expandedSessionId: split, splitSessionId: null }
 }
 
 // ---- selectors (pure) ----

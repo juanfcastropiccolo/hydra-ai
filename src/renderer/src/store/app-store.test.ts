@@ -40,6 +40,58 @@ describe('app-store', () => {
     st.getState().collapse()
     expect(st.getState().expandedSessionId).toBeNull()
   })
+  it('split (008): setSplit needs an expanded pane and never the same session on both sides', () => {
+    const st = createAppStore()
+    st.getState().setSplit('b')
+    expect(st.getState().splitSessionId).toBeNull() // nothing expanded → ignored
+    st.getState().toggleExpand('a')
+    st.getState().setSplit('a')
+    expect(st.getState().splitSessionId).toBeNull() // same as A → ignored
+    st.getState().setSplit('b')
+    expect(st.getState().splitSessionId).toBe('b')
+    st.getState().setSplit(null)
+    expect(st.getState().splitSessionId).toBeNull()
+    expect(st.getState().expandedSessionId).toBe('a')
+  })
+  it('split (008): toggleExpand/collapse/escape from a split go back to the grid', () => {
+    const st = createAppStore()
+    st.getState().toggleExpand('a')
+    st.getState().setSplit('b')
+    st.getState().toggleExpand('b') // dblclick on B
+    expect(st.getState()).toMatchObject({ expandedSessionId: null, splitSessionId: null })
+    st.getState().toggleExpand('a')
+    st.getState().setSplit('b')
+    st.getState().toggleExpand('a') // dblclick on A
+    expect(st.getState()).toMatchObject({ expandedSessionId: null, splitSessionId: null })
+    st.getState().toggleExpand('a')
+    st.getState().setSplit('b')
+    st.getState().collapse()
+    expect(st.getState()).toMatchObject({ expandedSessionId: null, splitSessionId: null })
+    st.getState().toggleExpand('a')
+    st.getState().setSplit('b')
+    expect(st.getState().escape()).toBe(true)
+    expect(st.getState()).toMatchObject({ expandedSessionId: null, splitSessionId: null })
+  })
+  it('split (008): hiding/losing B clears the split; hiding/losing A promotes B', () => {
+    const st = createAppStore()
+    st.getState().setSessions([S('a'), S('b')])
+    st.getState().toggleExpand('a')
+    st.getState().setSplit('b')
+    st.getState().hide('b')
+    expect(st.getState()).toMatchObject({ expandedSessionId: 'a', splitSessionId: null })
+    st.getState().show('b')
+    st.getState().setSplit('b')
+    st.getState().hide('a')
+    expect(st.getState()).toMatchObject({ expandedSessionId: 'b', splitSessionId: null })
+    st.getState().show('a')
+    st.getState().setSplit('a')
+    st.getState().setSessions([S('b')]) // A vanished → B promoted
+    expect(st.getState()).toMatchObject({ expandedSessionId: 'b', splitSessionId: null })
+    st.getState().setSessions([S('a'), S('b')])
+    st.getState().setSplit('a')
+    st.getState().setSessions([S('b')]) // wait: A is 'b', B is 'a' → B vanished → split cleared
+    expect(st.getState()).toMatchObject({ expandedSessionId: 'b', splitSessionId: null })
+  })
   it('escape collapses only when no terminal is focused (FR-16) and closes the dialog first', () => {
     const st = createAppStore()
     st.getState().toggleExpand('a')
