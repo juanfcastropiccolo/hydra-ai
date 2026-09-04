@@ -21,7 +21,7 @@ App de escritorio macOS (Electron + React + xterm.js + node-pty) que muestra y o
 
 - **Foco:** el borde verde se pinta desde el `focus/blur` del textarea de xterm, nunca al revés. No toques eso sin leer el principio 3 de la Constitution.
 - **Selectores de zustand** deben devolver primitivas o referencias estables (un `filter` dentro del selector = bucle infinito).
-- **PaneGrid** mantiene el mismo árbol DOM en modo grilla y expandido (solo cambian clases) para no remontar xterm.
+- **PaneGrid** mantiene el mismo árbol DOM en modo grilla, expandido y split (solo cambian clases) para no remontar xterm. Expandido/split (008): el header del pane se **portala** a la topbar (`TopbarSlotContext` con slots `a`/`b`), así el dblclick sigue burbujeando al pane. `splitSessionId` (B) solo existe con `expandedSessionId` (A); perder A promueve B, perder B termina el split, `toggleExpand` desde un split vuelve siempre a la grilla.
 - `claude attach` siempre renderiza fullscreen; está bien (spike 001). No setear `CLAUDE_CODE_DISABLE_ALTERNATE_SCREEN`.
 - `EnvResolver` usa `$SHELL -lc` (no `-ilc`: colgó 5 s en la máquina del autor).
 - **File tree:** un solo `fs.watch` por raíz; los eventos bajo `.git/**` se descartan (si no, `git status` realimenta el watcher). `GitService` devuelve la raíz en la forma de ruta del caller (symlinks `/var` vs `/private/var`). Estado git via CLI, nunca librerías.

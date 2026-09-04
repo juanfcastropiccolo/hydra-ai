@@ -8,6 +8,7 @@ Proyecto gestionado con Spec-Driven Development. Ver `constitution.md` para los 
 
 - [002 — Árbol de archivos del proyecto](features/002-file-tree/) — **complete (100%)** · v0.2.0 · pendiente menor: ⌘⇧E en .app
 - [004 — Importar contexto de otra sesión](features/004-import-context/) — **complete (100%)** · v0.3.0 · QA 2026-08-23 · spike: `docs/spike-004-context.md` · spike: `docs/spike-004-context.md`
+- [008 — Split view: dos terminales lado a lado](features/008-split-view/) — **complete (100%)** · 2026-09-03
 
 ## Backlog (aún sin spec, en orden tentativo)
 
