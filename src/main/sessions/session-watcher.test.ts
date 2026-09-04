@@ -110,6 +110,43 @@ describe('SessionWatcher', () => {
     await w.poll()
     expect(w.get('S1')?.state).toBe('ended')
   })
+  it('an ended EXTERNAL session is forgotten after endedTtlMs; a Hydra-owned one stays', async () => {
+    const ref = { current: [bg(), bg({ sessionId: 'S2', id: 'bg2', name: 'foo-2' })] }
+    const t = { now: 1000 }
+    const listSessions = vi.fn(async () => ({ entries: ref.current }))
+    const w = new SessionWatcher({
+      listSessions,
+      getProjects: () => projects,
+      realpath: (p) => p,
+      now: () => t.now,
+      endedTtlMs: 60_000
+    })
+    const changes: number[] = []
+    w.on('changed', (s) => changes.push(s.length))
+    w.markOwned('bg2')
+    await w.poll()
+    ref.current = []
+    t.now = 3000
+    await w.poll()
+    expect(w.get('S1')?.state).toBe('ended')
+    expect(w.get('S2')?.state).toBe('ended')
+    // Just before the TTL: both still listed, and nothing emitted (no change)
+    t.now = 3000 + 59_999
+    await w.poll()
+    expect(
+      w
+        .list()
+        .map((s) => s.sessionId)
+        .sort()
+    ).toEqual(['S1', 'S2'])
+    expect(changes).toEqual([2, 2])
+    // At the TTL: the external one is gone, the Hydra-owned one keeps its "ended" overlay
+    t.now = 3000 + 60_000
+    await w.poll()
+    expect(w.get('S1')).toBeUndefined()
+    expect(w.get('S2')?.state).toBe('ended')
+    expect(changes).toEqual([2, 2, 1])
+  })
   it('an interactive session that gets backgrounded gains a bgId and kind on the next poll', async () => {
     const ref = { current: [bg({ kind: 'interactive', id: undefined, status: 'busy' })] }
     const { w } = make(ref)

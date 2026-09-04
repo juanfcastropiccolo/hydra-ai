@@ -17,7 +17,11 @@ export interface SessionWatcherDeps {
   setInterval?: typeof globalThis.setInterval
   clearInterval?: typeof globalThis.clearInterval
   pollMs?: number
+  /** Ended sessions Hydra did not spawn are dropped from the list after this long (default 5 min). */
+  endedTtlMs?: number
 }
+
+export const DEFAULT_ENDED_TTL_MS = 5 * 60_000
 
 export interface SessionWatcherEvents {
   changed: [Session[]]
@@ -34,11 +38,13 @@ export class SessionWatcher extends EventEmitter<SessionWatcherEvents> {
   private index: ProjectPathIndex = { byId: new Map() }
   private readonly now: () => number
   private readonly pollMs: number
+  private readonly endedTtlMs: number
 
   constructor(private readonly deps: SessionWatcherDeps) {
     super()
     this.now = deps.now ?? Date.now
     this.pollMs = deps.pollMs ?? 2000
+    this.endedTtlMs = deps.endedTtlMs ?? DEFAULT_ENDED_TTL_MS
     this.refreshProjectIndex()
   }
 
@@ -177,6 +183,14 @@ export class SessionWatcher extends EventEmitter<SessionWatcherEvents> {
         s.lastStateAt = at
         s.source = 'poll'
         delete s.waitingFor
+        changed = true
+        continue
+      }
+      // External ended sessions have no pane to close them from (and a headless run can leave
+      // hundreds behind), so they expire on their own. Hydra-owned ones keep their "ended"
+      // overlay until the user closes the pane (forget). lastStateAt == when it became ended.
+      if (s.state === 'ended' && s.origin === 'external' && at - s.lastStateAt >= this.endedTtlMs) {
+        this.sessions.delete(s.sessionId)
         changed = true
       }
     }

@@ -16,7 +16,14 @@ test('AC-9/AC-10/AC-18: expand by button & double-click, collapse by button/dblc
   await createSession(page, 'p2')
   await createSession(page, 'p3')
   const grid = page.getByTestId('pane-grid')
-  const p2 = page.getByTestId('pane').filter({ hasText: 'p2' })
+  // While expanded the pane's header (its name) lives in the topbar, so resolve p2 by id.
+  const p2Id = await page
+    .getByTestId('pane')
+    .filter({ hasText: 'p2' })
+    .getAttribute('data-session-id')
+  const p2 = page.locator(`[data-testid=pane][data-session-id="${p2Id}"]`)
+  // The expanded pane's header (name + actions) is portaled into the topbar.
+  const topbarPane = page.getByTestId('topbar-pane')
   const widthBefore = (await p2.boundingBox())!.width
 
   // expand by button
@@ -24,11 +31,20 @@ test('AC-9/AC-10/AC-18: expand by button & double-click, collapse by button/dblc
   await expect(grid).toHaveAttribute('data-expanded', 'true')
   await expect(p2).toHaveAttribute('data-expanded', 'true')
   expect((await p2.boundingBox())!.width).toBeGreaterThan(widthBefore * 1.5)
+  // header moved to the topbar: name + actions there, "Sesiones"/Claude status gone, none inside the pane
+  await expect(topbarPane.getByTestId('pane-title')).toHaveText('p2')
+  await expect(topbarPane.getByTestId('pane-expand')).toBeVisible()
+  await expect(page.getByTestId('topbar-title')).toHaveCount(0)
+  await expect(page.getByTestId('claude-status')).toHaveCount(0)
+  await expect(p2.getByTestId('pane-header')).toHaveCount(0)
   // others stay mounted (3 panes in DOM)
   await expect(page.getByTestId('pane')).toHaveCount(3)
-  // collapse by button
-  await p2.getByTestId('pane-expand').click()
+  // collapse by button (in the topbar)
+  await topbarPane.getByTestId('pane-expand').click()
   await expect(grid).toHaveAttribute('data-expanded', 'false')
+  await expect(page.getByTestId('topbar-title')).toHaveText('Sesiones')
+  await expect(page.getByTestId('topbar-pane')).toHaveCount(0)
+  await expect(p2.getByTestId('pane-header')).toContainText('p2')
 
   // expand by double-click on the terminal area (AC-10), no text selected
   await p2.locator('.xterm').dblclick()
@@ -44,7 +60,8 @@ test('AC-9/AC-10/AC-18: expand by button & double-click, collapse by button/dblc
   // dblclick toggles again
   await p2.locator('.xterm').dblclick()
   await expect(grid).toHaveAttribute('data-expanded', 'true')
-  await p2.getByTestId('pane-header').dblclick()
+  // dblclick on the topbar header (portal → still bubbles to the pane) collapses too
+  await topbarPane.getByTestId('pane-header').dblclick()
   await expect(grid).toHaveAttribute('data-expanded', 'false')
 
   // resize window → PTY receives a new size (AC-18)
