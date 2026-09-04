@@ -21,6 +21,12 @@
   border-color: var(--border);
   box-shadow: none;
 }
+/* Expanded: no floating card — the terminal fills the content area edge to edge and the
+   header lives in the topbar (see .headerExpanded). */
+.pane[data-expanded='true'] {
+  border: 0;
+  border-radius: 0;
+}
 .header {
   display: flex;
   align-items: center;
@@ -30,6 +36,14 @@
   border-bottom: 1px solid var(--border);
   user-select: none;
   flex: none;
+}
+.headerExpanded {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  user-select: none;
 }
 .title {
   flex: 1;

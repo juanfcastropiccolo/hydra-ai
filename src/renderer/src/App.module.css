@@ -25,6 +25,13 @@
 .topbarSpacer {
   flex: 1;
 }
+/* Hosts the expanded pane's header (portal from Pane): name on the left, actions on the right. */
+.topbarPane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
 .contentRow {
   flex: 1;
   min-height: 0;
@@ -79,8 +86,17 @@
   margin-left: auto;
 }
 
+/* Expanded pane: edge to edge (only the bulge gutter survives). */
+.contentExpanded {
+  padding: 0 0 0 46px;
+  overflow: hidden;
+}
+
 /* No tab bulge when the sidebar is a rail → no gutter needed. */
 .shellCollapsed .topbar,
 .shellCollapsed .content {
   padding-left: 14px;
+}
+.shellCollapsed .contentExpanded {
+  padding: 0;
 }

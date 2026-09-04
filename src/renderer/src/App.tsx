@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './App.module.css'
 import { ClaudeUnavailable } from './components/ClaudeUnavailable'
 import { AnalyticsView } from './components/analytics/AnalyticsView'
@@ -10,6 +10,7 @@ import { ImportContextDialog } from './components/ImportContextDialog'
 import { NewSessionDialog } from './components/NewSessionDialog'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { PaneGrid } from './components/PaneGrid'
+import { TopbarSlotContext } from './lib/topbar-slot'
 import { hydra } from './lib/hydra-client'
 import { runImport } from './lib/import-flow'
 import { fileTreeStore, useFileTree } from './store/file-tree-slice'
@@ -25,6 +26,19 @@ function App(): React.JSX.Element {
   const setError = useAppStore((s) => s.setError)
   const escape = useAppStore((s) => s.escape)
   const centerView = useAppStore((s) => s.centerView)
+  // A visible pane is expanded: its header takes over the topbar and the grid loses its padding.
+  const paneExpanded = useAppStore(
+    (s) =>
+      s.expandedSessionId !== null &&
+      s.sessions.some(
+        (x) =>
+          x.sessionId === s.expandedSessionId &&
+          Boolean(x.bgId) &&
+          !s.hiddenSessionIds.includes(x.sessionId)
+      )
+  )
+  // Published through TopbarSlotContext so the expanded Pane can portal its header here.
+  const [topbarSlot, setTopbarSlot] = useState<HTMLElement | null>(null)
   // feature 007: accent color → CSS vars (UI only)
   const accent = usePrefs((p) => p.appearance.accent)
   useEffect(() => {
@@ -110,23 +124,29 @@ function App(): React.JSX.Element {
       <Sidebar />
       <section className={styles.main}>
         <header className={styles.topbar}>
-          <span className={styles.topbarTitle} data-testid="topbar-title">
-            {centerView === 'analytics'
-              ? 'Analytics'
-              : centerView === 'graph'
-                ? 'Graph Know'
-                : centerView === 'config'
-                  ? 'Config'
-                  : 'Sesiones'}
-          </span>
-          <span className={styles.topbarSpacer} />
-          <span className={styles.topbarTitle} data-testid="claude-status">
-            {availability === null
-              ? 'Claude Code: …'
-              : availability.ok
-                ? `Claude Code ${availability.version ?? ''}`
-                : 'Claude Code: no disponible'}
-          </span>
+          {paneExpanded && centerView === 'sessions' ? (
+            <div className={styles.topbarPane} ref={setTopbarSlot} data-testid="topbar-pane" />
+          ) : (
+            <>
+              <span className={styles.topbarTitle} data-testid="topbar-title">
+                {centerView === 'analytics'
+                  ? 'Analytics'
+                  : centerView === 'graph'
+                    ? 'Graph Know'
+                    : centerView === 'config'
+                      ? 'Config'
+                      : 'Sesiones'}
+              </span>
+              <span className={styles.topbarSpacer} />
+              <span className={styles.topbarTitle} data-testid="claude-status">
+                {availability === null
+                  ? 'Claude Code: …'
+                  : availability.ok
+                    ? `Claude Code ${availability.version ?? ''}`
+                    : 'Claude Code: no disponible'}
+              </span>
+            </>
+          )}
         </header>
         {lastError && (
           <div className={styles.errorBanner} role="alert">
@@ -137,7 +157,7 @@ function App(): React.JSX.Element {
         <div className={styles.contentRow}>
           {/* Feature 005: the grid stays mounted (terminals keep their size) but hidden behind Analytics. */}
           <div
-            className={`${styles.content} ${centerView !== 'sessions' ? styles.contentHidden : ''}`}
+            className={`${styles.content} ${centerView !== 'sessions' ? styles.contentHidden : ''} ${paneExpanded ? styles.contentExpanded : ''}`}
             aria-hidden={centerView !== 'sessions'}
             data-testid="sessions-view"
           >
@@ -152,7 +172,9 @@ function App(): React.JSX.Element {
               </div>
             ) : (
               <ErrorBoundary label="la grilla">
-                <PaneGrid />
+                <TopbarSlotContext.Provider value={topbarSlot}>
+                  <PaneGrid />
+                </TopbarSlotContext.Provider>
               </ErrorBoundary>
             )}
           </div>

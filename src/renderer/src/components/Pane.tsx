@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { Session } from '@shared/types'
 import { droppedPathText } from '@shared/paths'
 import { bracketedPaste } from '@shared/paste'
 import { canImportInto } from '../lib/can-import'
 import { hydra } from '../lib/hydra-client'
+import { TopbarSlotContext } from '../lib/topbar-slot'
 import { cancelImport, runImport } from '../lib/import-flow'
 import { useAppStore } from '../store/app-store'
 import { importContextStore, useImportContext } from '../store/import-context-slice'
@@ -35,6 +37,11 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
     toastTimer.current = setTimeout(() => setToast(null), 2500)
   }
   const [draft, setDraft] = useState(session.name)
+  // Expanded: the header moves into the app topbar (portal) so the terminal fills the whole area.
+  // A portal keeps the React tree intact: dblclick/mousedown on it still bubble to <section>,
+  // and XTermView (in .body) is never remounted.
+  const topbarSlot = useContext(TopbarSlotContext)
+  const headerSlot = expanded ? topbarSlot : null
   const ended = session.state === 'ended' || exitCode !== null
   const attachable = Boolean(session.bgId)
 
@@ -210,6 +217,87 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
     }
   }
 
+  const header = (
+    <header
+      className={headerSlot ? styles.headerExpanded : styles.header}
+      data-testid="pane-header"
+    >
+      <StatusLight state={ended ? 'ended' : session.state} waitingFor={session.waitingFor} />
+      {editing ? (
+        <input
+          className={styles.titleInput}
+          value={draft}
+          autoFocus
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => void commitRename()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            e.stopPropagation()
+            if (e.key === 'Enter') void commitRename()
+            if (e.key === 'Escape') setEditing(false)
+          }}
+          data-testid="pane-rename-input"
+        />
+      ) : (
+        <span className={styles.title} title={session.cwd} data-testid="pane-title">
+          {session.name}
+        </span>
+      )}
+      {!editing && (
+        <button
+          className={styles.iconBtn}
+          onClick={startRename}
+          title="Renombrar sesión"
+          data-testid="pane-rename"
+        >
+          ✎
+        </button>
+      )}
+      <button
+        className={styles.iconBtn}
+        onClick={onImportClick}
+        disabled={!canImport.ok}
+        title={
+          canImport.ok
+            ? 'Importar contexto de otra sesión'
+            : `Importar contexto: ${canImport.reason}`
+        }
+        data-testid="pane-import"
+      >
+        ⇩
+      </button>
+      <button
+        className={styles.iconBtn}
+        onClick={(e) => {
+          e.stopPropagation()
+          toggleExpand(session.sessionId)
+        }}
+        title={expanded ? 'Contraer' : 'Expandir'}
+        data-testid="pane-expand"
+      >
+        {expanded ? '⤡' : '⤢'}
+      </button>
+      <button
+        className={styles.iconBtn}
+        onClick={onHide}
+        title="Ocultar pane (la sesión sigue corriendo)"
+        data-testid="pane-hide"
+      >
+        ⊟
+      </button>
+      <button
+        className={styles.iconBtn}
+        onClick={() => void onStop()}
+        disabled={!attachable}
+        title={attachable ? 'Terminar sesión' : 'Solo se pueden terminar sesiones en background'}
+        data-testid="pane-stop"
+      >
+        ✕
+      </button>
+    </header>
+  )
+
   return (
     <section
       className={`${styles.pane} ${focused ? styles.focused : ''}`}
@@ -224,81 +312,7 @@ export function Pane({ session }: { session: Session }): React.JSX.Element {
       onDrop={onDrop}
       data-dropping={dropping}
     >
-      <header className={styles.header} data-testid="pane-header">
-        <StatusLight state={ended ? 'ended' : session.state} waitingFor={session.waitingFor} />
-        {editing ? (
-          <input
-            className={styles.titleInput}
-            value={draft}
-            autoFocus
-            onChange={(e) => setDraft(e.target.value)}
-            onBlur={() => void commitRename()}
-            onMouseDown={(e) => e.stopPropagation()}
-            onDoubleClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => {
-              e.stopPropagation()
-              if (e.key === 'Enter') void commitRename()
-              if (e.key === 'Escape') setEditing(false)
-            }}
-            data-testid="pane-rename-input"
-          />
-        ) : (
-          <span className={styles.title} title={session.cwd} data-testid="pane-title">
-            {session.name}
-          </span>
-        )}
-        {!editing && (
-          <button
-            className={styles.iconBtn}
-            onClick={startRename}
-            title="Renombrar sesión"
-            data-testid="pane-rename"
-          >
-            ✎
-          </button>
-        )}
-        <button
-          className={styles.iconBtn}
-          onClick={onImportClick}
-          disabled={!canImport.ok}
-          title={
-            canImport.ok
-              ? 'Importar contexto de otra sesión'
-              : `Importar contexto: ${canImport.reason}`
-          }
-          data-testid="pane-import"
-        >
-          ⇩
-        </button>
-        <button
-          className={styles.iconBtn}
-          onClick={(e) => {
-            e.stopPropagation()
-            toggleExpand(session.sessionId)
-          }}
-          title={expanded ? 'Contraer' : 'Expandir'}
-          data-testid="pane-expand"
-        >
-          {expanded ? '⤡' : '⤢'}
-        </button>
-        <button
-          className={styles.iconBtn}
-          onClick={onHide}
-          title="Ocultar pane (la sesión sigue corriendo)"
-          data-testid="pane-hide"
-        >
-          ⊟
-        </button>
-        <button
-          className={styles.iconBtn}
-          onClick={() => void onStop()}
-          disabled={!attachable}
-          title={attachable ? 'Terminar sesión' : 'Solo se pueden terminar sesiones en background'}
-          data-testid="pane-stop"
-        >
-          ✕
-        </button>
-      </header>
+      {headerSlot ? createPortal(header, headerSlot) : header}
       <div className={styles.body}>
         {toast && (
           <div className={styles.toast} role="status" data-testid="pane-toast">
